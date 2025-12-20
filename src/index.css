@@ -1,3 +1,99 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900;
+    @apply text-white;
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #a855f7 #1e293b;
+  }
+  
+  *::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #a855f7, #06b6d4);
+    border-radius: 10px;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+section,
+div[id] {
+  scroll-margin-top: 80px;
+}
+/* Gaming Glow Effects */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5),
+              0 0 40px rgba(59, 130, 246, 0.3),
+              0 0 60px rgba(59, 130, 246, 0.1);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5),
+              0 0 40px rgba(168, 85, 247, 0.3);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.5),
+              0 0 40px rgba(6, 182, 212, 0.3);
+}
+
+/* Neon Border Animation */
+@keyframes neon-border {
+  0%, 100% { border-color: #3b82f6; }
+  33% { border-color: #a855f7; }
+  66% { border-color: #06b6d4; }
+}
+
+.neon-border {
+  animation: neon-border 3s infinite;
+}
+
+/* Grid Background Effect */
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Animated gradient text */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, #06b6d4, #a855f7, #ec4899, #06b6d4);
+  background-size: 300% 300%;
+  animation: gradient-shift 5s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}

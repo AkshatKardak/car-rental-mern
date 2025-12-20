@@ -1,58 +1,112 @@
 import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Menu, X } from 'lucide-react'
 import Logo from '../assets/logo.png'
-import {  Menu, X } from 'lucide-react'
 
 const Navbar = () => {
-  const [open, setOpen] = useState(false)
-  const NavHandler = () => {
-    setOpen(!open);
+  const [isOpen, setIsOpen] = useState(false)
 
-    // Unsets Background Scrolling to use when SideDrawer/Modal is closed
-    if(open){
-      document.body.style.overflow = 'unset';
+  const menuItems = [
+    { name: 'Home', href: '#home' },
+    { name: 'About', href: '#about' },
+    { name: 'Inventory', href: '#inventory' },
+    { name: 'Contact', href: '#contact' }
+  ]
 
-    }else{
-      document.body.style.overflow = 'hidden';
+  // Smooth scroll function
+  const handleScroll = (e, href) => {
+    e.preventDefault()
+    const element = document.querySelector(href)
+    if (element) {
+      const offset = 80 // Height of navbar
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const offsetPosition = elementPosition - offset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
     }
-}
+    setIsOpen(false) // Close mobile menu after click
+  }
 
   return (
-    <div className='bg-slate-100 py-1 relative'>
-      <div className='max-w-7xl mx-auto'>
-        <div className='flex justify-between items-center px-5 lg:px-0'>
-          {/* logo */}
-          <div>
-            <img src={Logo} alt="" className='w-24' />
+    <motion.nav 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+      className='bg-slate-900/80 backdrop-blur-xl border-b border-purple-500/30 sticky top-0 z-50 shadow-lg shadow-purple-500/20'
+    >
+      <div className='max-w-7xl mx-auto px-4 lg:px-8'>
+        <div className='flex justify-between items-center h-16'>
+          {/* Logo */}
+          <motion.a 
+            href="#home"
+            onClick={(e) => handleScroll(e, '#home')}
+            whileHover={{ scale: 1.05 }}
+            className='flex items-center gap-3 cursor-pointer'
+          >
+            {/* Logo Image */}
+            <img src={Logo} alt="RentRide Logo" className='h-10 w-auto object-contain' />
+          </motion.a>
+
+          {/* Desktop Menu */}
+          <div className='hidden md:flex items-center gap-8'>
+            {menuItems.map((item) => (
+              <motion.a
+                key={item.name}
+                href={item.href}
+                onClick={(e) => handleScroll(e, item.href)}
+                whileHover={{ scale: 1.1, color: '#06b6d4' }}
+                whileTap={{ scale: 0.95 }}
+                className='text-gray-300 hover:text-cyan-400 font-semibold transition-colors'
+              >
+                {item.name}
+              </motion.a>
+            ))}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className='px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white glow-blue hover:shadow-cyan-500/50 transition-all'
+            >
+              Login
+            </motion.button>
           </div>
-          {/* computer nav */}
-          <ul className='md:flex gap-6 font-semibold items-center hidden'>
-            <li className='hover:text-blue-500 cursor-pointer transition-all'>Home</li>
-            <li className='hover:text-blue-500 cursor-pointer transition-all'>About</li>
-            <li className='hover:text-blue-500 cursor-pointer transition-all'>Inventory</li>
-            <li className='hover:text-blue-500 cursor-pointer transition-all'>Contact Us</li>
-            <button className='bg-blue-500 text-white px-4 py-2 rounded-full'>Book a Test Drive</button>
-          </ul>
-          <Menu
-            onClick={NavHandler}
-            className='lg:hidden' />
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className='md:hidden text-white hover:text-cyan-400 transition-colors'
+          >
+            {isOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className='md:hidden pb-4 space-y-3'
+          >
+            {menuItems.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                onClick={(e) => handleScroll(e, item.href)}
+                className='block text-gray-300 hover:text-cyan-400 font-semibold py-2 px-4 rounded-lg hover:bg-slate-800 transition-all'
+              >
+                {item.name}
+              </a>
+            ))}
+            <button className='w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white'>
+              Login
+            </button>
+          </motion.div>
+        )}
       </div>
-      {open ? ( <nav 
-     
-      className='bg-slate-50 scr lg:hidden'>
-        <ul className='flex flex-col space-y-10 bg-slate-50 w-[300px] h-[950px] items-center pt-36 absolute text-2xl font-semibold top-0 z-30 right-0'>
-          <li className='hover:text-blue-500 cursor-pointer transition-all'>Home</li>
-          <li className='hover:text-blue-500 cursor-pointer transition-all'>About</li>
-          <li className='hover:text-blue-500 cursor-pointer transition-all'>Inventory</li>
-          <li className='hover:text-blue-500 cursor-pointer transition-all'>Contact Us</li>
-          <button className='bg-blue-500 text-white px-4 py-2 rounded-full'>Book a Test Drive</button>
-        <X
-        onClick={NavHandler}
-        className='z-50 absolute top-0 right-10 border border-black p-1 rounded-md'/>
-        </ul>
-      </nav>):null}
-     
-    </div>
+    </motion.nav>
   )
 }
 
