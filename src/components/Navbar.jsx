@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import Logo from '../assets/logo.png'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const navigate = useNavigate()
 
   const menuItems = [
     { name: 'Home', href: '#home' },
@@ -64,13 +66,26 @@ const Navbar = () => {
                 {item.name}
               </motion.a>
             ))}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className='px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white glow-blue hover:shadow-cyan-500/50 transition-all'
-            >
-              Login
-            </motion.button>
+            
+            {/* Auth Buttons */}
+            <div className='flex items-center gap-3'>
+              <motion.button
+                onClick={() => navigate('/signin')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className='px-5 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-purple-500/10 transition-all'
+              >
+                Sign In
+              </motion.button>
+              <motion.button
+                onClick={() => navigate('/signup')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className='px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white glow-blue hover:shadow-cyan-500/50 transition-all'
+              >
+                Sign Up
+              </motion.button>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -100,9 +115,20 @@ const Navbar = () => {
                 {item.name}
               </a>
             ))}
-            <button className='w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white'>
-              Login
-            </button>
+            <div className='space-y-2 px-4'>
+              <button 
+                onClick={() => navigate('/signin')}
+                className='w-full px-6 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-purple-500/10 transition-all'
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={() => navigate('/signup')}
+                className='w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white'
+              >
+                Sign Up
+              </button>
+            </div>
           </motion.div>
         )}
       </div>
