@@ -1,165 +1,182 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import Logo from '../assets/logo.png';
 
 const SignIn = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Dummy credentials for testing
-  const DUMMY_USER = {
-    email: 'user@demo.com',
-    password: 'demo123'
-  };
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simulate API delay
     setTimeout(() => {
-      // Check dummy credentials OR accept any login for demo
-      if (formData.email && formData.password) {
-        // Create dummy user data
-        const userData = {
-          id: 'dummy-user-id-123',
-          name: formData.email.split('@')[0], // Use email prefix as name
-          email: formData.email,
-          phone: '+91 9876543210',
-          role: 'user'
-        };
-
-        // Store dummy token and user data
-        localStorage.setItem('token', 'dummy-jwt-token-' + Date.now());
-        localStorage.setItem('user', JSON.stringify(userData));
-
-        // Redirect to dashboard
-        navigate('/dashboard');
-      } else {
+      if (!formData.email || !formData.password) {
         setError('Please enter email and password');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }, 1000); // 1 second delay to simulate API call
+
+      const userData = {
+        id: 'dummy-user-' + Date.now(),
+        name: formData.email.split('@')[0],
+        email: formData.email,
+        role: 'user',
+      };
+
+      localStorage.setItem('token', 'dummy-token-' + Date.now());
+      localStorage.setItem('user', JSON.stringify(userData));
+      navigate('/dashboard');
+    }, 800);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md w-full bg-slate-800/50 backdrop-blur-xl rounded-2xl shadow-2xl shadow-purple-500/20 border border-purple-500/30 p-8"
-      >
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <img src={Logo} alt="RentRide Logo" className="h-12 w-auto mx-auto mb-4" />
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-            Welcome Back
-          </h2>
-          <p className="text-gray-400 mt-2">Sign in to your account</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#101f22]/80 to-purple-900/40 text-white font-display relative overflow-hidden">
+      {/* Background image + gradient + glows */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 to-[#101f22]/80" />
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-purple-900/40 to-[#101f22]/80 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-purple-900/40 to-[#101f22]/80 rounded-full blur-[120px]" />
+      </div>
 
-        {/* Demo Credentials Info */}
-        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4 mb-6">
-          <p className="text-cyan-400 text-sm font-semibold mb-2">🎯 Demo Mode - Use any credentials to login</p>
-          <p className="text-gray-400 text-xs">Just enter any email and password to test the app</p>
+      {/* Simple top bar (optional) */}
+      <header className="relative z-10 flex items-center justify-between px-6 py-4 lg:px-10 border-b border-white/5 bg-[#111f22]/40 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <img src={Logo} alt="RentRide Logo" className="h-10 w-auto object-contain" />
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6"
+        <div className="hidden md:flex items-center gap-8 text-sm">
+          <span className="text-slate-300 hover:text-[#13c8ec] transition-colors cursor-pointer">Inventory</span>
+          <span className="text-slate-300 hover:text-[#13c8ec] transition-colors cursor-pointer">Locations</span>
+          <span className="text-slate-300 hover:text-[#13c8ec] transition-colors cursor-pointer">About</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:block text-slate-400  hover:text-[#13c8ec] transition-colors text-sm">New to RentRide?</span>
+          <button
+            onClick={() => navigate('/signup')}
+            className="px-5 py-2 rounded-lg border border-white/10 bg-white/5 hover:text-[#13c8ec] transition-all text-white text-sm font-semibold transition-all backdrop-blur-sm"
           >
-            {error}
-          </motion.div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-slate-900/50 border border-purple-500/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition text-white placeholder-gray-500"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          {/* Password Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-slate-900/50 border border-purple-500/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition text-white placeholder-gray-500"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          {/* Forgot Password Link */}
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-cyan-400 hover:text-cyan-300">
-              Forgot password?
-            </Link>
-          </div>
-
-          {/* Submit Button */}
-          <motion.button
-            type="submit"
-            disabled={loading}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </motion.button>
-        </form>
-
-        {/* Sign Up Link */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-400">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-cyan-400 font-semibold hover:text-cyan-300">
-              Sign Up
-            </Link>
-          </p>
+            Sign Up
+          </button>
         </div>
+      </header>
 
-        {/* Back to Home */}
-        <div className="mt-4 text-center">
-          <Link to="/" className="text-sm text-gray-500 hover:text-gray-400">
-            ← Back to Home
-          </Link>
+      {/* Centered glass panel */}
+      <main className="relative z-10 flex min-h-[calc(100vh-64px)] items-center justify-center p-4">
+        <div
+          className="w-full max-w-[480px] rounded-2xl shadow-2xl p-8 sm:p-10 flex flex-col gap-6"
+          style={{
+            background: 'rgba(16, 31, 34, 0.65)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          {/* Heading */}
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-400 pb-1">
+              Welcome Back
+            </h1>
+            <p className="text-slate-400 text-base font-medium">Access your premium fleet.</p>
+          </div>
+
+          {/* Demo banner */}
+          <div className="flex items-center justify-center gap-2 rounded-lg bg-[#13c8ec]/10 border border-[#13c8ec]/20 p-3">
+            <span className="text-[#13c8ec] text-sm font-semibold">Demo mode: any credentials allowed</span>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/40 text-red-300 text-sm px-4 py-3">
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form className="flex flex-col gap-5 mt-2" onSubmit={handleSubmit}>
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-slate-300 text-sm font-medium ml-1">Email Address</label>
+              <div className="flex items-center w-full rounded-xl bg-[#0c1619] border border-[#325e67] transition-all duration-300 focus-within:shadow-[0_0_15px_rgba(19,200,236,0.15)] focus-within:border-[#13c8ec]/50">
+                <input
+                  type="email"
+                  name="email"
+                  className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 h-12 text-base px-4"
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="text-slate-300 text-sm font-medium ml-1">Password</label>
+              <div className="flex items-center w-full rounded-xl bg-[#0c1619] border border-[#325e67] transition-all duration-300 focus-within:shadow-[0_0_15px_rgba(19,200,236,0.15)] focus-within:border-[#13c8ec]/50">
+                <input
+                  type="password"
+                  name="password"
+                  className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 h-12 text-base px-4"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Remember / forgot */}
+            <div className="flex items-center justify-between mt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="h-4 w-4 rounded border-slate-600 bg-[#0c1619]" />
+                <span className="text-sm text-slate-300 font-medium">Remember me</span>
+              </label>
+              <button
+                type="button"
+                className="text-sm font-medium text-[#13c8ec] hover:text-[#0fc2e6] transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-xl text-slate-900 text-base font-bold tracking-wide mt-2
+                         bg-gradient-to-br from-[#7c3aed] to-[#13c8ec] bg-[length:200%_200%]
+                         hover:bg-right-top transition-[background-position,box-shadow] duration-500
+                         disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_0_rgba(0,0,0,0)]
+                         hover:shadow-[0_0_20px_rgba(19,200,236,0.4)]"
+            >
+              {loading ? 'Signing in…' : 'Sign In'}
+            </button>
+          </form>
+
+          {/* Bottom link */}
+          <div className="text-center pt-2">
+            <p className="text-slate-400 text-sm">
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                className="text-white font-semibold hover:underline decoration-[#13c8ec] underline-offset-4"
+              >
+                Sign up now
+              </Link>
+            </p>
+          </div>
         </div>
-      </motion.div>
+      </main>
+
+      <footer className="relative z-10 py-6 text-center">
+        <p className="text-slate-500 text-xs">© 2025 RentRide Inc. All rights reserved.</p>
+      </footer>
     </div>
   );
 };

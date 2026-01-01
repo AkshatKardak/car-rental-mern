@@ -73,7 +73,7 @@ const Navbar = () => {
                 onClick={() => navigate('/signin')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className='px-5 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-purple-500/10 transition-all'
+                className='px-5 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-cyan-300 transition-all'
               >
                 Sign In
               </motion.button>
@@ -81,7 +81,7 @@ const Navbar = () => {
                 onClick={() => navigate('/signup')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className='px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white glow-blue hover:shadow-cyan-500/50 transition-all'
+                className='px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-400 rounded-lg font-bold text-white glow-blue hover:shadow-cyan-500/50 transition-all'
               >
                 Sign Up
               </motion.button>
@@ -118,13 +118,13 @@ const Navbar = () => {
             <div className='space-y-2 px-4'>
               <button 
                 onClick={() => navigate('/signin')}
-                className='w-full px-6 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-purple-500/10 transition-all'
+                className='w-full px-6 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-cyan-500 transition-all'
               >
                 Sign In
               </button>
               <button 
                 onClick={() => navigate('/signup')}
-                className='w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-bold text-white'
+                className='w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-400 rounded-lg font-bold text-white'
               >
                 Sign Up
               </button>
