@@ -97,3 +97,99 @@ div[id] {
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+.rr-glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Neon checkbox */
+.rr-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rr-check::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  transition: transform 0.15s ease;
+  border-radius: 3px;
+  background: #22d3ee; /* cyan */
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.55);
+}
+
+.rr-check:checked {
+  border-color: rgba(34, 211, 238, 0.55);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.22);
+}
+
+.rr-check:checked::after {
+  transform: scale(1);
+}
+
+/* Neon range slider */
+.rr-range {
+  width: 100%;
+  height: 18px;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+}
+
+/* Track (webkit) */
+.rr-range::-webkit-slider-runnable-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+/* Thumb (webkit) */
+.rr-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #0b1220;
+  border: 2px solid #22d3ee;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.55);
+  transition: transform 0.15s ease;
+}
+
+.rr-range:active::-webkit-slider-thumb {
+  transform: scale(1.08);
+}
+
+/* Firefox track/thumb */
+.rr-range::-moz-range-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+.rr-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #0b1220;
+  border: 2px solid #22d3ee;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.55);
+}
+
+/* Optional: subtle cyan glow divider */
+.rr-divider {
+  border-color: rgba(255, 255, 255, 0.10);
+}

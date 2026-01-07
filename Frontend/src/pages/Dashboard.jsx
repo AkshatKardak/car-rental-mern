@@ -15,7 +15,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import DashboardNavbar from "../components/DashboardNavbar";
 
-// Page enter (fade-up) + stagger for nicer load-in [web:122]
+
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
@@ -26,7 +26,7 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
-// Hover: same theme as your background (teal/cyan + purple glow) [web:176][web:127]
+
 const hoverGlow = {
   whileHover: {
     y: -6,
@@ -137,8 +137,8 @@ const Dashboard = () => {
         {/* Header */}
         <motion.div variants={fadeUp} className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-white/80 text-sm">Welcome back</p>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
+            <p className="text-white text-sm">Welcome back</p>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-cyan-400">
               {firstName}'s Dashboard
             </h1>
           </div>
@@ -146,7 +146,7 @@ const Dashboard = () => {
           <motion.button
             {...hoverGlow}
             onClick={() => navigate("/browse-cars")}
-            className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-400/25 transition font-semibold text-white"
+            className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-400/25 transition font-semibold text-cyan-400"
           >
             View all cars <ArrowRight className="w-4 h-4" />
           </motion.button>
@@ -167,21 +167,21 @@ const Dashboard = () => {
                   key={a.title}
                   {...hoverGlow}
                   onClick={a.onClick}
-                  className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl hover:bg-white/10 hover:border-purple-400/25 transition p-5 text-left h-[140px] flex flex-col justify-between"
+                  className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl hover:bg-white/10 hover:border-cyan-400 transition p-5 text-left h-[140px] flex flex-col justify-between"
                 >
                   <div className="flex items-start justify-between">
                     <div className={`rounded-xl p-3 w-fit border ${a.iconBg}`}>
                       <Icon className={`w-6 h-6 ${a.iconColor}`} />
                     </div>
-                    <span className="opacity-0 group-hover:opacity-100 transition text-white/70 text-sm">
+                    <span className="opacity-0 group-hover:opacity-100 transition text-purple-700 text-sm">
                       →
                     </span>
                   </div>
 
                   <div>
-                    <p className="mt-3 font-semibold text-white">{a.title}</p>
-                    <div className={`mt-3 h-10 rounded-xl bg-gradient-to-r ${a.accent}`} />
-                  </div>
+  <p className="mt-3 font-semibold text-indigo-700">{a.title}</p>
+</div>
+
                 </motion.button>
               );
             })}
@@ -206,7 +206,7 @@ const Dashboard = () => {
               {/* Big card */}
               <motion.div
                 {...hoverGlow}
-                className="group md:col-span-2 rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl relative h-[280px] hover:border-cyan-400/25"
+                className="group md:col-span-2 rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl relative h-[280px] hover:border-cyan-400"
               >
                 <div className="absolute inset-0">
                   <img
@@ -228,7 +228,6 @@ const Dashboard = () => {
                   <div className="flex items-center justify-between mt-5">
                     <p className="text-cyan-200 font-black">
                       {recommended[0].price}{" "}
-                      <span className="text-white/60 text-xs font-semibold">/day</span>
                     </p>
                     <motion.button
                       whileHover={{
@@ -251,7 +250,7 @@ const Dashboard = () => {
                 <motion.div
                   key={c.id}
                   {...hoverGlow}
-                  className="group rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl h-[280px] flex flex-col hover:border-purple-400/25"
+                  className="group rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl h-[280px] flex flex-col hover:border-purple-400"
                 >
                   <div className="relative h-[150px] overflow-hidden">
                     <img
@@ -274,7 +273,6 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between mt-4">
                       <p className="text-cyan-200 font-black">
                         {c.price}{" "}
-                        <span className="text-white/60 text-xs font-semibold">/day</span>
                       </p>
                       <motion.button
                         whileHover={{
@@ -284,7 +282,7 @@ const Dashboard = () => {
                         whileTap={{ scale: 0.98 }}
                         transition={{ type: "spring", stiffness: 260, damping: 18 }}
                         onClick={() => navigate(`/car/${c.id}`)}
-                        className="px-3 py-2 rounded-xl bg-white/5 border border-cyan-400/20 text-cyan-200 font-bold hover:bg-white/10 transition text-xs"
+                        className="px-3 py-2 rounded-xl bg-white/5 border border-cyan-400 text-cyan-300 font-bold hover:bg-white/10 transition-colors-15 text-xs"
                       >
                         Book Now
                       </motion.button>
@@ -302,7 +300,7 @@ const Dashboard = () => {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-white/90">Recent Activity</h2>
-              <Clock className="w-5 h-5 text-white/70" />
+              <Clock className="w-5 h-5 text-white/60" />
             </div>
 
             <div className="space-y-4">
