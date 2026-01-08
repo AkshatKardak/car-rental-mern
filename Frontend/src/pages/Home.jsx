@@ -1,11 +1,9 @@
-import React from "react";
-import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
-import Aboutx from "../components/Aboutx";
-import Banner from "../components/Banner";
-import Inventory from "../components/Inventory";
-import Footer from "../components/Footer";
-import CarVideo from "../components/CarVideo";
+import Navbar from "../components/layout/Navbar";
+import Hero from "../components/home/Hero";
+import Banner from "../components/home/Banner";
+import Inventory from "../components/home/Inventory";
+import Footer from "../components/layout/Footer";
+import CarVideo from "../components/home/CarVideo";
 
 const Home = () => {
   return (
@@ -13,7 +11,6 @@ const Home = () => {
       <Navbar />
       <Hero />
       <CarVideo />
-      <Aboutx />
       <Inventory />
       <Banner />
       <Footer />

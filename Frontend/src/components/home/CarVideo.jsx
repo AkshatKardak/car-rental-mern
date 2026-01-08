@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Pause } from 'lucide-react'
-import { ZoomIn } from '../utility/Animation'
-import carVideo from '../assets/car1.mp4'
+import { ZoomIn } from '../../utility/Animation'
+import carVideo from '../../assets/car1.mp4'
 
 const CarVideo = () => {
   const [isPlaying, setIsPlaying] = useState(false)

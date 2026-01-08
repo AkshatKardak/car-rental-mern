@@ -1,5 +1,5 @@
 import React from "react";
-import DashboardNavbar from "../components/DashboardNavbar";
+import DashboardNavbar from "../components/layout/DashboardNavbar";
 import { Tag } from "lucide-react";
 
 const Offers = () => {

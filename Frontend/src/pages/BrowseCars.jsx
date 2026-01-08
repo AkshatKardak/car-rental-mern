@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import DashboardNavbar from "../components/DashboardNavbar";
+import DashboardNavbar from "../components/layout/DashboardNavbar";
 
 import SupraImg from "../assets/supra.png";
 import PorscheImg from "../assets/porsche.png";
@@ -34,7 +34,7 @@ const hoverGlow = {
 const BrowseCars = () => {
   const navigate = useNavigate();
 
-  // Demo data (replace with API later)
+
   const cars = [
     {
       id: "porsche",
@@ -62,7 +62,7 @@ const BrowseCars = () => {
     },
     {
       id: "supra",
-      name: "Toyota Supra (Blue)",
+      name: "Toyota Supra",
       meta: "2022 • Sports • 2 seats",
       pricePerDay: 899,
       tag: "SPORTS",
@@ -81,7 +81,7 @@ const BrowseCars = () => {
         type: "SUV",
         transmission: "Manual",
         seats: 5,
-        rating: 4.6,
+        rating: 4.2,
         image: Skoda,
     },
     {
@@ -124,7 +124,7 @@ const BrowseCars = () => {
   const [transmission, setTransmission] = useState("Auto");
   const [seats, setSeats] = useState("All"); 
   const [ratingUp, setRatingUp] = useState(true);
-  const minRating = 4.5;
+  const minRating = 4;
 
   const anyTypeSelected = useMemo(() => Object.values(types).some(Boolean), [types]);
 
@@ -362,9 +362,10 @@ const BrowseCars = () => {
                       className="w-full h-full object-cover opacity-95 transition duration-500 ease-out group-hover:scale-[1.06]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                    <span className="absolute top-3 right-3 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white/15 border border-white/10">
-                      {car.tag}
+                    <span className="absolute top-3 right-3 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-black/50 text-cyan-400 border border-white/10 backdrop-blur">
+                    {car.tag}
                     </span>
+
                   </div>
 
                   {/* body */}

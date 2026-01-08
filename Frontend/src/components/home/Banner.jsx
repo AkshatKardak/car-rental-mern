@@ -1,7 +1,7 @@
 import React from 'react'
-import banner from '../assets/banner.jpg'
+import banner from '../../assets/banner.jpg'
 import { motion } from 'framer-motion'
-import { FadeLeft } from '../utility/Animation'
+import { FadeLeft } from '../../utility/Animation'
 import { Send } from 'lucide-react'
 
 const Banner = () => {

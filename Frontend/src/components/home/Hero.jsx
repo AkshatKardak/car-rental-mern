@@ -1,8 +1,8 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight, Zap, Shield, Clock } from 'lucide-react'
-import { FadeRight, FadeLeft } from '../utility/Animation'
-import herocar from '../assets/herocar1.png'
+import { FadeRight, FadeLeft } from '../../utility/Animation'
+import herocar from '../../assets/herocar1.png'
 
 const Hero = () => {
   return (
