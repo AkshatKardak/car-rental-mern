@@ -7,36 +7,37 @@ export default {
   theme: {
     extend: {
       colors: {
-        gaming: {
-          dark: '#0a0e27',
-          darker: '#050816',
-          purple: '#6366f1',
-          cyan: '#06b6d4',
-          pink: '#ec4899',
-          blue: '#3b82f6',
-        },
-        neon: {
-          blue: '#00f0ff',
-          purple: '#bd00ff',
-          pink: '#ff006e',
-          green: '#00ff94',
-        }
+        primary: "#13c8ec",
+        "accent-purple": "#7c3aed",
+        "background-light": "#f6f8f8",
+        "background-dark": "#0a0a0c",
+        glass: "rgba(255, 255, 255, 0.03)",
+        "glass-border": "rgba(146, 192, 201, 0.1)",
+        bgStart: "#0a0a0c",
+        bgMid: "#1a0b2e",
+        bgEnd: "#0a0a0c",
+        accentCyan: "#13c8ec",
+        accentPurple: "#7c3aed",
+        glassBorder: "rgba(255, 255, 255, 0.1)",
       },
-      backgroundImage: {
-        'gaming-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'cyber-gradient': 'linear-gradient(to right, #0f2027, #203a43, #2c5364)',
-        'neon-gradient': 'linear-gradient(45deg, #00f0ff, #bd00ff, #ff006e)',
+      fontFamily: {
+        display: ["Space Grotesk", "sans-serif"],
       },
       animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
+        "slide-up": "slideUp 0.3s ease-out",
       },
       keyframes: {
-        glow: {
-          '0%': { boxShadow: '0 0 5px #3b82f6, 0 0 10px #3b82f6' },
-          '100%': { boxShadow: '0 0 20px #3b82f6, 0 0 30px #3b82f6, 0 0 40px #3b82f6' },
-        }
-      }
+        slideUp: {
+          "0%": { transform: "translateY(100%)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+      },
+      borderRadius: {
+        DEFAULT: "0.5rem",
+        lg: "1rem",
+        xl: "1.5rem",
+        full: "9999px",
+      },
     },
   },
   plugins: [],

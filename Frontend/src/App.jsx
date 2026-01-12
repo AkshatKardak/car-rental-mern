@@ -4,7 +4,7 @@ import BrowseCars from "./pages/BrowseCars";
 import CarDetails from "./pages/CarDetails";
 import MyBookings from "./pages/MyBookings";
 import Payment from "./pages/Payment";
-import Offers from "./pages/offers";
+import Offers from "./pages/OffersCode";
 import AIAssistant from "./pages/AIAssistant";
 import Dashboard from "./pages/AppDashboard";
 import Aboutx from "./pages/Aboutx";
