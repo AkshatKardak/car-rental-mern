@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import Logo from "../assets/logo.png";
+import DashboardNavbar from "../components/layout/DashboardNavbar";
 import SupraImg from "../assets/supra.png";
 import PorscheImg from "../assets/porsche.png";
 import MercedesImg from "../assets/mercedes g63 amg.png";
@@ -54,36 +55,7 @@ const AppDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-bgStart via-bgMid to-bgEnd text-white">
 
       {/* NAVBAR — CLEAN, NO LINE */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-black/20">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-
-          {/* Logo */}
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2"
-          >
-            <img src={Logo} alt="RentRide" className="h-8 w-8 object-contain" />
-            <span className="font-bold text-lg">RentRide</span>
-          </button>
-
-          {/* Nav */}
-          <nav className="hidden md:flex gap-3 text-sm">
-            <NavItem active label="Dashboard" />
-            <NavItem label="Browse Cars" onClick={() => navigate("/browsecars")} />
-            <NavItem label="My Bookings" onClick={() => navigate("/mybookings")} />
-            <NavItem label="Payment" onClick={() => navigate("/payment")} />
-            <NavItem label="Offers" onClick={() => navigate("/offers")} />
-          </nav>
-
-          {/* Right Icons */}
-          <div className="flex items-center gap-4">
-            <Bell className="w-5 h-5 text-gray-400 hover:text-accentCyan cursor-pointer" />
-            <Settings className="w-5 h-5 text-gray-400 hover:text-accentCyan cursor-pointer" />
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accentPurple to-accentCyan" />
-          </div>
-        </div>
-      </header>
+      <DashboardNavbar />
 
       {/* CONTENT */}
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
@@ -190,11 +162,10 @@ const AppDashboard = () => {
 const NavItem = ({ label, active, onClick }) => (
   <span
     onClick={onClick}
-    className={`px-4 py-1.5 rounded-full cursor-pointer transition ${
-      active
-        ? "bg-accentPurple/40 text-white"
-        : "bg-accentPurple/20 text-gray-300 hover:bg-accentPurple/35 hover:text-white"
-    }`}
+    className={`px-4 py-1.5 rounded-full cursor-pointer transition ${active
+      ? "bg-accentPurple/40 text-white"
+      : "bg-accentPurple/20 text-gray-300 hover:bg-accentPurple/35 hover:text-white"
+      }`}
   >
     {label}
   </span>
