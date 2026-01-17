@@ -17,11 +17,14 @@ const PaymentSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        default: 'Stripe'
+        default: 'Razorpay'
     },
-    transactionId: {
+    orderId: { // Razorpay Order ID
         type: String,
         required: true
+    },
+    transactionId: { // Razorpay Payment ID
+        type: String
     },
     status: {
         type: String,

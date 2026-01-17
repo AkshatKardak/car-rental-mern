@@ -1,21 +1,6 @@
 const Car = require('../models/Car');
 const { ErrorResponse } = require('../middleware/errorHandler');
-const cloudinary = require('../config/cloudinary');
-const streamifier = require('streamifier');
-
-// Helper for stream upload
-const uploadToCloudinary = (buffer) => {
-    return new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-            { folder: 'rentride/cars' },
-            (error, result) => {
-                if (result) resolve(result);
-                else reject(error);
-            }
-        );
-        streamifier.createReadStream(buffer).pipe(uploadStream);
-    });
-};
+const uploadToImgBB = require('../utils/imgbb');
 
 // @desc    Get all cars with filters (search merged here)
 // @route   GET /api/cars
@@ -85,8 +70,8 @@ exports.createCar = async (req, res, next) => {
 
         // Handle image upload if file present
         if (req.file) {
-            const result = await uploadToCloudinary(req.file.buffer);
-            carData.images = [result.secure_url]; // For now single image upload from basic implementation, can be extended
+            const imageUrl = await uploadToImgBB(req.file.buffer);
+            carData.images = [imageUrl]; // For now single image upload from basic implementation, can be extended
         }
 
         // Handle features array if sent as string
@@ -120,9 +105,9 @@ exports.updateCar = async (req, res, next) => {
 
         // Handle image upload if file present
         if (req.file) {
-            const result = await uploadToCloudinary(req.file.buffer);
+            const imageUrl = await uploadToImgBB(req.file.buffer);
             // Maybe append or replace? Let's push to array
-            car.images.push(result.secure_url);
+            car.images.push(imageUrl);
             updateData.images = car.images;
         }
 

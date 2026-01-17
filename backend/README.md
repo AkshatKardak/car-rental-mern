@@ -12,7 +12,7 @@ This project follows a Model-View-Controller (MVC) structure:
 - **Models**: Defines Mongoose schemas for MongoDB.
 - **Controllers**: Handles incoming requests and business logic.
 - **Routes**: Maps URL endpoints to controller methods.
-- **Middleware**: Intercepts requests for authentication (`authMiddleware`), error handling (`errorHandler`), and file uploads (`upload`).
+- **Middleware**: Authentication, error handling, and file processing.
 
 ## Installation
 1. Clone the repository.
@@ -28,53 +28,56 @@ This project follows a Model-View-Controller (MVC) structure:
    ```
 
 ## Configuration
-Renale `.env.example` to `.env` or create a `.env` file with the following keys:
+Update `.env` with your credentials:
 ```env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/rentride
-JWT_SECRET=your_jwt_secret
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_key
-CLOUDINARY_API_SECRET=your_secret
-STRIPE_SECRET_KEY=your_stripe_key
-EMAIL_HOST=smtp.mailtrap.io
-EMAIL_PORT=2525
-EMAIL_USER=your_user
-EMAIL_PASSWORD=your_password
+
+# JWT
+JWT_SECRET=your_long_secret
+JWT_EXPIRE=30d
+JWT_REFRESH_SECRET=your_refresh_secret
+
+# ImgBB
+IMGBB_API_KEY=your_imgbb_key
+
+# Razorpay
+RAZORPAY_KEY_ID=your_key_id
+RAZORPAY_KEY_SECRET=your_key_secret
+
+# Email (Gmail)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+
+# Frontend
+CLIENT_URL=http://localhost:5173
 ```
 
 ## API Documentation
 ### Auth
-- `POST /api/auth/signup` - Register a new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user profile
-- `GET /api/auth/logout` - Logout user
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/auth/logout`
 
 ### Cars
-- `GET /api/cars` - Get all cars (filters: category, minPrice, maxPrice, brand, model, availability)
-- `GET /api/cars/:id` - Get single car
-- `POST /api/cars` - Create car (Admin, form-data with `image`)
-- `PUT /api/cars/:id` - Update car (Admin)
-- `DELETE /api/cars/:id` - Delete car (Admin)
+- `GET /api/cars`
+- `POST /api/cars` (Admin, form-data with `image`)
+- `PUT /api/cars/:id` (Admin)
+- `DELETE /api/cars/:id` (Admin)
 
 ### Bookings
-- `POST /api/bookings` - Create a booking
-- `GET /api/bookings/my-bookings` - Get logged-in user's bookings
-- `GET /api/bookings/:id` - Get booking details
-- `PUT /api/bookings/:id/cancel` - Cancel booking
+- `POST /api/bookings`
+- `GET /api/bookings/my-bookings`
+- `PUT /api/bookings/:id/cancel`
 
-### Payments
-- `POST /api/payments/process` - Process payment for a booking
-- `GET /api/payments/history` - Get payment history
+### Payments (Razorpay)
+- `POST /api/payments/process` - Returns Razorpay Order ID.
+- `POST /api/payments/verify` - Verify payment signature (OrderID, PaymentID, Signature).
+- `GET /api/payments/history`
 
 ### Offers
-- `GET /api/offers` - Get all active offers
-- `POST /api/offers/validate` - Validate an offer code
-- `POST /api/offers` - Create offer (Admin)
-
-### Admin
-- `GET /api/admin/stats` - Dashboard stats
-- `GET /api/admin/users` - Get all users
-- `GET /api/admin/bookings` - Get all bookings
-- `PUT /api/admin/users/:id/role` - Update user role
-- `DELETE /api/admin/users/:id` - Delete user
+- `GET /api/offers`
+- `POST /api/offers/validate`
