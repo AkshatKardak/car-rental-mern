@@ -57,8 +57,12 @@ const Sidebar = ({ navigate }) => {
     { icon: 'group', label: 'User Management', active: false, path: '/admin/users' },
     { icon: 'directions_car', label: 'Vehicles', active: false, path: '/admin/vehicles' },
     { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
-    { icon: 'calendar_month', label: 'Bookings', active: false, path: '#' },
+    { icon: 'calendar_month', label: 'Bookings', active: false, path: '/admin/bookings' },
+    { icon: 'local_offer', label: 'Promotions', active: false, path: '/admin/promotions' },
+    { icon: 'car_crash', label: 'Damage Reports', active: false, path: '/admin/damage' },
+    { icon: 'bar_chart', label: 'Analytics', active: false, path: '/admin/analytics' },
   ]
+
 
   return (
     <aside className="hidden md:flex flex-col w-72 glass-panel border-r border-white/5 z-20 h-full">

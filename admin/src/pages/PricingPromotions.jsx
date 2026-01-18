@@ -1,25 +1,290 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 
 const PricingPromotions = () => {
   const navigate = useNavigate()
+  const [cars, setCars] = useState([])
+  const [users, setUsers] = useState([])
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedPromo, setSelectedPromo] = useState(null)
+  const [formData, setFormData] = useState({
+    code: '',
+    name: '',
+    description: '',
+    type: 'percentage',
+    value: '',
+    minBookingAmount: '',
+    maxDiscount: '',
+    validFrom: '',
+    validTo: '',
+    usageLimit: '',
+    applicableVehicles: [],
+    active: true
+  })
+
+  // Promotions state
+  const [promotions, setPromotions] = useState([])
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const [carsRes, usersRes, bookingsRes] = await Promise.all([
+        fetch('http://localhost:5000/api/cars'),
+        fetch('http://localhost:5000/api/users'),
+        fetch('http://localhost:5000/api/bookings')
+      ])
+
+      const carsData = await carsRes.json()
+      const usersData = await usersRes.json()
+      const bookingsData = await bookingsRes.json()
+
+      setCars(carsData)
+      setUsers(usersData)
+      setBookings(bookingsData)
+
+      // Generate sample promotions
+      const samplePromotions = [
+        {
+          _id: 'PROMO001',
+          code: 'WELCOME50',
+          name: 'Welcome Offer',
+          description: 'Get 50% off on your first booking',
+          type: 'percentage',
+          value: 50,
+          minBookingAmount: 5000,
+          maxDiscount: 2500,
+          validFrom: '2026-01-01T00:00:00Z',
+          validTo: '2026-12-31T23:59:59Z',
+          usageLimit: 100,
+          usedCount: 24,
+          applicableVehicles: [],
+          active: true,
+          createdAt: '2026-01-01T00:00:00Z'
+        },
+        {
+          _id: 'PROMO002',
+          code: 'WEEKEND20',
+          name: 'Weekend Special',
+          description: '20% off on weekend bookings',
+          type: 'percentage',
+          value: 20,
+          minBookingAmount: 3000,
+          maxDiscount: 1500,
+          validFrom: '2026-01-10T00:00:00Z',
+          validTo: '2026-03-31T23:59:59Z',
+          usageLimit: 200,
+          usedCount: 87,
+          applicableVehicles: carsData.slice(0, 5).map(c => c._id),
+          active: true,
+          createdAt: '2026-01-10T00:00:00Z'
+        },
+        {
+          _id: 'PROMO003',
+          code: 'LUXURY1000',
+          name: 'Luxury Discount',
+          description: 'Flat ₹1000 off on luxury vehicles',
+          type: 'fixed',
+          value: 1000,
+          minBookingAmount: 10000,
+          maxDiscount: 1000,
+          validFrom: '2026-01-15T00:00:00Z',
+          validTo: '2026-02-28T23:59:59Z',
+          usageLimit: 50,
+          usedCount: 12,
+          applicableVehicles: carsData.filter(c => c.category === 'Luxury').map(c => c._id),
+          active: true,
+          createdAt: '2026-01-15T00:00:00Z'
+        },
+        {
+          _id: 'PROMO004',
+          code: 'NEWYEAR2026',
+          name: 'New Year Bonanza',
+          description: '30% off on all bookings',
+          type: 'percentage',
+          value: 30,
+          minBookingAmount: 4000,
+          maxDiscount: 3000,
+          validFrom: '2026-01-01T00:00:00Z',
+          validTo: '2026-01-15T23:59:59Z',
+          usageLimit: 500,
+          usedCount: 456,
+          applicableVehicles: [],
+          active: false,
+          createdAt: '2025-12-25T00:00:00Z'
+        },
+        {
+          _id: 'PROMO005',
+          code: 'STUDENT15',
+          name: 'Student Discount',
+          description: '15% off for verified students',
+          type: 'percentage',
+          value: 15,
+          minBookingAmount: 2000,
+          maxDiscount: 1000,
+          validFrom: '2026-01-01T00:00:00Z',
+          validTo: '2026-06-30T23:59:59Z',
+          usageLimit: 300,
+          usedCount: 45,
+          applicableVehicles: [],
+          active: true,
+          createdAt: '2026-01-01T00:00:00Z'
+        },
+        {
+          _id: 'PROMO006',
+          code: 'LONGTERM25',
+          name: 'Long Term Rental',
+          description: '25% off on bookings over 7 days',
+          type: 'percentage',
+          value: 25,
+          minBookingAmount: 15000,
+          maxDiscount: 5000,
+          validFrom: '2026-01-01T00:00:00Z',
+          validTo: '2026-12-31T23:59:59Z',
+          usageLimit: 100,
+          usedCount: 18,
+          applicableVehicles: [],
+          active: true,
+          createdAt: '2026-01-05T00:00:00Z'
+        }
+      ]
+
+      setPromotions(samplePromotions)
+      setLoading(false)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      setLoading(false)
+    }
+  }
+
+  const handleAddPromotion = (e) => {
+    e.preventDefault()
+    const newPromo = {
+      _id: `PROMO${Date.now()}`,
+      ...formData,
+      value: Number(formData.value),
+      minBookingAmount: Number(formData.minBookingAmount),
+      maxDiscount: Number(formData.maxDiscount),
+      usageLimit: Number(formData.usageLimit),
+      usedCount: 0,
+      createdAt: new Date().toISOString()
+    }
+    
+    setPromotions([newPromo, ...promotions])
+    setShowAddModal(false)
+    alert('Promotion added successfully!')
+    
+    // Reset form
+    setFormData({
+      code: '', name: '', description: '', type: 'percentage',
+      value: '', minBookingAmount: '', maxDiscount: '',
+      validFrom: '', validTo: '', usageLimit: '',
+      applicableVehicles: [], active: true
+    })
+  }
+
+  const handleEditPromotion = (e) => {
+    e.preventDefault()
+    setPromotions(promotions.map(promo =>
+      promo._id === selectedPromo._id ? {
+        ...promo,
+        ...formData,
+        value: Number(formData.value),
+        minBookingAmount: Number(formData.minBookingAmount),
+        maxDiscount: Number(formData.maxDiscount),
+        usageLimit: Number(formData.usageLimit)
+      } : promo
+    ))
+    setShowEditModal(false)
+    alert('Promotion updated successfully!')
+  }
+
+  const handleDeletePromotion = (promoId) => {
+    if (!window.confirm('Are you sure you want to delete this promotion?')) return
+    setPromotions(promotions.filter(p => p._id !== promoId))
+    alert('Promotion deleted successfully!')
+  }
+
+  const togglePromoStatus = (promoId, currentStatus) => {
+    setPromotions(promotions.map(promo =>
+      promo._id === promoId ? { ...promo, active: !currentStatus } : promo
+    ))
+    alert(`Promotion ${!currentStatus ? 'activated' : 'deactivated'} successfully!`)
+  }
+
+  const filteredPromotions = promotions.filter(promo => {
+    const matchesSearch = 
+      promo.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      promo.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      promo.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && promo.active) ||
+      (statusFilter === 'inactive' && !promo.active)
+    
+    const matchesType = typeFilter === 'all' || promo.type === typeFilter
+    
+    return matchesSearch && matchesStatus && matchesType
+  })
+
+  const stats = {
+    total: promotions.length,
+    active: promotions.filter(p => p.active).length,
+    inactive: promotions.filter(p => !p.active).length,
+    totalUsage: promotions.reduce((sum, p) => sum + (p.usedCount || 0), 0),
+    totalDiscountGiven: promotions.reduce((sum, p) => {
+      const bookingsWithPromo = bookings.filter(b => b.promoCode === p.code)
+      return sum + bookingsWithPromo.length * (p.type === 'fixed' ? p.value : 0)
+    }, 0),
+    avgDiscountPerPromo: Math.round(promotions.reduce((sum, p) => sum + (p.usedCount || 0), 0) / (promotions.length || 1))
+  }
 
   return (
     <div className="relative flex h-screen w-full bg-dashboard-gradient overflow-hidden">
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-900/20 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] bg-accent-purple/10 rounded-full blur-[100px]"></div>
       </div>
 
-      {/* Sidebar */}
       <Sidebar navigate={navigate} />
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <ContentArea />
+        <ContentArea 
+          promotions={promotions}
+          loading={loading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          filteredPromotions={filteredPromotions}
+          stats={stats}
+          setShowAddModal={setShowAddModal}
+          showAddModal={showAddModal}
+          showEditModal={showEditModal}
+          setShowEditModal={setShowEditModal}
+          selectedPromo={selectedPromo}
+          setSelectedPromo={setSelectedPromo}
+          formData={formData}
+          setFormData={setFormData}
+          handleAddPromotion={handleAddPromotion}
+          handleEditPromotion={handleEditPromotion}
+          handleDeletePromotion={handleDeletePromotion}
+          togglePromoStatus={togglePromoStatus}
+          cars={cars}
+        />
       </main>
     </div>
   )
@@ -29,25 +294,20 @@ const Sidebar = ({ navigate }) => {
   const navItems = [
     { icon: 'dashboard', label: 'Dashboard', active: false, path: '/admin/dashboard' },
     { icon: 'group', label: 'User Management', active: false, path: '/admin/users' },
-    { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
     { icon: 'directions_car', label: 'Vehicles', active: false, path: '/admin/vehicles' },
-    { icon: 'calendar_month', label: 'Bookings', active: false, path: '#' },
-    { icon: 'sell', label: 'Pricing & Promotions', active: true, path: '/admin/promotions' },
-    { icon: 'car_crash', label: 'Damage Management', active: false, path: '/admin/damage' },
+    { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
+    { icon: 'calendar_month', label: 'Bookings', active: false, path: '/admin/bookings' },
+    { icon: 'local_offer', label: 'Promotions', active: true, path: '/admin/promotions' },
+    { icon: 'car_crash', label: 'Damage Reports', active: false, path: '/admin/damage' },
+    { icon: 'bar_chart', label: 'Analytics', active: false, path: '/admin/analytics' },
   ]
 
   return (
     <aside className="hidden md:flex flex-col w-72 glass-panel border-r border-white/5 z-20 h-full">
-      {/* Logo */}
       <div className="p-6 flex items-center gap-3">
-        <img
-          src={logo}
-          alt="RentRide Logo"
-          className="h-12 w-auto object-contain"
-        />
+        <img src={logo} alt="RentRide Logo" className="h-12 w-auto object-contain" />
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-2 px-4 py-4 overflow-y-auto">
         {navItems.map((item, index) => (
           <motion.button
@@ -64,7 +324,7 @@ const Sidebar = ({ navigate }) => {
               className={`material-symbols-outlined ${
                 item.active ? 'text-primary' : 'group-hover:text-primary'
               } transition-colors`}
-              style={{ fontVariationSettings: item.active ? '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24' : '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
+              style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
             >
               {item.icon}
             </span>
@@ -73,9 +333,7 @@ const Sidebar = ({ navigate }) => {
         ))}
 
         <div className="pt-4 mt-2 border-t border-white/5">
-          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
-            System
-          </p>
+          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">System</p>
           <motion.button
             whileHover={{ x: 3 }}
             className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white text-slate-400 transition-all duration-300 group text-left"
@@ -91,7 +349,6 @@ const Sidebar = ({ navigate }) => {
         </div>
       </nav>
 
-      {/* User Profile */}
       <div className="p-4 border-t border-white/5">
         <motion.div 
           whileHover={{ scale: 1.02 }}
@@ -116,334 +373,588 @@ const Sidebar = ({ navigate }) => {
   )
 }
 
-const ContentArea = () => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [promotions] = useState([
-    {
-      code: 'SUMMER2024',
-      name: 'Summer campaign',
-      type: 'Percentage',
-      typeColor: 'purple',
-      value: '20% Off',
-      expiry: 'Dec 31, 2024',
-      used: 450,
-      limit: 1000,
-      active: true,
-      expired: false
-    },
-    {
-      code: 'WELCOME50',
-      name: 'New user bonus',
-      type: 'Fixed Amount',
-      typeColor: 'blue',
-      value: '$50.00 Off',
-      expiry: 'Unlimited',
-      used: 1204,
-      limit: null,
-      active: true,
-      expired: false
-    },
-    {
-      code: 'FLASH24H',
-      name: 'Flash sale',
-      type: 'Percentage',
-      typeColor: 'slate',
-      value: '15% Off',
-      expiry: 'Expired',
-      used: 500,
-      limit: 500,
-      active: false,
-      expired: true
-    },
-    {
-      code: 'VIP_Upgrade',
-      name: 'Loyalty tier 2',
-      type: 'Percentage',
-      typeColor: 'purple',
-      value: '10% Off',
-      expiry: 'Dec 31, 2025',
-      used: 88,
-      limit: 200,
-      active: true,
-      expired: false
-    },
-    {
-      code: 'WEEKEND25',
-      name: 'Weekend Special',
-      type: 'Percentage',
-      typeColor: 'purple',
-      value: '25% Off',
-      expiry: 'Nov 15, 2024',
-      used: 12,
-      limit: 50,
-      active: true,
-      expired: false
-    },
-  ])
-
-  const handleToggleActive = (code) => {
-    alert(`Toggling status for ${code}`)
-  }
-
-  const handleEdit = (code) => {
-    alert(`Editing ${code}`)
-  }
-
-  const handleDelete = (code) => {
-    if (confirm(`Are you sure you want to delete ${code}?`)) {
-      alert(`Deleted ${code}`)
-    }
-  }
-
-  const handleCreatePromo = () => {
-    alert('Create Promotion modal would open here!')
-  }
-
+const ContentArea = ({ 
+  promotions, loading, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+  typeFilter, setTypeFilter, filteredPromotions, stats, setShowAddModal,
+  showAddModal, showEditModal, setShowEditModal, selectedPromo, setSelectedPromo,
+  formData, setFormData, handleAddPromotion, handleEditPromotion,
+  handleDeletePromotion, togglePromoStatus, cars
+}) => {
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <header className="h-20 shrink-0 border-b border-white/5 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-sm z-20">
-        <div className="flex flex-col">
-          <h2 className="text-2xl font-bold text-white tracking-tight">Pricing & Promotions</h2>
-          <p className="text-sm text-slate-400">Manage marketing campaigns, coupons, and seasonal discounts</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="relative p-2 text-slate-400 hover:text-white transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
-          <div className="h-8 w-[1px] bg-white/10"></div>
-          <button className="text-sm text-primary hover:text-primary/80 font-medium">Help Center</button>
-        </div>
-      </header>
-
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-[1400px] mx-auto flex flex-col gap-8">
-          {/* Stats Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Stat 1 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-panel rounded-xl p-6 relative group overflow-hidden"
-            >
-              <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-primary">local_activity</span>
-              </div>
-              <div className="relative z-10">
-                <p className="text-slate-400 text-sm font-medium mb-1">Active Promos</p>
-                <div className="flex items-baseline gap-3">
-                  <h3 className="text-3xl font-bold text-white">12</h3>
-                  <span className="text-emerald-400 text-xs font-medium bg-emerald-400/10 px-2 py-0.5 rounded-full flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-0.5">trending_up</span> +2%
-                  </span>
-                </div>
-              </div>
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary to-transparent opacity-50"></div>
-            </motion.div>
-
-            {/* Stat 2 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="glass-panel rounded-xl p-6 relative group overflow-hidden"
-            >
-              <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-purple-400">shopping_bag</span>
-              </div>
-              <div className="relative z-10">
-                <p className="text-slate-400 text-sm font-medium mb-1">Total Redeemed</p>
-                <div className="flex items-baseline gap-3">
-                  <h3 className="text-3xl font-bold text-white">450</h3>
-                  <span className="text-emerald-400 text-xs font-medium bg-emerald-400/10 px-2 py-0.5 rounded-full flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-0.5">trending_up</span> +15%
-                  </span>
-                </div>
-              </div>
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-transparent opacity-50"></div>
-            </motion.div>
-
-            {/* Stat 3 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="glass-panel rounded-xl p-6 relative group overflow-hidden"
-            >
-              <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-pink-400">savings</span>
-              </div>
-              <div className="relative z-10">
-                <p className="text-slate-400 text-sm font-medium mb-1">Discount Volume</p>
-                <div className="flex items-baseline gap-3">
-                  <h3 className="text-3xl font-bold text-white">$12,400</h3>
-                  <span className="text-emerald-400 text-xs font-medium bg-emerald-400/10 px-2 py-0.5 rounded-full flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-0.5">trending_up</span> +8%
-                  </span>
-                </div>
-              </div>
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-pink-500 to-transparent opacity-50"></div>
-            </motion.div>
+    <div className="flex-1 overflow-y-auto p-4 md:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+        >
+          <div>
+            <h2 className="text-3xl font-black text-white tracking-tight">PRICING & PROMOTIONS</h2>
+            <p className="text-slate-400 mt-1">Manage discount codes and promotional offers</p>
           </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent-purple rounded-lg font-semibold text-black hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
+          >
+            <span className="material-symbols-outlined">add</span>
+            Create Promotion
+          </motion.button>
+        </motion.header>
 
-          {/* Toolbar & Filters */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex flex-1 items-center gap-3">
-              {/* Search */}
-              <div className="relative group w-full md:w-80">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="material-symbols-outlined text-slate-500 group-focus-within:text-primary transition-colors">search</span>
-                </div>
-                <input 
-                  className="block w-full p-2.5 pl-10 text-sm text-white bg-slate-800/50 border border-white/10 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary placeholder-slate-500 transition-all backdrop-blur-sm" 
-                  placeholder="Search by code or name..." 
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[
+            { label: 'Total Promos', value: stats.total, icon: 'local_offer', color: 'primary' },
+            { label: 'Active', value: stats.active, icon: 'check_circle', color: 'green-400' },
+            { label: 'Inactive', value: stats.inactive, icon: 'cancel', color: 'red-400' },
+            { label: 'Total Usage', value: stats.totalUsage, icon: 'trending_up', color: 'blue-400' },
+            { label: 'Avg Usage', value: stats.avgDiscountPerPromo, icon: 'analytics', color: 'purple-400' },
+            { label: 'Total Saved', value: `₹${stats.totalDiscountGiven.toLocaleString()}`, icon: 'savings', color: 'orange-400' }
+          ].map((stat, index) => (
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="glass-panel rounded-xl p-4"
+            >
+              <div className="flex flex-col gap-1">
+                <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{stat.label}</span>
+                <span className={`text-2xl font-bold text-${stat.color}`}>{stat.value}</span>
               </div>
-              {/* Filters */}
-              <div className="hidden md:flex gap-2">
-                <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 bg-slate-800/50 border border-white/10 rounded-lg hover:bg-slate-700/50 hover:text-white transition-colors">
-                  <span>Status: All</span>
-                  <span className="material-symbols-outlined text-sm">expand_more</span>
-                </button>
-                <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 bg-slate-800/50 border border-white/10 rounded-lg hover:bg-slate-700/50 hover:text-white transition-colors">
-                  <span>Type: All</span>
-                  <span className="material-symbols-outlined text-sm">expand_more</span>
-                </button>
-              </div>
+              <span className={`material-symbols-outlined text-${stat.color} text-3xl mt-2`}>{stat.icon}</span>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Filters */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="glass-panel rounded-xl p-4"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search promotions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              />
+              <span className="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400">search</span>
             </div>
-            {/* Main Action */}
-            <button 
-              onClick={handleCreatePromo}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-900 bg-primary rounded-lg shadow-neon hover:bg-white hover:shadow-[0_0_25px_rgba(19,200,236,0.5)] transition-all transform hover:-translate-y-0.5"
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
             >
-              <span className="material-symbols-outlined text-lg">add</span>
-              Create Promotion
-            </button>
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            >
+              <option value="all">All Types</option>
+              <option value="percentage">Percentage</option>
+              <option value="fixed">Fixed Amount</option>
+            </select>
           </div>
+        </motion.div>
 
-          {/* Data Table */}
-          <div className="glass-panel rounded-xl overflow-hidden flex flex-col min-h-[500px]">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-white/5 bg-white/5">
-                    <th className="p-4 text-xs font-semibold tracking-wide text-slate-400 uppercase">Promo Code</th>
-                    <th className="p-4 text-xs font-semibold tracking-wide text-slate-400 uppercase">Type</th>
-                    <th className="p-4 text-xs font-semibold tracking-wide text-slate-400 uppercase">Value</th>
-                    <th className="p-4 text-xs font-semibold tracking-wide text-slate-400 uppercase">Expiry</th>
-                    <th className="p-4 text-xs font-semibold tracking-wide text-slate-400 uppercase w-48">Usage Limit</th>
-                    <th className="p-4 text-xs font-semibold tracking-wide text-slate-400 uppercase">Status</th>
-                    <th className="p-4 text-xs font-semibold tracking-wide text-slate-400 uppercase text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {promotions.map((promo, index) => (
-                    <motion.tr 
-                      key={promo.code}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={`hover:bg-white/5 transition-colors group ${promo.expired ? 'opacity-60 hover:opacity-100' : ''}`}
-                    >
-                      <td className="p-4">
-                        <div className="flex flex-col">
-                          <span className={`font-mono font-bold tracking-wide ${promo.expired ? 'text-slate-300 line-through decoration-slate-500' : 'text-white'}`}>
-                            {promo.code}
-                          </span>
-                          <span className="text-xs text-slate-500">{promo.name}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-medium ${
-                          promo.typeColor === 'purple' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                          promo.typeColor === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                          'bg-slate-700/30 text-slate-400 border border-slate-600/30'
-                        }`}>
-                          {promo.type}
+        {/* Promotions Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          {loading ? (
+            <div className="text-center py-12 text-slate-400">Loading promotions...</div>
+          ) : filteredPromotions.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">No promotions found</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPromotions.map((promo, index) => (
+                <motion.div
+                  key={promo._id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`glass-panel rounded-xl p-6 group hover:border-primary/30 transition-all ${
+                    !promo.active ? 'opacity-60' : ''
+                  }`}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="material-symbols-outlined text-primary text-2xl">local_offer</span>
+                        <h3 className="text-xl font-bold text-white">{promo.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-mono font-bold border border-primary/30">
+                          {promo.code}
                         </span>
-                      </td>
-                      <td className="p-4 text-sm text-white font-medium">{promo.value}</td>
-                      <td className="p-4 text-sm">
-                        {promo.expired ? (
-                          <span className="text-red-400 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">warning</span> Expired
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">{promo.expiry}</span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <div className="w-full flex flex-col gap-1">
-                          <div className="flex justify-between text-xs text-slate-400">
-                            <span>{promo.used} used</span>
-                            <span>{promo.limit ? `${promo.limit} limit` : '∞'}</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full ${
-                                promo.expired ? 'bg-emerald-500' :
-                                promo.limit ? 'bg-gradient-to-r from-primary to-purple-500' : 'bg-slate-500 opacity-30'
-                              }`}
-                              style={{ width: promo.limit ? `${(promo.used / promo.limit) * 100}%` : '100%' }}
-                            ></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            checked={promo.active} 
-                            className="sr-only peer" 
-                            type="checkbox"
-                            onChange={() => handleToggleActive(promo.code)}
-                          />
-                          <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => handleEdit(promo.code)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">edit</span>
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(promo.code)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          promo.active 
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}>
+                          {promo.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-            {/* Pagination */}
-            <div className="p-4 border-t border-white/5 flex items-center justify-between">
-              <p className="text-xs text-slate-500">
-                Showing <span className="text-white font-medium">1-5</span> of <span className="text-white font-medium">12</span> promotions
-              </p>
-              <div className="flex gap-2">
-                <button className="px-3 py-1 text-xs font-medium text-slate-400 bg-white/5 rounded hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50" disabled>
-                  Previous
-                </button>
-                <button className="px-3 py-1 text-xs font-medium text-slate-400 bg-white/5 rounded hover:bg-white/10 hover:text-white transition-colors">
-                  Next
-                </button>
-              </div>
+                  {/* Description */}
+                  <p className="text-slate-400 text-sm mb-4">{promo.description}</p>
+
+                  {/* Discount Info */}
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-sm">Discount</span>
+                      <span className="text-primary font-bold text-2xl">
+                        {promo.type === 'percentage' ? `${promo.value}%` : `₹${promo.value}`}
+                      </span>
+                    </div>
+                    {promo.maxDiscount && (
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-slate-500 text-xs">Max Discount</span>
+                        <span className="text-slate-300 text-sm font-semibold">₹{promo.maxDiscount.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+                    <div>
+                      <p className="text-slate-500 text-xs mb-1">Min. Booking</p>
+                      <p className="text-white font-semibold">₹{promo.minBookingAmount.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs mb-1">Usage</p>
+                      <p className="text-white font-semibold">{promo.usedCount || 0} / {promo.usageLimit}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-slate-500 text-xs mb-1">Valid Period</p>
+                      <p className="text-white text-xs">
+                        {new Date(promo.validFrom).toLocaleDateString('en-IN')} - {new Date(promo.validTo).toLocaleDateString('en-IN')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-slate-500">Usage Progress</span>
+                      <span className="text-slate-400">{Math.round(((promo.usedCount || 0) / promo.usageLimit) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${((promo.usedCount || 0) / promo.usageLimit) * 100}%` }}
+                        transition={{ delay: 0.8 + index * 0.1, duration: 0.5 }}
+                        className="bg-gradient-to-r from-primary to-accent-purple h-2 rounded-full"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSelectedPromo(promo)
+                        setFormData({
+                          code: promo.code,
+                          name: promo.name,
+                          description: promo.description,
+                          type: promo.type,
+                          value: promo.value,
+                          minBookingAmount: promo.minBookingAmount,
+                          maxDiscount: promo.maxDiscount,
+                          validFrom: promo.validFrom.split('T')[0],
+                          validTo: promo.validTo.split('T')[0],
+                          usageLimit: promo.usageLimit,
+                          applicableVehicles: promo.applicableVehicles || [],
+                          active: promo.active
+                        })
+                        setShowEditModal(true)
+                      }}
+                      className="flex-1 px-4 py-2 bg-primary/20 hover:bg-primary text-primary hover:text-black rounded-lg transition-all font-medium text-sm"
+                    >
+                      Edit
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => togglePromoStatus(promo._id, promo.active)}
+                      className={`px-4 py-2 rounded-lg transition-all font-medium text-sm ${
+                        promo.active
+                          ? 'bg-yellow-500/20 hover:bg-yellow-500 text-yellow-400 hover:text-black'
+                          : 'bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-black'
+                      }`}
+                    >
+                      {promo.active ? 'Deactivate' : 'Activate'}
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleDeletePromotion(promo._id)}
+                      className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-black rounded-lg transition-all"
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-          </div>
-        </div>
+          )}
+        </motion.div>
       </div>
+
+      {/* Add Promotion Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowAddModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass-panel rounded-2xl border border-white/10 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold text-white">Create New Promotion</h3>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              </div>
+              <form onSubmit={handleAddPromotion} className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Promo Code*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.code}
+                      onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary uppercase"
+                      placeholder="SUMMER20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Promotion Name*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Summer Special"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-slate-400 text-sm mb-2">Description*</label>
+                    <textarea
+                      required
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      rows={2}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Get 20% off on summer bookings"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Discount Type*</label>
+                    <select
+                      required
+                      value={formData.type}
+                      onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="percentage">Percentage</option>
+                      <option value="fixed">Fixed Amount</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">
+                      Discount Value* {formData.type === 'percentage' ? '(%)' : '(₹)'}
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.value}
+                      onChange={(e) => setFormData({...formData, value: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder={formData.type === 'percentage' ? '20' : '500'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Min. Booking Amount*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.minBookingAmount}
+                      onChange={(e) => setFormData({...formData, minBookingAmount: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="5000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Max Discount Amount</label>
+                    <input
+                      type="number"
+                      value={formData.maxDiscount}
+                      onChange={(e) => setFormData({...formData, maxDiscount: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="2000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Valid From*</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.validFrom}
+                      onChange={(e) => setFormData({...formData, validFrom: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Valid To*</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.validTo}
+                      onChange={(e) => setFormData({...formData, validTo: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Usage Limit*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.usageLimit}
+                      onChange={(e) => setFormData({...formData, usageLimit: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="100"
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.active}
+                      onChange={(e) => setFormData({...formData, active: e.target.checked})}
+                      className="w-5 h-5"
+                    />
+                    <label className="text-white">Activate immediately</label>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-gradient-to-r from-primary to-accent-purple text-black font-semibold rounded-lg hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
+                  >
+                    Create Promotion
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Promotion Modal - Similar to Add Modal */}
+      <AnimatePresence>
+        {showEditModal && selectedPromo && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowEditModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass-panel rounded-2xl border border-white/10 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold text-white">Edit Promotion</h3>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              </div>
+              <form onSubmit={handleEditPromotion} className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Promo Code*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.code}
+                      onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary uppercase"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Promotion Name*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-slate-400 text-sm mb-2">Description*</label>
+                    <textarea
+                      required
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      rows={2}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Discount Type*</label>
+                    <select
+                      required
+                      value={formData.type}
+                      onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="percentage">Percentage</option>
+                      <option value="fixed">Fixed Amount</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">
+                      Discount Value* {formData.type === 'percentage' ? '(%)' : '(₹)'}
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.value}
+                      onChange={(e) => setFormData({...formData, value: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Min. Booking Amount*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.minBookingAmount}
+                      onChange={(e) => setFormData({...formData, minBookingAmount: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Max Discount Amount</label>
+                    <input
+                      type="number"
+                      value={formData.maxDiscount}
+                      onChange={(e) => setFormData({...formData, maxDiscount: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Valid From*</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.validFrom}
+                      onChange={(e) => setFormData({...formData, validFrom: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Valid To*</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.validTo}
+                      onChange={(e) => setFormData({...formData, validTo: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Usage Limit*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.usageLimit}
+                      onChange={(e) => setFormData({...formData, usageLimit: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.active}
+                      onChange={(e) => setFormData({...formData, active: e.target.checked})}
+                      className="w-5 h-5"
+                    />
+                    <label className="text-white">Active</label>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-gradient-to-r from-primary to-accent-purple text-black font-semibold rounded-lg hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
+                  >
+                    Update Promotion
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

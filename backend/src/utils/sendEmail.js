@@ -1,30 +1,28 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (options) => {
-    // Create transporter
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', // Auto-sets host/port usually, but explicit host/port is fine too
-        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port: process.env.EMAIL_PORT || 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD
-        }
+  try {
+    const { data, error } = await resend.emails.send({
+      from: options.from || 'RentRide <onboarding@resend.dev>',
+      to: [options.email || options.to],
+      subject: options.subject,
+      html: options.html || `<p>${options.message || options.text}</p>`,
+      text: options.text || options.message,
+      reply_to: options.replyTo || process.env.EMAIL_USER || 'noreply@rentride.com'
     });
 
-    // Define email options
-    const message = {
-        from: `RentRide <${process.env.EMAIL_USER}>`,
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-    };
+    if (error) {
+      throw new Error(error.message);
+    }
 
-    // Send email
-    const info = await transporter.sendMail(message);
-
-    console.log('Message sent: %s', info.messageId);
+    console.log('✅ Email sent successfully:', data.id);
+    return { success: true, data };
+  } catch (error) {
+    console.error('❌ Email sending failed:', error);
+    throw error;
+  }
 };
 
 module.exports = sendEmail;

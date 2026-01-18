@@ -1,10 +1,155 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 
 const VehicleManagement = () => {
   const navigate = useNavigate()
+  const [vehicles, setVehicles] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [selectedVehicle, setSelectedVehicle] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    brand: '',
+    model: '',
+    year: '',
+    category: 'Sedan',
+    price: '',
+    seats: '',
+    transmission: 'Automatic',
+    fuelType: 'Petrol',
+    color: '',
+    plateNumber: '',
+    mileage: '',
+    images: '',
+    features: '',
+    description: '',
+    available: true
+  })
+
+  useEffect(() => {
+    fetchVehicles()
+  }, [])
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/cars')
+      const data = await response.json()
+      setVehicles(data)
+      setLoading(false)
+    } catch (error) {
+      console.error('Error fetching vehicles:', error)
+      setLoading(false)
+    }
+  }
+
+  const handleAddVehicle = async (e) => {
+    e.preventDefault()
+    try {
+      const vehicleData = {
+        ...formData,
+        price: Number(formData.price),
+        seats: Number(formData.seats),
+        year: Number(formData.year),
+        mileage: Number(formData.mileage),
+        images: formData.images.split(',').map(img => img.trim()),
+        features: formData.features.split(',').map(f => f.trim())
+      }
+
+      const response = await fetch('http://localhost:5000/api/cars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(vehicleData)
+      })
+
+      if (response.ok) {
+        alert('Vehicle added successfully!')
+        setShowAddModal(false)
+        fetchVehicles()
+        // Reset form
+        setFormData({
+          name: '', brand: '', model: '', year: '', category: 'Sedan',
+          price: '', seats: '', transmission: 'Automatic', fuelType: 'Petrol',
+          color: '', plateNumber: '', mileage: '', images: '', features: '',
+          description: '', available: true
+        })
+      } else {
+        alert('Failed to add vehicle')
+      }
+    } catch (error) {
+      console.error('Error adding vehicle:', error)
+      alert('Error adding vehicle')
+    }
+  }
+
+  const handleDeleteVehicle = async (vehicleId) => {
+    if (!window.confirm('Are you sure you want to delete this vehicle?')) return
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/cars/${vehicleId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        alert('Vehicle deleted successfully!')
+        fetchVehicles()
+      } else {
+        alert('Failed to delete vehicle')
+      }
+    } catch (error) {
+      console.error('Error deleting vehicle:', error)
+      alert('Error deleting vehicle')
+    }
+  }
+
+  const toggleAvailability = async (vehicleId, currentStatus) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/cars/${vehicleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ available: !currentStatus })
+      })
+
+      if (response.ok) {
+        alert('Vehicle availability updated!')
+        fetchVehicles()
+      } else {
+        alert('Failed to update vehicle')
+      }
+    } catch (error) {
+      console.error('Error updating vehicle:', error)
+      alert('Error updating vehicle')
+    }
+  }
+
+  const filteredVehicles = vehicles.filter(vehicle => {
+    const matchesSearch = 
+      vehicle.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.plateNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'available' && vehicle.available) ||
+      (filterStatus === 'unavailable' && !vehicle.available)
+    
+    const matchesCategory = filterCategory === 'all' || vehicle.category === filterCategory
+    
+    return matchesSearch && matchesStatus && matchesCategory
+  })
+
+  const stats = {
+    total: vehicles.length,
+    available: vehicles.filter(v => v.available).length,
+    unavailable: vehicles.filter(v => !v.available).length,
+    categories: [...new Set(vehicles.map(v => v.category))].length,
+    avgPrice: vehicles.length > 0 ? Math.round(vehicles.reduce((sum, v) => sum + v.price, 0) / vehicles.length) : 0
+  }
 
   return (
     <div className="relative flex h-screen w-full bg-dashboard-gradient overflow-hidden">
@@ -14,13 +159,32 @@ const VehicleManagement = () => {
         <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] bg-accent-purple/10 rounded-full blur-[100px]"></div>
       </div>
 
-      {/* Sidebar */}
       <Sidebar navigate={navigate} />
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <Header />
-        <ContentArea />
+        <ContentArea 
+          vehicles={vehicles}
+          loading={loading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          filterCategory={filterCategory}
+          setFilterCategory={setFilterCategory}
+          filteredVehicles={filteredVehicles}
+          stats={stats}
+          setSelectedVehicle={setSelectedVehicle}
+          setShowModal={setShowModal}
+          selectedVehicle={selectedVehicle}
+          showModal={showModal}
+          setShowAddModal={setShowAddModal}
+          showAddModal={showAddModal}
+          formData={formData}
+          setFormData={setFormData}
+          handleAddVehicle={handleAddVehicle}
+          handleDeleteVehicle={handleDeleteVehicle}
+          toggleAvailability={toggleAvailability}
+        />
       </main>
     </div>
   )
@@ -32,21 +196,18 @@ const Sidebar = ({ navigate }) => {
     { icon: 'group', label: 'User Management', active: false, path: '/admin/users' },
     { icon: 'directions_car', label: 'Vehicles', active: true, path: '/admin/vehicles' },
     { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
-    { icon: 'calendar_month', label: 'Bookings', active: false, path: '#' },
+    { icon: 'calendar_month', label: 'Bookings', active: false, path: '/admin/bookings' },
+    { icon: 'local_offer', label: 'Promotions', active: false, path: '/admin/promotions' },
+    { icon: 'car_crash', label: 'Damage Reports', active: false, path: '/admin/damage' },
+    { icon: 'bar_chart', label: 'Analytics', active: false, path: '/admin/analytics' },
   ]
 
   return (
     <aside className="hidden md:flex flex-col w-72 glass-panel border-r border-white/5 z-20 h-full">
-      {/* Logo */}
       <div className="p-6 flex items-center gap-3">
-        <img
-          src={logo}
-          alt="RentRide Logo"
-          className="h-12 w-auto object-contain"
-        />
+        <img src={logo} alt="RentRide Logo" className="h-12 w-auto object-contain" />
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-2 px-4 py-4 overflow-y-auto">
         {navItems.map((item, index) => (
           <motion.button
@@ -72,9 +233,7 @@ const Sidebar = ({ navigate }) => {
         ))}
 
         <div className="pt-4 mt-2 border-t border-white/5">
-          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
-            System
-          </p>
+          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">System</p>
           <motion.button
             whileHover={{ x: 3 }}
             className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white text-slate-400 transition-all duration-300 group text-left"
@@ -90,7 +249,6 @@ const Sidebar = ({ navigate }) => {
         </div>
       </nav>
 
-      {/* User Profile */}
       <div className="p-4 border-t border-white/5">
         <motion.div 
           whileHover={{ scale: 1.02 }}
@@ -115,574 +273,570 @@ const Sidebar = ({ navigate }) => {
   )
 }
 
-const Header = () => {
-  return (
-    <header className="flex h-20 items-center justify-between px-8 py-4 backdrop-blur-sm z-10 border-b border-white/5">
-      {/* Mobile Menu */}
-      <div className="flex items-center gap-4 md:hidden">
-        <button className="text-white">
-          <span className="material-symbols-outlined">menu</span>
-        </button>
-        <span className="text-lg font-bold text-white">RentRide</span>
-      </div>
-
-      {/* Page Title */}
-      <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-primary text-3xl">garage_home</span>
-        <h1 className="text-white text-2xl font-black leading-tight tracking-tight">Vehicle Management</h1>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <button className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white hover:border-primary/30 transition-all">
-          <span className="material-symbols-outlined">notifications</span>
-          <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_#13c8ec]"></span>
-        </button>
-      </div>
-    </header>
-  )
-}
-
-const ContentArea = () => {
-  const stats = [
-    { label: 'Total Fleet', value: '48', icon: 'directions_car', iconColor: 'primary', trend: '+2 this month', trendIcon: 'trending_up' },
-    { label: 'Rented Out', value: '15', icon: 'key', iconColor: 'accent-purple', trend: '+12% usage rate', trendIcon: 'trending_up' },
-    { label: 'In Maintenance', value: '3', icon: 'build', iconColor: 'orange', trend: 'Needs attention', trendIcon: 'info' },
-  ]
-
-  const [vehicles, setVehicles] = useState([
-    {
-      id: 1,
-      name: 'Tesla Model S',
-      vin: '...8932',
-      category: 'Electric',
-      categoryColor: 'blue',
-      price: '$150.00',
-      status: 'Available',
-      statusColor: 'primary',
-      image: 'https://i.pravatar.cc/150?img=51'
-    },
-    {
-      id: 2,
-      name: 'Porsche 911',
-      vin: '...4421',
-      category: 'Sports',
-      categoryColor: 'purple',
-      price: '$300.00',
-      status: 'Maintenance',
-      statusColor: 'orange',
-      image: 'https://i.pravatar.cc/150?img=52'
-    },
-    {
-      id: 3,
-      name: 'Range Rover Sport',
-      vin: '...1102',
-      category: 'SUV',
-      categoryColor: 'emerald',
-      price: '$220.00',
-      status: 'Rented',
-      statusColor: 'slate',
-      image: 'https://i.pravatar.cc/150?img=53'
-    },
-    {
-      id: 4,
-      name: 'Mercedes S-Class',
-      vin: '...9921',
-      category: 'Luxury',
-      categoryColor: 'amber',
-      price: '$280.00',
-      status: 'Available',
-      statusColor: 'primary',
-      image: 'https://i.pravatar.cc/150?img=54'
-    },
-  ])
-
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterCategory, setFilterCategory] = useState('all')
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [editingVehicle, setEditingVehicle] = useState(null)
-
-  // New vehicle form state
-  const [newVehicle, setNewVehicle] = useState({
-    name: '',
-    category: 'Sports',
-    price: '',
-    status: 'Available',
-    features: ['GPS', 'Bluetooth']
-  })
-
-  // Filter vehicles
-  const filteredVehicles = vehicles.filter(vehicle => {
-    const matchesSearch = 
-      vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vehicle.vin.includes(searchQuery) ||
-      vehicle.category.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesFilter = 
-      filterCategory === 'all' ||
-      vehicle.category.toLowerCase() === filterCategory.toLowerCase()
-    
-    return matchesSearch && matchesFilter
-  })
-
-  const handleAddVehicle = () => {
-    if (!newVehicle.name || !newVehicle.price) {
-      alert('Please fill in all required fields!')
-      return
-    }
-
-    const vehicle = {
-      id: vehicles.length + 1,
-      name: newVehicle.name,
-      vin: `...${Math.floor(Math.random() * 9000) + 1000}`,
-      category: newVehicle.category,
-      categoryColor: newVehicle.category === 'Sports' ? 'purple' : newVehicle.category === 'Luxury' ? 'amber' : newVehicle.category === 'Electric' ? 'blue' : 'emerald',
-      price: newVehicle.price,
-      status: newVehicle.status,
-      statusColor: newVehicle.status === 'Available' ? 'primary' : newVehicle.status === 'Rented' ? 'slate' : 'orange',
-      image: `https://i.pravatar.cc/150?img=${50 + vehicles.length}`
-    }
-
-    setVehicles([...vehicles, vehicle])
-    setShowAddModal(false)
-    setNewVehicle({ name: '', category: 'Sports', price: '', status: 'Available', features: ['GPS', 'Bluetooth'] })
-    alert('Vehicle added successfully!')
-  }
-
-  const handleDeleteVehicle = (vehicleId) => {
-    if (confirm('Are you sure you want to delete this vehicle?')) {
-      setVehicles(vehicles.filter(v => v.id !== vehicleId))
-      alert('Vehicle deleted successfully!')
-    }
-  }
-
-  const handleEditVehicle = (vehicle) => {
-    setEditingVehicle(vehicle)
-    setNewVehicle({
-      name: vehicle.name,
-      category: vehicle.category,
-      price: vehicle.price,
-      status: vehicle.status,
-      features: ['GPS', 'Bluetooth']
-    })
-    setShowAddModal(true)
-  }
-
-  const handleUpdateVehicle = () => {
-    if (!newVehicle.name || !newVehicle.price) {
-      alert('Please fill in all required fields!')
-      return
-    }
-
-    setVehicles(vehicles.map(v => 
-      v.id === editingVehicle.id 
-        ? {
-            ...v,
-            name: newVehicle.name,
-            category: newVehicle.category,
-            categoryColor: newVehicle.category === 'Sports' ? 'purple' : newVehicle.category === 'Luxury' ? 'amber' : newVehicle.category === 'Electric' ? 'blue' : 'emerald',
-            price: newVehicle.price,
-            status: newVehicle.status,
-            statusColor: newVehicle.status === 'Available' ? 'primary' : newVehicle.status === 'Rented' ? 'slate' : 'orange'
-          }
-        : v
-    ))
-    setShowAddModal(false)
-    setEditingVehicle(null)
-    setNewVehicle({ name: '', category: 'Sports', price: '', status: 'Available', features: ['GPS', 'Bluetooth'] })
-    alert('Vehicle updated successfully!')
-  }
+const ContentArea = ({ 
+  vehicles, loading, searchTerm, setSearchTerm, filterStatus, setFilterStatus,
+  filterCategory, setFilterCategory, filteredVehicles, stats,
+  setSelectedVehicle, setShowModal, selectedVehicle, showModal,
+  setShowAddModal, showAddModal, formData, setFormData, handleAddVehicle,
+  handleDeleteVehicle, toggleAvailability
+}) => {
+  const categories = ['all', ...new Set(vehicles.map(v => v.category))]
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8">
       <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+        >
+          <div>
+            <h2 className="text-3xl font-black text-white tracking-tight">VEHICLE MANAGEMENT</h2>
+            <p className="text-slate-400 mt-1">Manage your fleet inventory and availability</p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent-purple rounded-lg font-semibold text-black hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
+          >
+            <span className="material-symbols-outlined">add</span>
+            Add Vehicle
+          </motion.button>
+        </motion.header>
+
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {stats.map((stat, index) => (
-            <motion.div
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {[
+            { label: 'Total Vehicles', value: stats.total, icon: 'directions_car', color: 'primary' },
+            { label: 'Available', value: stats.available, icon: 'check_circle', color: 'green-400' },
+            { label: 'Unavailable', value: stats.unavailable, icon: 'cancel', color: 'red-400' },
+            { label: 'Categories', value: stats.categories, icon: 'category', color: 'purple-400' },
+            { label: 'Avg. Price', value: `₹${stats.avgPrice.toLocaleString()}`, icon: 'payments', color: 'primary' }
+          ].map((stat, index) => (
+            <motion.div 
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              className="glass-panel rounded-xl p-6 relative overflow-hidden group transition-all duration-300 hover:border-primary/30"
+              className="glass-panel rounded-xl p-4"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className={`material-symbols-outlined text-${stat.iconColor} text-4xl`}>
-                  {stat.icon}
-                </span>
+              <div className="flex flex-col gap-1">
+                <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{stat.label}</span>
+                <span className={`text-2xl font-bold text-${stat.color}`}>{stat.value}</span>
               </div>
-              <p className="text-slate-400 text-sm font-medium mb-2">{stat.label}</p>
-              <p className="text-white text-3xl font-bold tracking-tight mb-2">{stat.value}</p>
-              <div className={`flex items-center gap-1 text-${stat.iconColor === 'orange' ? 'orange-500' : stat.iconColor} text-sm font-medium`}>
-                <span className="material-symbols-outlined text-base">{stat.trendIcon}</span>
-                <span>{stat.trend}</span>
-              </div>
+              <span className={`material-symbols-outlined text-${stat.color} text-3xl mt-2`}>{stat.icon}</span>
             </motion.div>
           ))}
         </div>
 
-        {/* Main Content */}
-        <div className="flex flex-col xl:flex-row gap-6">
-          {/* Table Section */}
-          <div className="flex-1 flex flex-col gap-4">
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row justify-between gap-4 glass-panel p-4 rounded-xl">
-              <div className="relative flex-1 max-w-md">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                <input 
-                  className="w-full bg-slate-900/50 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none" 
-                  placeholder="Search by model, make, or VIN..." 
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
-                <button 
-                  onClick={() => setFilterCategory('all')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                    filterCategory === 'all'
-                      ? 'bg-primary/20 text-primary border border-primary/30'
-                      : 'bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-transparent hover:border-slate-600'
-                  }`}
-                >
-                  All Vehicles
-                </button>
-                <button 
-                  onClick={() => setFilterCategory('luxury')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                    filterCategory === 'luxury'
-                      ? 'bg-primary/20 text-primary border border-primary/30'
-                      : 'bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-transparent hover:border-slate-600'
-                  }`}
-                >
-                  Luxury
-                </button>
-                <button 
-                  onClick={() => setFilterCategory('sports')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                    filterCategory === 'sports'
-                      ? 'bg-primary/20 text-primary border border-primary/30'
-                      : 'bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-transparent hover:border-slate-600'
-                  }`}
-                >
-                  Sports
-                </button>
-                <button 
-                  onClick={() => setFilterCategory('electric')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                    filterCategory === 'electric'
-                      ? 'bg-primary/20 text-primary border border-primary/30'
-                      : 'bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-transparent hover:border-slate-600'
-                  }`}
-                >
-                  Electric
-                </button>
-              </div>
+        {/* Filters */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="glass-panel rounded-xl p-4"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search vehicles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              />
+              <span className="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400">search</span>
             </div>
-
-            {/* Add Vehicle Button (Mobile) */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => { setShowAddModal(true); setEditingVehicle(null); }}
-              className="md:hidden flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-accent-purple to-primary text-white text-sm font-bold shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all hover:shadow-[0_0_30px_rgba(19,200,236,0.6)]"
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">add</span>
-              Add New Vehicle
-            </motion.button>
+              <option value="all">All Status</option>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
+            </select>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat === 'all' ? 'All Categories' : cat}</option>
+              ))}
+            </select>
+          </div>
+        </motion.div>
 
-            {/* Data Table */}
-            <div className="glass-panel rounded-xl overflow-hidden border border-white/5">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/5 bg-slate-900/30 text-xs uppercase text-slate-400 tracking-wider">
-                      <th className="p-4 font-semibold">Vehicle</th>
-                      <th className="p-4 font-semibold">Category</th>
-                      <th className="p-4 font-semibold">Price / Day</th>
-                      <th className="p-4 font-semibold">Status</th>
-                      <th className="p-4 font-semibold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm divide-y divide-white/5">
-                    <AnimatePresence>
-                      {filteredVehicles.length > 0 ? (
-                        filteredVehicles.map((vehicle, index) => (
-                          <motion.tr
-                            key={vehicle.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="group hover:bg-white/[0.02] transition-colors"
-                          >
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-16 h-10 rounded-lg bg-slate-800 overflow-hidden border border-white/10">
-                                  <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-slate-600">directions_car</span>
-                                  </div>
-                                </div>
-                                <div>
-                                  <p className="font-bold text-white">{vehicle.name}</p>
-                                  <p className="text-xs text-slate-500">VIN: {vehicle.vin}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${vehicle.categoryColor}-500/10 text-${vehicle.categoryColor}-400 border border-${vehicle.categoryColor}-500/20`}>
-                                {vehicle.category}
-                              </span>
-                            </td>
-                            <td className="p-4 text-slate-300 font-medium">{vehicle.price}</td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <span className={`w-2 h-2 rounded-full ${vehicle.statusColor === 'primary' ? 'bg-primary shadow-[0_0_8px_rgba(19,200,236,0.6)]' : vehicle.statusColor === 'orange' ? 'bg-orange-500' : 'bg-slate-500'}`}></span>
-                                <span className={`font-medium ${vehicle.statusColor === 'primary' ? 'text-primary' : vehicle.statusColor === 'orange' ? 'text-orange-400' : 'text-slate-400'}`}>{vehicle.status}</span>
-                              </div>
-                            </td>
-                            <td className="p-4 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <motion.button 
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() => handleEditVehicle(vehicle)}
-                                  className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
-                                >
-                                  <span className="material-symbols-outlined text-[20px]">edit</span>
-                                </motion.button>
-                                <motion.button 
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() => handleDeleteVehicle(vehicle.id)}
-                                  className="text-slate-400 hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg"
-                                >
-                                  <span className="material-symbols-outlined text-[20px]">delete</span>
-                                </motion.button>
-                              </div>
-                            </td>
-                          </motion.tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="5" className="p-8 text-center text-slate-400">
-                            No vehicles found
-                          </td>
-                        </tr>
-                      )}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
-              </div>
+        {/* Vehicles Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          {loading ? (
+            <div className="text-center py-12 text-slate-400">Loading vehicles...</div>
+          ) : filteredVehicles.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">No vehicles found</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredVehicles.map((vehicle, index) => (
+                <motion.div
+                  key={vehicle._id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="glass-panel rounded-xl overflow-hidden group hover:border-primary/30 transition-all"
+                >
+                  {/* Vehicle Image */}
+                  <div className="relative h-48 overflow-hidden bg-slate-800">
+                    {vehicle.images && vehicle.images[0] ? (
+                      <img 
+                        src={vehicle.images[0]} 
+                        alt={vehicle.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-slate-600 text-6xl">directions_car</span>
+                      </div>
+                    )}
+                    {/* Status Badge */}
+                    <div className="absolute top-3 right-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        vehicle.available 
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      }`}>
+                        {vehicle.available ? 'Available' : 'Unavailable'}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Pagination */}
-              <div className="p-4 border-t border-white/5 flex items-center justify-between">
-                <p className="text-xs text-slate-400">Showing 1-{filteredVehicles.length} of {vehicles.length}</p>
-                <div className="flex gap-2">
-                  <button className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-50">
-                    <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                  </button>
-                  <button className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white">
-                    <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-                  </button>
-                </div>
-              </div>
+                  {/* Vehicle Info */}
+                  <div className="p-5">
+                    <h3 className="text-xl font-bold text-white mb-1">{vehicle.name}</h3>
+                    <p className="text-slate-400 text-sm mb-3">{vehicle.brand} • {vehicle.model} • {vehicle.year}</p>
+                    
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-primary text-sm">airline_seat_recline_normal</span>
+                        <span className="text-slate-300 text-xs">{vehicle.seats} Seats</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-primary text-sm">settings</span>
+                        <span className="text-slate-300 text-xs">{vehicle.transmission}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-primary text-sm">local_gas_station</span>
+                        <span className="text-slate-300 text-xs">{vehicle.fuelType}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-slate-500 text-xs">Price per day</p>
+                        <p className="text-primary font-bold text-2xl">₹{vehicle.price.toLocaleString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-slate-500 text-xs">Plate Number</p>
+                        <p className="text-white font-mono text-sm">{vehicle.plateNumber}</p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          setSelectedVehicle(vehicle)
+                          setShowModal(true)
+                        }}
+                        className="flex-1 px-4 py-2 bg-primary/20 hover:bg-primary text-primary hover:text-black rounded-lg transition-all font-medium text-sm"
+                      >
+                        View Details
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => toggleAvailability(vehicle._id, vehicle.available)}
+                        className={`px-4 py-2 rounded-lg transition-all font-medium text-sm ${
+                          vehicle.available
+                            ? 'bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-black'
+                            : 'bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-black'
+                        }`}
+                      >
+                        {vehicle.available ? 'Disable' : 'Enable'}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDeleteVehicle(vehicle._id)}
+                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-black rounded-lg transition-all"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-          </div>
-
-          {/* Right Form Panel (Desktop Only) */}
-          <div className="hidden xl:block w-96 shrink-0 glass-panel rounded-xl border border-white/10 flex-col shadow-2xl">
-            <VehicleForm 
-              vehicle={newVehicle}
-              setVehicle={setNewVehicle}
-              onSave={editingVehicle ? handleUpdateVehicle : handleAddVehicle}
-              onCancel={() => {
-                setNewVehicle({ name: '', category: 'Sports', price: '', status: 'Available', features: ['GPS', 'Bluetooth'] })
-                setEditingVehicle(null)
-              }}
-              isEditing={!!editingVehicle}
-            />
-          </div>
-        </div>
+          )}
+        </motion.div>
       </div>
 
-      {/* Add/Edit Vehicle Modal (Mobile/Tablet) */}
+      {/* View Vehicle Modal */}
       <AnimatePresence>
-        {showAddModal && (
-          <motion.div
+        {showModal && selectedVehicle && (
+          <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="xl:hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setShowAddModal(false)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
-              className="glass-panel rounded-2xl w-full max-w-md border border-white/10 max-h-[90vh] overflow-y-auto"
+              className="glass-panel rounded-2xl border border-white/10 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
-              <VehicleForm 
-                vehicle={newVehicle}
-                setVehicle={setNewVehicle}
-                onSave={editingVehicle ? handleUpdateVehicle : handleAddVehicle}
-                onCancel={() => {
-                  setShowAddModal(false)
-                  setNewVehicle({ name: '', category: 'Sports', price: '', status: 'Available', features: ['GPS', 'Bluetooth'] })
-                  setEditingVehicle(null)
-                }}
-                isEditing={!!editingVehicle}
-              />
+              <div className="p-6 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold text-white">Vehicle Details</h3>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Images */}
+                  <div className="col-span-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedVehicle.images?.map((img, index) => (
+                        <img key={index} src={img} alt={`${selectedVehicle.name} ${index + 1}`} className="w-full h-32 object-cover rounded-lg" />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Basic Info */}
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Vehicle Name</p>
+                    <p className="text-white font-bold text-lg">{selectedVehicle.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Brand & Model</p>
+                    <p className="text-white font-semibold">{selectedVehicle.brand} {selectedVehicle.model}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Year</p>
+                    <p className="text-white font-semibold">{selectedVehicle.year}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Category</p>
+                    <p className="text-white font-semibold">{selectedVehicle.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Price per Day</p>
+                    <p className="text-primary font-bold text-2xl">₹{selectedVehicle.price.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Plate Number</p>
+                    <p className="text-white font-mono font-bold">{selectedVehicle.plateNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Seats</p>
+                    <p className="text-white font-semibold">{selectedVehicle.seats}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Transmission</p>
+                    <p className="text-white font-semibold">{selectedVehicle.transmission}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Fuel Type</p>
+                    <p className="text-white font-semibold">{selectedVehicle.fuelType}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Color</p>
+                    <p className="text-white font-semibold">{selectedVehicle.color}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Mileage</p>
+                    <p className="text-white font-semibold">{selectedVehicle.mileage} km/l</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                      selectedVehicle.available 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {selectedVehicle.available ? 'Available' : 'Unavailable'}
+                    </span>
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="col-span-2">
+                    <p className="text-slate-400 text-sm mb-1">Description</p>
+                    <p className="text-white">{selectedVehicle.description}</p>
+                  </div>
+
+                  {/* Features */}
+                  <div className="col-span-2">
+                    <p className="text-slate-400 text-sm mb-2">Features</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedVehicle.features?.map((feature, index) => (
+                        <span key={index} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm border border-primary/30">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  )
-}
 
-const VehicleForm = ({ vehicle, setVehicle, onSave, onCancel, isEditing }) => {
-  return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-5 border-b border-white/5 bg-slate-900/40">
-        <h3 className="text-lg font-bold text-white">{isEditing ? 'Edit Vehicle' : 'Add New Vehicle'}</h3>
-        <p className="text-xs text-slate-400 mt-1">Enter vehicle details to {isEditing ? 'update' : 'add to'} fleet.</p>
-      </div>
-
-      {/* Form Content */}
-      <div className="flex-1 p-5 overflow-y-auto space-y-5">
-        {/* Image Upload */}
-        <div className="w-full aspect-video rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-slate-800/50 transition-all group">
-          <span className="material-symbols-outlined text-4xl text-slate-600 group-hover:text-primary transition-colors">cloud_upload</span>
-          <p className="text-xs text-slate-400 mt-2 font-medium">Click to upload image</p>
-        </div>
-
-        {/* Inputs */}
-        <div className="space-y-4">
-          <div className="group">
-            <label className="text-xs font-semibold text-slate-400 mb-1 block">Vehicle Name *</label>
-            <input 
-              className="w-full bg-slate-900/50 border-b border-slate-700 focus:border-primary text-white px-0 py-2 placeholder-slate-600 focus:outline-none transition-colors text-sm font-medium" 
-              type="text"
-              placeholder="e.g., BMW i8 Roadster"
-              value={vehicle.name}
-              onChange={(e) => setVehicle({ ...vehicle, name: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="group">
-              <label className="text-xs font-semibold text-slate-400 mb-1 block">Category</label>
-              <div className="relative">
-                <select 
-                  className="w-full bg-slate-900/50 border-b border-slate-700 focus:border-primary text-white px-0 py-2 pr-8 text-sm focus:outline-none appearance-none cursor-pointer"
-                  value={vehicle.category}
-                  onChange={(e) => setVehicle({ ...vehicle, category: e.target.value })}
-                >
-                  <option>Sports</option>
-                  <option>Luxury</option>
-                  <option>SUV</option>
-                  <option>Electric</option>
-                </select>
-                <span className="material-symbols-outlined absolute right-0 top-2 text-slate-500 pointer-events-none text-sm">expand_more</span>
-              </div>
-            </div>
-
-            <div className="group">
-              <label className="text-xs font-semibold text-slate-400 mb-1 block">Price / Day *</label>
-              <input 
-                className="w-full bg-slate-900/50 border-b border-slate-700 focus:border-primary text-white px-0 py-2 text-sm focus:outline-none" 
-                type="text"
-                placeholder="$350"
-                value={vehicle.price}
-                onChange={(e) => setVehicle({ ...vehicle, price: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="group">
-            <label className="text-xs font-semibold text-slate-400 mb-1 block">Status</label>
-            <div className="flex gap-2 mt-2">
-              <label className="cursor-pointer">
-                <input 
-                  className="peer sr-only" 
-                  name="status" 
-                  type="radio"
-                  checked={vehicle.status === 'Available'}
-                  onChange={() => setVehicle({ ...vehicle, status: 'Available' })}
-                />
-                <div className="px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-400 peer-checked:bg-primary/20 peer-checked:text-primary peer-checked:border-primary transition-all">Available</div>
-              </label>
-              <label className="cursor-pointer">
-                <input 
-                  className="peer sr-only" 
-                  name="status" 
-                  type="radio"
-                  checked={vehicle.status === 'Rented'}
-                  onChange={() => setVehicle({ ...vehicle, status: 'Rented' })}
-                />
-                <div className="px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-400 peer-checked:bg-slate-500/20 peer-checked:text-slate-300 peer-checked:border-slate-500 transition-all">Rented</div>
-              </label>
-              <label className="cursor-pointer">
-                <input 
-                  className="peer sr-only" 
-                  name="status" 
-                  type="radio"
-                  checked={vehicle.status === 'Maintenance'}
-                  onChange={() => setVehicle({ ...vehicle, status: 'Maintenance' })}
-                />
-                <div className="px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-400 peer-checked:bg-orange-500/20 peer-checked:text-orange-500 peer-checked:border-orange-500 transition-all">Maint.</div>
-              </label>
-            </div>
-          </div>
-
-          <div className="group">
-            <label className="text-xs font-semibold text-slate-400 mb-1 block">Features</label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {vehicle.features.map((feature, index) => (
-                <span key={index} className="px-2 py-1 rounded bg-slate-800 text-xs text-slate-300 flex items-center gap-1">
-                  {feature}
-                  <button 
-                    onClick={() => setVehicle({ ...vehicle, features: vehicle.features.filter((_, i) => i !== index) })}
-                    className="hover:text-white"
+      {/* Add Vehicle Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowAddModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass-panel rounded-2xl border border-white/10 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold text-white">Add New Vehicle</h3>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
                   >
-                    ×
+                    <span className="material-symbols-outlined">close</span>
                   </button>
-                </span>
-              ))}
-              <button 
-                onClick={() => {
-                  const newFeature = prompt('Enter feature name:')
-                  if (newFeature) setVehicle({ ...vehicle, features: [...vehicle.features, newFeature] })
-                }}
-                className="px-2 py-1 rounded border border-dashed border-slate-600 text-xs text-slate-500 hover:text-white hover:border-slate-400 transition-colors"
-              >
-                + Add
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer Actions */}
-      <div className="p-5 border-t border-white/5 bg-slate-900/40 flex gap-3">
-        <button 
-          onClick={onCancel}
-          className="flex-1 px-4 py-2.5 rounded-lg border border-slate-700 text-slate-300 text-sm font-medium hover:bg-white/5 hover:text-white transition-all"
-        >
-          Cancel
-        </button>
-        <button 
-          onClick={onSave}
-          className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-accent-purple to-primary text-white text-sm font-bold shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:opacity-90 transition-all"
-        >
-          {isEditing ? 'Update Vehicle' : 'Save Vehicle'}
-        </button>
-      </div>
+                </div>
+              </div>
+              <form onSubmit={handleAddVehicle} className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Vehicle Name*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Tesla Model 3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Brand*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.brand}
+                      onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Tesla"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Model*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.model}
+                      onChange={(e) => setFormData({...formData, model: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Model 3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Year*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.year}
+                      onChange={(e) => setFormData({...formData, year: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="2024"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Category*</label>
+                    <select
+                      required
+                      value={formData.category}
+                      onChange={(e) => setFormData({...formData, category: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="Sedan">Sedan</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Luxury">Luxury</option>
+                      <option value="Sports">Sports</option>
+                      <option value="Electric">Electric</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Price per Day*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.price}
+                      onChange={(e) => setFormData({...formData, price: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="5000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Seats*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.seats}
+                      onChange={(e) => setFormData({...formData, seats: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Transmission*</label>
+                    <select
+                      required
+                      value={formData.transmission}
+                      onChange={(e) => setFormData({...formData, transmission: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="Automatic">Automatic</option>
+                      <option value="Manual">Manual</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Fuel Type*</label>
+                    <select
+                      required
+                      value={formData.fuelType}
+                      onChange={(e) => setFormData({...formData, fuelType: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="Petrol">Petrol</option>
+                      <option value="Diesel">Diesel</option>
+                      <option value="Electric">Electric</option>
+                      <option value="Hybrid">Hybrid</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Color*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.color}
+                      onChange={(e) => setFormData({...formData, color: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="White"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Plate Number*</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.plateNumber}
+                      onChange={(e) => setFormData({...formData, plateNumber: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="MH-01-AB-1234"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">Mileage (km/l)*</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.mileage}
+                      onChange={(e) => setFormData({...formData, mileage: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="15"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-slate-400 text-sm mb-2">Image URLs (comma-separated)</label>
+                    <input
+                      type="text"
+                      value={formData.images}
+                      onChange={(e) => setFormData({...formData, images: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-slate-400 text-sm mb-2">Features (comma-separated)</label>
+                    <input
+                      type="text"
+                      value={formData.features}
+                      onChange={(e) => setFormData({...formData, features: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="GPS, Bluetooth, Sunroof"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-slate-400 text-sm mb-2">Description</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Enter vehicle description..."
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.available}
+                      onChange={(e) => setFormData({...formData, available: e.target.checked})}
+                      className="w-5 h-5"
+                    />
+                    <label className="text-white">Available for Rent</label>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-gradient-to-r from-primary to-accent-purple text-black font-semibold rounded-lg hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
+                  >
+                    Add Vehicle
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

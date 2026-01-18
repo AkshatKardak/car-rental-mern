@@ -5,6 +5,8 @@ import PaymentRevenue from './pages/PaymentRevenue'
 import VehicleManagement from './pages/VehicleManagement'
 import DamageManagement from './pages/DamageManagement'
 import PricingPromotions from './pages/PricingPromotions'
+import BookingManagement from './pages/BookingManagement'
+import Analytics from './pages/Analytics'
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/admin/vehicles" element={<VehicleManagement />} />
         <Route path="/admin/damage" element={<DamageManagement />} />
         <Route path="/admin/promotions" element={<PricingPromotions />} />
+        <Route path="/admin/bookings" element={<BookingManagement />} />
+        <Route path="/admin/analytics" element={<Analytics />} />
       </Routes>
     </Router>
   )

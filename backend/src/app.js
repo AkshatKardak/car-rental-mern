@@ -11,6 +11,8 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const offerRoutes = require('./routes/offerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const promotionRoutes = require('./routes/promotionRoutes');
+const damageRoutes = require('./routes/damageRoutes');
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/promotions', promotionRoutes);
+app.use('/api/damage-reports', damageRoutes);
 
 // Base route
 app.get('/', (req, res) => {
