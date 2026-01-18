@@ -1,13 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
+import { statsService } from '../services/statsService'
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
-  const [selectedDateRange, setSelectedDateRange] = useState('Oct 24 - Nov 24')
-  const [notifications, setNotifications] = useState(3)
+  const [selectedDateRange, setSelectedDateRange] = useState('Last 30 Days')
+  const [notifications, setNotifications] = useState(0)
 
   return (
     <div className="relative flex h-screen w-full bg-dashboard-gradient overflow-hidden">
@@ -58,11 +59,7 @@ const Sidebar = ({ navigate }) => {
     { icon: 'directions_car', label: 'Vehicles', active: false, path: '/admin/vehicles' },
     { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
     { icon: 'calendar_month', label: 'Bookings', active: false, path: '/admin/bookings' },
-    { icon: 'local_offer', label: 'Promotions', active: false, path: '/admin/promotions' },
-    { icon: 'car_crash', label: 'Damage Reports', active: false, path: '/admin/damage' },
-    { icon: 'bar_chart', label: 'Analytics', active: false, path: '/admin/analytics' },
   ]
-
 
   return (
     <aside className="hidden md:flex flex-col w-72 glass-panel border-r border-white/5 z-20 h-full">
@@ -129,7 +126,7 @@ const Sidebar = ({ navigate }) => {
             AM
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Alex Morgan</p>
+            <p className="text-sm font-semibold text-white truncate">Admin</p>
             <p className="text-xs text-slate-400 truncate">Super Admin</p>
           </div>
           <span 
@@ -145,95 +142,121 @@ const Sidebar = ({ navigate }) => {
 }
 
 const DashboardContent = ({ navigate, selectedDateRange, setSelectedDateRange, notifications, setNotifications }) => {
-  const [stats, setStats] = useState([
-    {
-      title: 'Total Revenue',
-      value: '$128,450',
-      icon: 'payments',
-      change: '+12%',
-      trend: 'up',
-      description: 'vs last month',
-      color: 'primary'
-    },
-    {
-      title: 'Active Bookings',
-      value: '45',
-      icon: 'key',
-      change: '+5%',
-      trend: 'up',
-      description: 'vs last week',
-      color: 'primary'
-    },
-    {
-      title: 'Fleet Utilization',
-      value: '78%',
-      icon: 'speed',
-      change: '-2%',
-      trend: 'down',
-      description: 'Capacity warning',
-      color: 'accent-purple'
-    },
-    {
-      title: 'Pending Requests',
-      value: '8',
-      icon: 'pending_actions',
-      change: 'New',
-      trend: 'neutral',
-      description: 'Require approval',
-      color: 'primary'
-    },
-  ])
-
-  const [recentActivity, setRecentActivity] = useState([
-    {
-      car: 'Tesla Model S',
-      variant: 'Plaid Edition',
-      customer: 'Sarah Jenning',
-      date: 'Oct 24, 2023',
-      status: 'Active',
-      amount: '$450.00',
-      statusColor: 'emerald'
-    },
-    {
-      car: 'Porsche 911',
-      variant: 'Carrera S',
-      customer: 'Mike Ross',
-      date: 'Oct 23, 2023',
-      status: 'Completed',
-      amount: '$1,200.00',
-      statusColor: 'blue'
-    },
-    {
-      car: 'BMW M4',
-      variant: 'Competition',
-      customer: 'Jessica Wu',
-      date: 'Oct 22, 2023',
-      status: 'Pending',
-      amount: '$650.00',
-      statusColor: 'amber'
-    },
-  ])
-
-const quickActions = [
-  { icon: 'add_circle', title: 'Add Vehicle', description: 'Register to fleet', color: 'primary', path: '/admin/vehicles' },
-  { icon: 'local_offer', title: 'Create Promo', description: 'Marketing campaign', color: 'accent-purple', path: '/admin/promotions' },
-  { icon: 'car_crash', title: 'Review Damage', description: 'Process claims', color: 'rose', path: '/admin/damage' },
-  { icon: 'currency_exchange', title: 'Refund Request', description: 'View pending', color: 'amber', path: '#' },
-]
-
-
-
-
+  const [stats, setStats] = useState([])
+  const [recentActivity, setRecentActivity] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showDatePicker, setShowDatePicker] = useState(false)
 
+  useEffect(() => {
+    fetchDashboardData()
+  }, [selectedDateRange])
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
+
+      // Fetch dashboard statistics
+      const statsResponse = await statsService.getDashboardStats()
+      
+      // Map backend data to frontend format
+      setStats([
+        {
+          title: 'Total Revenue',
+          value: `₹${statsResponse.data.totalRevenue?.toLocaleString() || '0'}`,
+          icon: 'payments',
+          change: statsResponse.data.revenueChange || '+0%',
+          trend: statsResponse.data.revenueChange?.includes('-') ? 'down' : 'up',
+          description: 'vs last month',
+          color: 'primary'
+        },
+        {
+          title: 'Active Bookings',
+          value: statsResponse.data.activeBookings || '0',
+          icon: 'key',
+          change: statsResponse.data.bookingsChange || '+0%',
+          trend: 'up',
+          description: 'vs last week',
+          color: 'primary'
+        },
+        {
+          title: 'Fleet Utilization',
+          value: `${statsResponse.data.fleetUtilization || '0'}%`,
+          icon: 'speed',
+          change: statsResponse.data.utilizationChange || '0%',
+          trend: statsResponse.data.utilizationChange?.includes('-') ? 'down' : 'up',
+          description: 'Current capacity',
+          color: 'accent-purple'
+        },
+        {
+          title: 'Pending Requests',
+          value: statsResponse.data.pendingRequests || '0',
+          icon: 'pending_actions',
+          change: 'New',
+          trend: 'neutral',
+          description: 'Require approval',
+          color: 'primary'
+        },
+      ])
+
+      // Fetch recent activity
+      const activityResponse = await statsService.getRecentActivity(5)
+      setRecentActivity(activityResponse.data.bookings || [])
+
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+      // Keep dummy data on error
+      setStats([
+        {
+          title: 'Total Revenue',
+          value: '₹128,450',
+          icon: 'payments',
+          change: '+12%',
+          trend: 'up',
+          description: 'vs last month',
+          color: 'primary'
+        },
+        {
+          title: 'Active Bookings',
+          value: '45',
+          icon: 'key',
+          change: '+5%',
+          trend: 'up',
+          description: 'vs last week',
+          color: 'primary'
+        },
+        {
+          title: 'Fleet Utilization',
+          value: '78%',
+          icon: 'speed',
+          change: '-2%',
+          trend: 'down',
+          description: 'Capacity warning',
+          color: 'accent-purple'
+        },
+        {
+          title: 'Pending Requests',
+          value: '8',
+          icon: 'pending_actions',
+          change: 'New',
+          trend: 'neutral',
+          description: 'Require approval',
+          color: 'primary'
+        },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const quickActions = [
+    { icon: 'add_circle', title: 'Add Vehicle', description: 'Register to fleet', color: 'primary', path: '/admin/vehicles' },
+    { icon: 'local_offer', title: 'Create Promo', description: 'Marketing campaign', color: 'accent-purple', path: '/admin/promotions' },
+    { icon: 'car_crash', title: 'Review Damage', description: 'Process claims', color: 'rose', path: '/admin/damage' },
+    { icon: 'currency_exchange', title: 'Refund Request', description: 'View pending', color: 'amber', path: '/admin/payments' },
+  ]
+
   const handleRefreshData = () => {
-    // Simulate data refresh
-    const newRevenue = '$' + (Math.floor(Math.random() * 50000) + 100000).toLocaleString()
-    const newStats = [...stats]
-    newStats[0].value = newRevenue
-    setStats(newStats)
-    
-    // Show notification
+    fetchDashboardData()
     alert('Data refreshed successfully!')
   }
 
@@ -248,6 +271,14 @@ const quickActions = [
     } else {
       alert(`${action.title} feature coming soon!`)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-white text-lg">Loading dashboard...</div>
+      </div>
+    )
   }
 
   return (
@@ -299,6 +330,20 @@ const quickActions = [
               )}
             </div>
             
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleRefreshData}
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800/50 border border-white/10 text-slate-300 hover:text-white hover:border-primary/50 transition-all"
+            >
+              <span 
+                className="material-symbols-outlined"
+                style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
+              >
+                refresh
+              </span>
+            </motion.button>
+
             <div className="relative">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
@@ -365,115 +410,6 @@ const quickActions = [
           ))}
         </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Revenue Chart */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="glass-panel rounded-2xl p-6 lg:col-span-2"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-white">Revenue Overview</h3>
-                <p className="text-slate-400 text-sm">Monthly performance trends</p>
-              </div>
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                onClick={handleRefreshData}
-                className="text-primary hover:text-white text-sm font-medium transition-colors"
-              >
-                View Report
-              </motion.button>
-            </div>
-
-            {/* Chart */}
-            <div className="w-full h-[280px] relative mt-8">
-              {/* Grid Lines */}
-              <div className="absolute inset-0 flex flex-col justify-between text-xs text-slate-600">
-                {['40k', '30k', '20k', '10k', '0'].map((label, i) => (
-                  <div key={i} className="flex w-full items-center">
-                    <span className="w-8">{label}</span>
-                    <div className="flex-1 h-px bg-white/5 ml-2"></div>
-                  </div>
-                ))}
-              </div>
-
-              {/* SVG Chart */}
-              <svg className="absolute inset-0 ml-10 h-full w-[calc(100%-2.5rem)] chart-glow" preserveAspectRatio="none" viewBox="0 0 100 50">
-                <defs>
-                  <linearGradient id="gradientArea" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#13c8ec" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#13c8ec" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path d="M0,45 C10,40 15,30 25,32 C35,34 40,25 50,20 C60,15 70,25 80,15 C90,5 95,10 100,5 L100,50 L0,50 Z" fill="url(#gradientArea)" />
-                <path d="M0,45 C10,40 15,30 25,32 C35,34 40,25 50,20 C60,15 70,25 80,15 C90,5 95,10 100,5" fill="none" stroke="#13c8ec" strokeWidth="0.8" />
-                <circle cx="25" cy="32" r="1.5" fill="#0f172a" stroke="#13c8ec" strokeWidth="0.5" />
-                <circle cx="50" cy="20" r="1.5" fill="#0f172a" stroke="#13c8ec" strokeWidth="0.5" />
-                <circle cx="80" cy="15" r="1.5" fill="#0f172a" stroke="#13c8ec" strokeWidth="0.5" />
-              </svg>
-
-              {/* X Axis */}
-              <div className="absolute bottom-[-24px] left-10 right-0 flex justify-between text-xs text-slate-500 font-medium px-2">
-                {['Nov 1', 'Nov 5', 'Nov 10', 'Nov 15', 'Nov 20', 'Nov 25'].map((date, i) => (
-                  <span key={i}>{date}</span>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Fleet Status */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="glass-panel rounded-2xl p-6 flex flex-col"
-          >
-            <h3 className="text-lg font-bold text-white mb-6">Fleet Status</h3>
-            <div className="flex-1 flex flex-col items-center justify-center relative">
-              {/* Donut Chart */}
-              <div className="relative w-48 h-48">
-                <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 36 36">
-                  <path className="text-slate-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3.8" />
-                  <path className="text-primary chart-glow" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="60, 100" strokeWidth="3.8" />
-                  <path className="text-accent-purple" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="25, 100" strokeDashoffset="-60" strokeWidth="3.8" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold text-white">85</span>
-                  <span className="text-xs text-slate-400 uppercase tracking-wider">Total Cars</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="mt-8 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(19,200,236,0.6)]"></div>
-                  <span className="text-sm text-slate-300">Rented</span>
-                </div>
-                <span className="text-sm font-bold text-white">51 (60%)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-slate-700"></div>
-                  <span className="text-sm text-slate-300">Available</span>
-                </div>
-                <span className="text-sm font-bold text-white">13 (15%)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-accent-purple"></div>
-                  <span className="text-sm text-slate-300">Maintenance</span>
-                </div>
-                <span className="text-sm font-bold text-white">21 (25%)</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
         {/* Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -518,59 +454,74 @@ const quickActions = [
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-white">Recent Activity</h3>
-            <button className="text-xs font-semibold text-primary uppercase tracking-wider hover:text-white transition-colors">
+            <button 
+              onClick={() => navigate('/admin/bookings')}
+              className="text-xs font-semibold text-primary uppercase tracking-wider hover:text-white transition-colors"
+            >
               View All
             </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="text-slate-400 text-xs uppercase tracking-wider border-b border-white/5">
-                  <th className="pb-4 font-medium pl-2">Vehicle</th>
-                  <th className="pb-4 font-medium">Customer</th>
-                  <th className="pb-4 font-medium">Date</th>
-                  <th className="pb-4 font-medium">Status</th>
-                  <th className="pb-4 font-medium text-right pr-2">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {recentActivity.map((activity, index) => (
-                  <motion.tr
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                    className="border-b border-white/5 last:border-0 transition-colors cursor-pointer"
-                  >
-                    <td className="py-4 pl-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-slate-800 border border-white/10"></div>
-                        <div>
-                          <p className="font-bold text-white">{activity.car}</p>
-                          <p className="text-xs text-slate-500">{activity.variant}</p>
+          {recentActivity.length === 0 ? (
+            <p className="text-slate-400 text-center py-8">No recent activity</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-slate-400 text-xs uppercase tracking-wider border-b border-white/5">
+                    <th className="pb-4 font-medium pl-2">Vehicle</th>
+                    <th className="pb-4 font-medium">Customer</th>
+                    <th className="pb-4 font-medium">Date</th>
+                    <th className="pb-4 font-medium">Status</th>
+                    <th className="pb-4 font-medium text-right pr-2">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {recentActivity.map((activity, index) => (
+                    <motion.tr
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                      className="border-b border-white/5 last:border-0 transition-colors cursor-pointer"
+                    >
+                      <td className="py-4 pl-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded bg-slate-800 border border-white/10"></div>
+                          <div>
+                            <p className="font-bold text-white">{activity.car?.name || 'Car'}</p>
+                            <p className="text-xs text-slate-500">{activity.car?.model || 'Model'}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-4 text-slate-300">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-700"></div>
-                        <span>{activity.customer}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 text-slate-400">{activity.date}</td>
-                    <td className="py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${activity.statusColor}-400/10 text-${activity.statusColor}-400 border border-${activity.statusColor}-400/20`}>
-                        {activity.status}
-                      </span>
-                    </td>
-                    <td className="py-4 text-right font-bold text-white pr-2">{activity.amount}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td className="py-4 text-slate-300">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-700"></div>
+                          <span>{activity.user?.name || 'Customer'}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 text-slate-400">
+                        {new Date(activity.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          activity.status === 'Active' || activity.status === 'Confirmed' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' :
+                          activity.status === 'Completed' ? 'bg-blue-400/10 text-blue-400 border border-blue-400/20' :
+                          'bg-amber-400/10 text-amber-400 border border-amber-400/20'
+                        }`}>
+                          {activity.status}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right font-bold text-white pr-2">
+                        ₹{activity.totalPrice?.toLocaleString()}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

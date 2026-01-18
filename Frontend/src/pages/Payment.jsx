@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import DashboardNavbar from "../components/layout/DashboardNavbar";
@@ -12,6 +12,9 @@ import {
   ArrowRight,
   Tag,
 } from "lucide-react";
+import { paymentService } from "../services/paymentService";
+import { bookingService } from "../services/bookingService";
+import { loadRazorpayScript, initRazorpayPayment } from "../utils/razorpay";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -34,18 +37,20 @@ const Payment = () => {
 
   const summary = useMemo(() => {
     const carName = incoming.carName || "Selected Car";
+    const carId = incoming.carId;
     const days = incoming.days || 2;
 
     const baseFare = incoming.baseFare ?? (incoming.pricePerDay ? incoming.pricePerDay * days : 1200);
     const taxesFees = incoming.taxesFees ?? 150;
     const deposit = incoming.deposit ?? 300;
-    const promoCode = incoming.promoCode ?? "FUTURE20";
+    const promoCode = incoming.promoCode ?? "";
     const promoDiscount = incoming.promoDiscount ?? 0;
 
     const total = Math.max(0, baseFare + taxesFees + deposit - promoDiscount);
 
     return {
       carName,
+      carId,
       days,
       baseFare,
       taxesFees,
@@ -53,11 +58,14 @@ const Payment = () => {
       promoCode,
       promoDiscount,
       total,
+      startDate: incoming.startDate,
+      endDate: incoming.endDate,
     };
   }, [incoming]);
 
-  const [method, setMethod] = useState("card"); 
+  const [method, setMethod] = useState("card");
   const [saveCard, setSaveCard] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Card fields (UI only)
   const [cardNumber, setCardNumber] = useState("");
@@ -65,9 +73,83 @@ const Payment = () => {
   const [cvv, setCvv] = useState("");
   const [holder, setHolder] = useState("");
 
-  const handlePay = () => {
-    // For now: just navigate to bookings
-    navigate("/mybookings");
+  const handlePay = async () => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      // 1. Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert('Failed to load Razorpay SDK. Please check your internet connection.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Create booking first
+      const bookingData = {
+        car: summary.carId,
+        startDate: summary.startDate,
+        endDate: summary.endDate,
+        totalPrice: summary.total,
+        discount: summary.promoDiscount,
+        promoCode: summary.promoCode,
+      };
+
+      const bookingResponse = await bookingService.createBooking(bookingData);
+      const bookingId = bookingResponse.data._id;
+
+      // 3. Create Razorpay order
+      const orderData = {
+        amount: summary.total,
+        currency: 'INR',
+        bookingId: bookingId,
+      };
+
+      const orderResponse = await paymentService.createOrder(orderData);
+      const order = orderResponse.data;
+
+      // 4. Configure Razorpay options
+      const razorpayOptions = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'RentRide',
+        description: `Booking for ${summary.carName}`,
+        order_id: order.id,
+        prefill: {
+          name: holder || 'Customer',
+          email: 'customer@example.com',
+          contact: '9999999999',
+        },
+        theme: {
+          color: '#13c8ec',
+        },
+      };
+
+      // 5. Open Razorpay checkout
+      const paymentResponse = await initRazorpayPayment(razorpayOptions);
+
+      // 6. Verify payment
+      const verifyData = {
+        razorpay_order_id: paymentResponse.razorpay_order_id,
+        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+        razorpay_signature: paymentResponse.razorpay_signature,
+        bookingId: bookingId,
+      };
+
+      await paymentService.verifyPayment(verifyData);
+
+      alert('Payment successful! Your booking is confirmed.');
+      navigate('/mybookings');
+
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert(error.message || 'Payment failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -181,7 +263,7 @@ const Payment = () => {
                 <div className="space-y-4">
                   <p className="text-white font-black text-lg">UPI / Wallets</p>
                   <p className="text-white/60 text-sm">
-                    UI ready. Add UPI ID input + QR + integration later.
+                    Razorpay supports UPI payments. Click Pay button to proceed.
                   </p>
                   <input
                     placeholder="example@upi"
@@ -194,7 +276,7 @@ const Payment = () => {
                 <div className="space-y-4">
                   <p className="text-white font-black text-lg">Netbanking</p>
                   <p className="text-white/60 text-sm">
-                    UI ready. Add bank selection + redirect integration later.
+                    Razorpay supports netbanking. Click Pay button to proceed.
                   </p>
                   <select className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-white focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20">
                     <option>HDFC Bank</option>
@@ -267,22 +349,22 @@ const Payment = () => {
                   </p>
                 </div>
 
-                <button className="mt-4 w-full py-3 rounded-xl bg-white/5 border border-white/10 text-purple-200 hover:bg-white/10 transition font-bold text-sm inline-flex items-center justify-center gap-2">
-                  <SparkleIcon />
-                  Ask AI about this breakdown
-                </button>
-
                 <motion.button
                   whileHover={{
-                    scale: 1.03,
-                    boxShadow: "0 0 26px rgba(34,211,238,0.25), 0 0 22px rgba(168,85,247,0.18)",
+                    scale: loading ? 1 : 1.03,
+                    boxShadow: loading ? "none" : "0 0 26px rgba(34,211,238,0.25), 0 0 22px rgba(168,85,247,0.18)",
                   }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: loading ? 1 : 0.98 }}
                   onClick={handlePay}
-                  className="mt-3 w-full py-4 rounded-xl bg-cyan-500 text-slate-950 font-black text-lg hover:brightness-110 transition inline-flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className={`mt-6 w-full py-4 rounded-xl font-black text-lg inline-flex items-center justify-center gap-2 transition-all ${
+                    loading 
+                      ? 'bg-gray-500 cursor-not-allowed' 
+                      : 'bg-cyan-500 text-slate-950 hover:brightness-110'
+                  }`}
                 >
-                  Pay ₹{summary.total}
-                  <ArrowRight className="w-5 h-5" />
+                  {loading ? 'Processing...' : `Pay ₹${summary.total}`}
+                  {!loading && <ArrowRight className="w-5 h-5" />}
                 </motion.button>
 
                 <p className="text-center text-xs text-white/40 mt-2">
@@ -297,7 +379,7 @@ const Payment = () => {
               </div>
               <div>
                 <p className="text-white font-black">Secure payments</p>
-                <p className="text-white/60 text-xs">Encryption enabled for checkout.</p>
+                <p className="text-white/60 text-xs">Powered by Razorpay.</p>
               </div>
             </div>
 
@@ -344,14 +426,6 @@ function BadgeMini({ children }) {
     <div className="h-8 w-14 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-black text-xs text-white/80">
       {children}
     </div>
-  );
-}
-
-function SparkleIcon() {
-  return (
-    <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-purple-500/15 border border-purple-400/20">
-      ✦
-    </span>
   );
 }
 

@@ -1,419 +1,564 @@
-import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import DashboardNavbar from "../components/layout/DashboardNavbar";
-
-import SupraImg from "../assets/supra.png";
-import PorscheImg from "../assets/porsche.png";
-import MercedesImg from "../assets/mercedes g63 amg.png";
-import Skoda from "../assets/Skoda.png"
-import Audi from "../assets/AudiElectric.png"
-import Kia from "../assets/Kia.png"
-// Animations
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
-};
-
-const hoverGlow = {
-  whileHover: {
-    y: -6,
-    scale: 1.02,
-    boxShadow:
-      "0 22px 55px rgba(0,0,0,0.55), 0 0 0 1px rgba(34,211,238,0.18), 0 0 40px rgba(168,85,247,0.22)",
-    transition: { type: "spring", stiffness: 260, damping: 18 },
-  },
-  whileTap: { scale: 0.98 },
-};
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Search, 
+  SlidersHorizontal, 
+  Star, 
+  Users, 
+  Fuel, 
+  Gauge,
+  MapPin,
+  Calendar,
+  ChevronDown,
+  X,
+  Loader2
+} from 'lucide-react';
+import DashboardNavbar from '../components/layout/DashboardNavbar';
+import { carService } from '../services/carService';
 
 const BrowseCars = () => {
   const navigate = useNavigate();
 
+  // State for cars data
+  const [cars, setCars] = useState([]);
+  const [filteredCars, setFilteredCars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const cars = [
-    {
-      id: "porsche",
-      name: "Porsche 911 Carrera",
-      meta: "2023 • Automatic • Petrol",
-      pricePerDay: 1499,
-      tag: "PREMIUM",
-      type: "Sports",
-      transmission: "Auto",
-      seats: 2,
-      rating: 5.0,
-      image: PorscheImg,
-    },
-    {
-      id: "mercedes-g63",
-      name: "Mercedes G63 AMG",
-      meta: "2023 • Luxury SUV",
-      pricePerDay: 1999,
-      tag: "EXCLUSIVE",
-      type: "Luxury",
-      transmission: "Auto",
-      seats: 5,
-      rating: 4.8,
-      image: MercedesImg,
-    },
-    {
-      id: "supra",
-      name: "Toyota Supra",
-      meta: "2022 • Sports • 2 seats",
-      pricePerDay: 899,
-      tag: "SPORTS",
-      type: "Sports",
-      transmission: "Manual",
-      seats: 2,
-      rating: 4.7,
-      image: SupraImg,
-    },
-   {
-        id: "skoda-kylaq",
-        name: "Skoda Kylaq",
-        meta: "2024 • Manual • Petrol",
-        pricePerDay: 249,
-        tag: "PREMIUM",
-        type: "SUV",
-        transmission: "Manual",
-        seats: 5,
-        rating: 4.2,
-        image: Skoda,
-    },
-    {
-  id: "audi-e-tron",
-  name: "Audi e-tron Sportback",
-  meta: "2024 • Auto • Electric",
-  pricePerDay: 579,
-  tag: "PREMIUM",
-  type: "Electric",
-  transmission: "Auto",
-  seats: 5,
-  rating: 4.8,
-  image: Audi,
-},
-     {
-  id: "kia-seltos",
-  name: "Kia Seltos",
-  meta: "2024 • Auto • Petrol",
-  pricePerDay: 679,
-  tag: "PREMIUM",
-  type: "SUV",
-  transmission: "Auto",
-  seats: 7,
-  rating: 4.7,
-  image: Kia,
-},
-  ];
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('All');
+  const [selectedFuelType, setSelectedFuelType] = useState('All');
+  const [selectedTransmission, setSelectedTransmission] = useState('All');
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [selectedSeats, setSelectedSeats] = useState('All');
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Filters state
-  const [priceMin, setPriceMin] = useState(50);
-  const [priceMax, setPriceMax] = useState(1500);
+  // Sorting
+  const [sortBy, setSortBy] = useState('featured');
 
-  const [types, setTypes] = useState({
-    Sports: false,
-    Luxury: true,
-    SUV: false,
-    Electric: false,
-  });
+  // Available filter options (will be populated from backend data)
+  const [brands, setBrands] = useState(['All']);
+  const fuelTypes = ['All', 'Petrol', 'Diesel', 'Electric', 'Hybrid'];
+  const transmissions = ['All', 'Automatic', 'Manual'];
+  const seatOptions = ['All', '2', '4', '5', '7', '8'];
 
-  const [transmission, setTransmission] = useState("Auto");
-  const [seats, setSeats] = useState("All"); 
-  const [ratingUp, setRatingUp] = useState(true);
-  const minRating = 4;
+  // Fetch cars on component mount
+  useEffect(() => {
+    fetchCars();
+  }, []);
 
-  const anyTypeSelected = useMemo(() => Object.values(types).some(Boolean), [types]);
+  // Apply filters whenever filter states change
+  useEffect(() => {
+    applyFilters();
+  }, [cars, searchQuery, selectedBrand, selectedFuelType, selectedTransmission, priceRange, selectedSeats, sortBy]);
 
-  const filteredCars = useMemo(() => {
-    return cars.filter((c) => {
-      if (c.pricePerDay < priceMin || c.pricePerDay > priceMax) return false;
+  const fetchCars = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-      if (anyTypeSelected && !types[c.type]) return false;
+      const response = await carService.getAllCars({
+        status: 'Available', // Only fetch available cars
+      });
 
-      if (transmission !== "All" && c.transmission !== transmission) return false;
+      if (response.success && response.data) {
+        setCars(response.data);
+        setFilteredCars(response.data);
 
-      if (seats !== "All") {
-        if (seats === "7+") {
-          if (c.seats < 7) return false;
-        } else {
-          if (c.seats !== Number(seats)) return false;
-        }
+        // Extract unique brands from the data
+        const uniqueBrands = ['All', ...new Set(response.data.map(car => car.brand))];
+        setBrands(uniqueBrands);
+
+        // Set initial price range based on data
+        const prices = response.data.map(car => car.pricePerDay);
+        const maxPrice = Math.max(...prices, 10000);
+        setPriceRange([0, maxPrice]);
+      } else {
+        setError('Failed to load cars');
       }
+    } catch (err) {
+      console.error('Error fetching cars:', err);
+      setError(err.message || 'Failed to load cars. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (ratingUp && c.rating < minRating) return false;
+  const applyFilters = () => {
+    let filtered = [...cars];
 
-      return true;
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(car => 
+        car.name?.toLowerCase().includes(query) ||
+        car.brand?.toLowerCase().includes(query) ||
+        car.model?.toLowerCase().includes(query) ||
+        car.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // Brand filter
+    if (selectedBrand !== 'All') {
+      filtered = filtered.filter(car => car.brand === selectedBrand);
+    }
+
+    // Fuel type filter
+    if (selectedFuelType !== 'All') {
+      filtered = filtered.filter(car => car.fuelType === selectedFuelType);
+    }
+
+    // Transmission filter
+    if (selectedTransmission !== 'All') {
+      filtered = filtered.filter(car => car.transmission === selectedTransmission);
+    }
+
+    // Price range filter
+    filtered = filtered.filter(car => 
+      car.pricePerDay >= priceRange[0] && car.pricePerDay <= priceRange[1]
+    );
+
+    // Seats filter
+    if (selectedSeats !== 'All') {
+      filtered = filtered.filter(car => car.seats === parseInt(selectedSeats));
+    }
+
+    // Sorting
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => a.pricePerDay - b.pricePerDay);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.pricePerDay - a.pricePerDay);
+        break;
+      case 'rating':
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      default:
+        // Featured - keep original order
+        break;
+    }
+
+    setFilteredCars(filtered);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedBrand('All');
+    setSelectedFuelType('All');
+    setSelectedTransmission('All');
+    setSelectedSeats('All');
+    const prices = cars.map(car => car.pricePerDay);
+    const maxPrice = Math.max(...prices, 10000);
+    setPriceRange([0, maxPrice]);
+    setSortBy('featured');
+  };
+
+  const handleViewDetails = (carId) => {
+    navigate(`/car/${carId}`);
+  };
+
+  const handleBookNow = (car) => {
+    navigate('/payment', {
+      state: {
+        carId: car._id,
+        carName: `${car.brand} ${car.model}`,
+        pricePerDay: car.pricePerDay,
+        baseFare: car.pricePerDay * 2, // Default 2 days
+        days: 2,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      }
     });
-  }, [cars, priceMin, priceMax, anyTypeSelected, types, transmission, seats, ratingUp]);
-
-  const resetAll = () => {
-    setPriceMin(50);
-    setPriceMax(1500);
-    setTypes({ Sports: false, Luxury: true, SUV: false, Electric: false });
-    setTransmission("Auto");
-    setSeats("All");
-    setRatingUp(true);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#101f22]/80 to-purple-900/40 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1a] via-[#0f1729] to-[#1a0f2e] text-white">
       <DashboardNavbar />
 
-      <motion.main
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-      >
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div variants={fadeUp} className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-cyan-400">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
             Browse Cars
           </h1>
-          <p className="text-white/70 mt-2 text-sm">
-            Use filters on the left to find the best car.
+          <p className="text-slate-400 text-lg">
+            Find your perfect ride from our premium collection
           </p>
         </motion.div>
 
-        {/* Layout */}
-        <div className="flex gap-6">
-          {/* Filters (left) */}
-          <motion.aside variants={fadeUp} className="hidden lg:block w-[280px] shrink-0">
-            <div className="sticky top-24 rounded-2xl rr-glass p-6">
-              <div className="flex items-center justify-between pb-4 border-b rr-divider">
-                <div className="flex items-center gap-2">
-                  <span className="text-cyan-300">≡</span>
-                  <h3 className="text-lg font-black text-white">Filters</h3>
-                </div>
-                <button
-                  onClick={resetAll}
-                  className="text-xs font-semibold text-white/60 hover:text-white transition"
-                >
-                  Reset All
-                </button>
-              </div>
-
-              {/* Price / Day */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white/90">Price / Day</p>
-                  <span className="text-xs font-bold text-cyan-200 bg-cyan-500/10 border border-cyan-400/20 px-2 py-1 rounded-lg">
-                    ₹{priceMin} - ₹{priceMax}+
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  <input
-                    type="range"
-                    min={0}
-                    max={2000}
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax))}
-                    className="rr-range"
-                  />
-                  <input
-                    type="range"
-                    min={0}
-                    max={2000}
-                    value={priceMax}
-                    onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))}
-                    className="rr-range"
-                  />
-                </div>
-              </div>
-
-              {/* Car Type */}
-              <div className="mt-7">
-                <p className="text-sm font-semibold text-white/90 mb-3">Car Type</p>
-
-                {Object.keys(types).map((t) => (
-                  <label key={t} className="flex items-center gap-3 py-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={types[t]}
-                      onChange={() => setTypes((prev) => ({ ...prev, [t]: !prev[t] }))}
-                      className="rr-check"
-                    />
-                    <span className="text-sm text-white/70 hover:text-white transition">
-                      {t}
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              {/* Transmission */}
-              <div className="mt-7">
-                <p className="text-sm font-semibold text-white/90 mb-3">Transmission</p>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setTransmission("Auto")}
-                    className={`py-2 rounded-xl border transition font-bold text-sm
-                      ${
-                        transmission === "Auto"
-                          ? "bg-cyan-500/15 border-cyan-400/25 text-cyan-200"
-                          : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
-                      }`}
-                  >
-                    Auto
-                  </button>
-
-                  <button
-                    onClick={() => setTransmission("Manual")}
-                    className={`py-2 rounded-xl border transition font-bold text-sm
-                      ${
-                        transmission === "Manual"
-                          ? "bg-cyan-500/15 border-cyan-400/25 text-cyan-200"
-                          : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
-                      }`}
-                  >
-                    Manual
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setTransmission("All")}
-                  className="mt-3 w-full py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition font-semibold text-sm"
-                >
-                  Show All
-                </button>
-              </div>
-
-              {/* Seats */}
-              <div className="mt-7">
-                <p className="text-sm font-semibold text-white/90 mb-3">Seats</p>
-
-                <div className="flex gap-2">
-                  {["2", "4", "5", "7+"].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSeats(s)}
-                      className={`h-9 w-9 rounded-xl border font-bold text-sm transition
-                        ${
-                          seats === s
-                            ? "bg-cyan-500/15 border-cyan-400/25 text-cyan-200"
-                            : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
-                        }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setSeats("All")}
-                  className="mt-3 w-full py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition font-semibold text-sm"
-                >
-                  Any seats
-                </button>
-              </div>
-
-              {/* Rating */}
-              <div className="mt-7">
-                <p className="text-sm font-semibold text-white/90 mb-3">Rating</p>
-
-                <label className="flex items-center gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={ratingUp}
-                    onChange={() => setRatingUp((v) => !v)}
-                    className="rr-check"
-                  />
-                  <span className="text-yellow-400 text-sm font-black">★★★★★</span>
-                  <span className="text-xs text-white/60">&amp; Up</span>
-                </label>
-
-                <p className="text-xs text-white/50 mt-2">(Applies {minRating}+ rating)</p>
-              </div>
+        {/* Search & Filter Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6 space-y-4"
+        >
+          {/* Search and Sort Row */}
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search Bar */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by name, brand, model..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 transition-all"
+              />
             </div>
-          </motion.aside>
 
-          {/* Cars grid (right) */}
-          <motion.section variants={fadeUp} className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-white/70 text-sm">
-                Showing <span className="text-white font-black">{filteredCars.length}</span> results
-              </p>
-                  
-              <button
-                onClick={resetAll}
-                className="lg:hidden px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 transition text-sm font-semibold"
+            {/* Sort Dropdown */}
+            <div className="relative min-w-[200px]">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white appearance-none cursor-pointer focus:outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 transition-all"
               >
-                Reset Filters
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Highest Rated</option>
+                <option value="newest">Newest First</option>
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Filter Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 hover:bg-cyan-500/20 transition-all min-w-[140px]"
+            >
+              <SlidersHorizontal className="w-5 h-5" />
+              <span className="font-semibold">Filters</span>
+            </button>
+          </div>
+
+          {/* Active Filters Display */}
+          {(selectedBrand !== 'All' || selectedFuelType !== 'All' || selectedTransmission !== 'All' || selectedSeats !== 'All' || searchQuery) && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-slate-400">Active filters:</span>
+              {searchQuery && (
+                <FilterChip label={`Search: "${searchQuery}"`} onRemove={() => setSearchQuery('')} />
+              )}
+              {selectedBrand !== 'All' && (
+                <FilterChip label={`Brand: ${selectedBrand}`} onRemove={() => setSelectedBrand('All')} />
+              )}
+              {selectedFuelType !== 'All' && (
+                <FilterChip label={`Fuel: ${selectedFuelType}`} onRemove={() => setSelectedFuelType('All')} />
+              )}
+              {selectedTransmission !== 'All' && (
+                <FilterChip label={`Transmission: ${selectedTransmission}`} onRemove={() => setSelectedTransmission('All')} />
+              )}
+              {selectedSeats !== 'All' && (
+                <FilterChip label={`Seats: ${selectedSeats}`} onRemove={() => setSelectedSeats('All')} />
+              )}
+              <button
+                onClick={handleClearFilters}
+                className="text-sm text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
+              >
+                Clear all
               </button>
             </div>
+          )}
+        </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredCars.map((car) => (
-                <motion.div
-                  key={car.id}
-                  {...hoverGlow}
-                  className="group rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 hover:border-cyan-400/25 transition h-[380px] flex flex-col"
-                >
-                  {/* image */}
-                  <div className="relative h-[210px] overflow-hidden">
-                    <img
-                      src={car.image}
-                      alt={car.name}
-                      className="w-full h-full object-cover opacity-95 transition duration-500 ease-out group-hover:scale-[1.06]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                    <span className="absolute top-3 right-3 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-black/50 text-cyan-400 border border-white/10 backdrop-blur">
-                    {car.tag}
-                    </span>
+        {/* Filters Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Brand Filter */}
+                  <FilterSelect
+                    label="Brand"
+                    value={selectedBrand}
+                    onChange={setSelectedBrand}
+                    options={brands}
+                  />
 
-                  </div>
+                  {/* Fuel Type Filter */}
+                  <FilterSelect
+                    label="Fuel Type"
+                    value={selectedFuelType}
+                    onChange={setSelectedFuelType}
+                    options={fuelTypes}
+                  />
 
-                  {/* body */}
-                  <div className="p-5 flex-1 flex flex-col">
-                    <div>
-                      <h3 className="text-xl font-black text-white group-hover:text-cyan-300 transition-colors">
-                        {car.name}
-                      </h3>
-                      <p className="text-xs text-white/70 mt-1">{car.meta}</p>
-                      <p className="text-xs text-cyan-200/90 mt-2">
-                        {car.type} • {car.transmission} • {car.seats} seats • ⭐ {car.rating.toFixed(1)}
-                      </p>
-                    </div>
+                  {/* Transmission Filter */}
+                  <FilterSelect
+                    label="Transmission"
+                    value={selectedTransmission}
+                    onChange={setSelectedTransmission}
+                    options={transmissions}
+                  />
 
-                    <div className="mt-auto flex items-center justify-between gap-3 pt-5">
-                      <p className="text-cyan-200 font-black text-lg">
-                        ₹{car.pricePerDay}
-                        <span className="text-white/60 text-xs font-semibold">/day</span>
-                      </p>
+                  {/* Seats Filter */}
+                  <FilterSelect
+                    label="Seats"
+                    value={selectedSeats}
+                    onChange={setSelectedSeats}
+                    options={seatOptions}
+                  />
+                </div>
 
-                      <motion.button
-                        whileHover={{
-                          scale: 1.06,
-                          boxShadow:
-                            "0 0 28px rgba(34,211,238,0.28), 0 0 26px rgba(168,85,247,0.20)",
-                        }}
-                        whileTap={{ scale: 0.98 }}
-                        transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                        onClick={() => navigate(`/car/${car.id}`)}
-                        className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:brightness-110 transition"
-                      >
-                        Book Now
-                      </motion.button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {filteredCars.length === 0 && (
-              <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 text-white/70">
-                No cars match these filters. Try changing Car Type / Price / Transmission.
+                {/* Price Range Filter */}
+                <div className="mt-6">
+                  <label className="text-sm font-semibold text-slate-300 mb-3 block">
+                    Price Range: ₹{priceRange[0]} - ₹{priceRange[1]} / day
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max={Math.max(...cars.map(c => c.pricePerDay || 0), 10000)}
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  />
+                </div>
               </div>
-            )}
-          </motion.section>
-        </div>
-      </motion.main>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Results Count */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6"
+        >
+          <p className="text-slate-400">
+            Showing <span className="text-white font-semibold">{filteredCars.length}</span> of{' '}
+            <span className="text-white font-semibold">{cars.length}</span> vehicles
+          </p>
+        </motion.div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
+            <p className="text-slate-400 text-lg">Loading amazing cars for you...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
+              <X className="w-8 h-8 text-rose-400" />
+            </div>
+            <p className="text-rose-400 text-lg font-semibold mb-2">Failed to load cars</p>
+            <p className="text-slate-400 mb-6">{error}</p>
+            <button
+              onClick={fetchCars}
+              className="px-6 py-3 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-400 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* No Results */}
+        {!loading && !error && filteredCars.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+              <Search className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-300 text-lg font-semibold mb-2">No cars found</p>
+            <p className="text-slate-400 mb-6">Try adjusting your filters or search terms</p>
+            <button
+              onClick={handleClearFilters}
+              className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+
+        {/* Cars Grid */}
+        {!loading && !error && filteredCars.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {filteredCars.map((car, index) => (
+              <CarCard
+                key={car._id || index}
+                car={car}
+                index={index}
+                onViewDetails={() => handleViewDetails(car._id)}
+                onBookNow={() => handleBookNow(car)}
+              />
+            ))}
+          </motion.div>
+        )}
+      </main>
     </div>
+  );
+};
+
+// Filter Chip Component
+const FilterChip = ({ label, onRemove }) => (
+  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 text-sm">
+    <span>{label}</span>
+    <button
+      onClick={onRemove}
+      className="hover:bg-cyan-400/20 rounded-full p-0.5 transition-colors"
+    >
+      <X className="w-3.5 h-3.5" />
+    </button>
+  </div>
+);
+
+// Filter Select Component
+const FilterSelect = ({ label, value, onChange, options }) => (
+  <div>
+    <label className="text-sm font-semibold text-slate-300 mb-2 block">{label}</label>
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white appearance-none cursor-pointer focus:outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 transition-all"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+    </div>
+  </div>
+);
+
+// Car Card Component
+const CarCard = ({ car, index, onViewDetails, onBookNow }) => {
+  const [imageError, setImageError] = useState(false);
+  const defaultImage = 'https://via.placeholder.com/400x300/1e293b/64748b?text=Car+Image';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      whileHover={{ y: -5 }}
+      className="group rounded-2xl bg-white/5 border border-white/10 overflow-hidden backdrop-blur-xl hover:border-cyan-400/30 transition-all duration-300"
+    >
+      {/* Car Image */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-slate-800">
+        <img
+          src={imageError ? defaultImage : (car.images?.[0] || defaultImage)}
+          alt={car.name || 'Car'}
+          onError={() => setImageError(true)}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
+        
+        {/* Featured Badge */}
+        {car.featured && (
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-yellow-500/90 backdrop-blur-sm text-slate-900 text-xs font-bold">
+            Featured
+          </div>
+        )}
+
+        {/* Rating Badge */}
+        {car.rating && (
+          <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-slate-900/80 backdrop-blur-sm flex items-center gap-1.5">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <span className="text-white text-sm font-bold">{car.rating.toFixed(1)}</span>
+          </div>
+        )}
+
+        {/* Hover Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+
+      {/* Car Details */}
+      <div className="p-6">
+        {/* Brand & Model */}
+        <div className="mb-3">
+          <p className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">
+            {car.brand || 'Brand'}
+          </p>
+          <h3 className="text-xl font-black text-white group-hover:text-cyan-400 transition-colors">
+            {car.model || car.name || 'Car Model'}
+          </h3>
+        </div>
+
+        {/* Specs */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="flex items-center gap-2 text-slate-400">
+            <Users className="w-4 h-4 text-cyan-400" />
+            <span className="text-sm">{car.seats || 4} Seats</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <Fuel className="w-4 h-4 text-purple-400" />
+            <span className="text-sm text-xs">{car.fuelType || 'Petrol'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <Gauge className="w-4 h-4 text-rose-400" />
+            <span className="text-sm text-xs">{car.transmission || 'Auto'}</span>
+          </div>
+        </div>
+
+        {/* Location */}
+        {car.location && (
+          <div className="flex items-center gap-2 text-slate-400 mb-4 text-sm">
+            <MapPin className="w-4 h-4 text-slate-500" />
+            <span>{car.location}</span>
+          </div>
+        )}
+
+        {/* Price & Actions */}
+        <div className="flex items-end justify-between pt-4 border-t border-white/10">
+          <div>
+            <p className="text-xs text-slate-500 mb-1">Starting from</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
+                ₹{car.pricePerDay || 0}
+              </span>
+              <span className="text-sm text-slate-500">/day</span>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onViewDetails}
+              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 transition-colors"
+            >
+              Details
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onBookNow}
+              className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors flex items-center gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              Book
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 

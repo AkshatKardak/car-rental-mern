@@ -3,6 +3,9 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import DashboardNavbar from "../components/layout/DashboardNavbar";
 import { CalendarDays, Clock, MapPin, Car, CreditCard } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { bookingService } from '../services/bookingService';
+
 
 const container = {
   hidden: { opacity: 0 },
@@ -17,37 +20,41 @@ const fadeUp = {
 const MyBookings = () => {
   const navigate = useNavigate();
 
-  // Demo bookings (replace with API later)
-  const bookings = useMemo(
-    () => [
-      // Example:
-      {
-      id: "BK-1024",
-       carName: "Porsche 911 Carrera",
-        status: "Confirmed", // Confirmed | Pending | Completed | Cancelled
-       pickup: "Artist Village, Navi Mumbai",
-        dropoff: "BKC, Mumbai",
-       start: "08 Jan 2026, 10:00 AM",
-       end: "10 Jan 2026, 10:00 AM",
-        total: 4497,
-      },
-    ],
-    []
-  );
+const [bookings, setBookings] = useState([]);
+const [loading, setLoading] = useState(true);
 
-  const statusBadge = (status) => {
-    const base =
-      "px-2.5 py-1 rounded-lg text-[11px] font-extrabold border backdrop-blur";
-    if (status === "Confirmed")
-      return `${base} bg-emerald-500/15 text-emerald-200 border-emerald-400/25`;
-    if (status === "Pending")
-      return `${base} bg-amber-500/15 text-amber-200 border-amber-400/25`;
-    if (status === "Completed")
-      return `${base} bg-cyan-500/15 text-cyan-200 border-cyan-400/25`;
-    if (status === "Cancelled")
-      return `${base} bg-rose-500/15 text-rose-200 border-rose-400/25`;
-    return `${base} bg-white/10 text-white/80 border-white/10`;
-  };
+useEffect(() => {
+  fetchBookings();
+}, []);
+
+const fetchBookings = async () => {
+  try {
+    setLoading(true);
+    const response = await bookingService.getUserBookings();
+    setBookings(response.data);
+  } catch (error) {
+    console.error('Failed to fetch bookings:', error);
+    alert('Failed to load bookings. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleCancelBooking = async (bookingId) => {
+  if (!confirm('Are you sure you want to cancel this booking?')) {
+    return;
+  }
+
+  try {
+    await bookingService.cancelBooking(bookingId);
+    alert('Booking cancelled successfully');
+    fetchBookings(); // Refresh list
+  } catch (error) {
+    console.error('Failed to cancel booking:', error);
+    alert('Failed to cancel booking. Please try again.');
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#101f22]/80 to-purple-900/40 text-white">
