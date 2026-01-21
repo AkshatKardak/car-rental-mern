@@ -1,14 +1,1 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    @apply bg-background text-text-primary;
-    overflow-x: hidden;
-  }
-}
-
-html {
-  scroll-behavior: smooth;
-}
+@import "tailwindcss";
