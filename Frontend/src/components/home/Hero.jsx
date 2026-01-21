@@ -7,25 +7,24 @@ import { FadeRight, FadeLeft } from '../../utility/Animation'
 export default function Hero() {
   return (
     <section className="relative overflow-hidden">
-      {/* Background */}
+      {/* Background Decor */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-hover to-primary-dark" />
-        <div className="absolute top-[-10%] left-[-10%] w-[520px] h-[520px] bg-primary/30 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[650px] h-[650px] bg-green-500/20 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[520px] h-[520px] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[650px] h-[650px] bg-primary/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-20 lg:py-28">
         <div className="flex flex-col lg:flex-row items-center gap-14">
-          
+
           {/* Left Content */}
-          <div className="lg:w-1/2 text-white space-y-6">
+          <div className="lg:w-1/2 text-text-primary space-y-6">
             <motion.div
               variants={FadeRight(0.2)}
               initial="hidden"
               animate="visible"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full
-                         bg-white/10 border border-white/20 backdrop-blur-md
-                         text-sm font-semibold"
+                         bg-primary/10 border border-primary/20
+                         text-sm font-bold text-primary"
             >
               Smart rentals • AI powered
             </motion.div>
@@ -34,10 +33,10 @@ export default function Hero() {
               variants={FadeRight(0.3)}
               initial="hidden"
               animate="visible"
-              className="text-4xl md:text-6xl font-bold leading-tight"
+              className="text-4xl md:text-6xl font-black leading-tight tracking-tight"
             >
               Find Your
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-green-200">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-dark">
                 Perfect Ride
               </span>
             </motion.h1>
@@ -46,7 +45,7 @@ export default function Hero() {
               variants={FadeRight(0.4)}
               initial="hidden"
               animate="visible"
-              className="text-lg text-white/90"
+              className="text-lg text-text-secondary font-medium leading-relaxed"
             >
               Premium cars at unbeatable prices. AI-powered recommendations, smooth booking, and secure payments.
             </motion.p>
@@ -66,10 +65,10 @@ export default function Hero() {
                 <div
                   key={idx}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl
-                             bg-white/10 border border-white/20 backdrop-blur-md"
+                             bg-background-secondary border border-border-light text-text-secondary"
                 >
-                  {item.icon}
-                  <span className="text-sm font-medium">{item.text}</span>
+                  <span className="text-primary">{item.icon}</span>
+                  <span className="text-sm font-bold uppercase tracking-wider">{item.text}</span>
                 </div>
               ))}
             </motion.div>
@@ -83,16 +82,16 @@ export default function Hero() {
             >
               <Link
                 to="/browsecars"
-                className="bg-white text-primary px-8 py-4 rounded-lg text-lg font-semibold
-                           hover:bg-background-secondary transition"
+                className="bg-primary text-white px-8 py-4 rounded-xl text-lg font-black uppercase tracking-widest shadow-lg shadow-primary/20
+                           hover:bg-primary-hover transition-all hover:scale-105 active:scale-95"
               >
                 Browse Cars
               </Link>
 
               <Link
                 to="/offers"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg
-                           hover:bg-white hover:text-primary transition"
+                className="border-2 border-primary text-primary px-8 py-4 rounded-xl text-lg font-black uppercase tracking-widest
+                           hover:bg-primary hover:text-white transition-all hover:scale-105 active:scale-95"
               >
                 View Offers
               </Link>
@@ -109,11 +108,11 @@ export default function Hero() {
             <motion.img
               src={herocar}
               alt="Premium Car"
-              className="w-full drop-shadow-2xl"
+              className="w-full drop-shadow-[0_20px_50px_rgba(16,163,16,0.2)]"
               animate={{ y: [0, -18, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <div className="absolute inset-0 -z-10 blur-3xl bg-gradient-to-r from-primary/40 to-green-400/30" />
+            <div className="absolute inset-0 -z-10 blur-3xl bg-gradient-to-r from-primary/20 to-primary-hover/10 rounded-full" />
           </motion.div>
         </div>
 
