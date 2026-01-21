@@ -8,59 +8,57 @@ import instagram from '../../assets/instagram.png'
 
 const Footer = () => {
   const socialLinks = [
-    { name: 'Facebook', img: facebook, url: 'https://facebook.com', color: 'from-blue-600 to-blue-400' },
-    { name: 'Twitter', img: twitter, url: 'https://twitter.com', color: 'from-sky-600 to-sky-400' },
-    { name: 'Instagram', img: instagram, url: 'https://instagram.com', color: 'from-pink-600 to-purple-600' },
+    { name: 'Facebook', img: facebook, url: 'https://facebook.com' },
+    { name: 'Twitter', img: twitter, url: 'https://twitter.com' },
+    { name: 'Instagram', img: instagram, url: 'https://instagram.com' },
   ]
 
- return (
-    <footer className='bg-slate-950 border-t border-purple-500/30'>
+  return (
+    <footer className='bg-background border-t border-border-light'>
       <div className='max-w-7xl mx-auto px-4 lg:px-8 py-12'>
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
-          
-          {/* Brand - Using favicon from public folder */}
+
+          {/* Brand */}
           <div>
             <div className='flex items-center gap-2 mb-4'>
-              {/* Reference public folder with /tab.png */}
-              <img 
-                src="/tab.png" 
-                alt="RentRide Logo" 
+              <img
+                src="/tab.png"
+                alt="RentRide Logo"
                 className='w-10 h-10 object-contain'
               />
-              <span className='text-2xl font-bold gradient-text'>RentRide</span>
+              <span className='text-2xl font-bold text-primary'>RentRide</span>
             </div>
-            <p className='text-gray-400 mb-4'>
-              Level up your journey with legendary vehicles from our exclusive gaming collection.
+            <p className='text-text-secondary mb-4'>
+              Reliable, swift, and comfortable car rentals for every journey.
             </p>
-            
+
             {/* Social Media Icons */}
             <div className='flex gap-3'>
               {socialLinks.map((social) => (
-                <motion.a
+                <a
                   key={social.name}
-                  whileHover={{ scale: 1.1, y: -2 }}
                   href={social.url}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-gradient-to-r hover:from-purple-600 hover:to-cyan-600 transition-all p-2 group'
+                  className='w-10 h-10 bg-background-secondary border border-border-light rounded-lg flex items-center justify-center hover:bg-primary-hover hover:border-primary-hover group transition-all'
                 >
-                  <img 
-                    src={social.img} 
-                    alt={social.name} 
-                    className='w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-opacity'
+                  <img
+                    src={social.img}
+                    alt={social.name}
+                    className='w-5 h-5 object-contain opacity-70 group-hover:opacity-100 group-hover:invert group-hover:brightness-0 transition-all'
                   />
-                </motion.a>
+                </a>
               ))}
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className='text-xl font-bold text-cyan-400 mb-4'>Quick Links</h3>
+            <h3 className='text-xl font-bold text-text-primary mb-4'>Quick Links</h3>
             <ul className='space-y-2'>
               {['Home', 'Inventory', 'About Us', 'Contact', 'FAQ'].map((link) => (
                 <li key={link}>
-                  <a href='#' className='text-gray-400 hover:text-cyan-400 transition-colors hover:translate-x-1 inline-block'>
+                  <a href='#' className='text-text-secondary hover:text-primary transition-colors hover:translate-x-1 inline-block'>
                     → {link}
                   </a>
                 </li>
@@ -70,11 +68,11 @@ const Footer = () => {
 
           {/* Services */}
           <div>
-            <h3 className='text-xl font-bold text-purple-400 mb-4'>Services</h3>
+            <h3 className='text-xl font-bold text-text-primary mb-4'>Services</h3>
             <ul className='space-y-2'>
               {['Luxury Cars', 'Sports Cars', 'SUVs', 'Electric Vehicles', 'Chauffeur Service'].map((service) => (
                 <li key={service}>
-                  <a href='#' className='text-gray-400 hover:text-purple-400 transition-colors hover:translate-x-1 inline-block'>
+                  <a href='#' className='text-text-secondary hover:text-primary transition-colors hover:translate-x-1 inline-block'>
                     → {service}
                   </a>
                 </li>
@@ -84,18 +82,18 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h3 className='text-xl font-bold text-pink-400 mb-4'>Contact Us</h3>
+            <h3 className='text-xl font-bold text-text-primary mb-4'>Contact Us</h3>
             <ul className='space-y-3'>
-              <li className='flex items-start gap-3 text-gray-400 group hover:text-pink-400 transition-colors'>
-                <MapPin size={20} className='text-pink-400 mt-1 flex-shrink-0 group-hover:animate-bounce' />
-                <span>123 Gaming Street, Mumbai, Maharashtra, India</span>
+              <li className='flex items-start gap-3 text-text-secondary group hover:text-primary transition-colors'>
+                <MapPin size={20} className='text-primary mt-1 flex-shrink-0' />
+                <span>123 RentRide Street, Mumbai, Maharashtra, India</span>
               </li>
-              <li className='flex items-center gap-3 text-gray-400 group hover:text-cyan-400 transition-colors'>
-                <Phone size={20} className='text-cyan-400 flex-shrink-0 group-hover:animate-pulse' />
+              <li className='flex items-center gap-3 text-text-secondary group hover:text-primary transition-colors'>
+                <Phone size={20} className='text-primary flex-shrink-0' />
                 <span>+91 98765 43210</span>
               </li>
-              <li className='flex items-center gap-3 text-gray-400 group hover:text-purple-400 transition-colors'>
-                <Mail size={20} className='text-purple-400 flex-shrink-0 group-hover:animate-pulse' />
+              <li className='flex items-center gap-3 text-text-secondary group hover:text-primary transition-colors'>
+                <Mail size={20} className='text-primary flex-shrink-0' />
                 <span>support@rentride.com</span>
               </li>
             </ul>
@@ -103,14 +101,14 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className='border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4'>
-          <p className='text-gray-400 text-sm'>
-            © 2025 RentRide. All rights reserved. Made with 💜 by <span className='text-cyan-400 font-semibold'>Akshat</span>
+        <div className='border-t border-border-light mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4'>
+          <p className='text-text-secondary text-sm'>
+            © 2025 RentRide. All rights reserved. Made with 💚 by <span className='text-primary font-semibold'>Akshat</span>
           </p>
           <div className='flex gap-6 text-sm'>
-            <a href='#' className='text-gray-400 hover:text-cyan-400 transition-colors'>Privacy Policy</a>
-            <a href='#' className='text-gray-400 hover:text-cyan-400 transition-colors'>Terms of Service</a>
-            <a href='#' className='text-gray-400 hover:text-cyan-400 transition-colors'>Cookie Policy</a>
+            <a href='#' className='text-text-secondary hover:text-primary transition-colors'>Privacy Policy</a>
+            <a href='#' className='text-text-secondary hover:text-primary transition-colors'>Terms of Service</a>
+            <a href='#' className='text-text-secondary hover:text-primary transition-colors'>Cookie Policy</a>
           </div>
         </div>
       </div>

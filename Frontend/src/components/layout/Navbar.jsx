@@ -1,139 +1,234 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, Moon, Sun, User, LogOut, Car } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../assets/logo.png'
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false)
-  const navigate = useNavigate()
+export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
-  const menuItems = [
-    { name: 'Home', href: '#home' },
-    { name: 'About', href: '#about' },
-    { name: 'Inventory', href: '#inventory' },
-    { name: 'Contact', href: '#contact' }
-  ]
+  // Get user from localStorage (you can use AuthContext instead)
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
-  // Smooth scroll function
-  const handleScroll = (e, href) => {
-    e.preventDefault()
-    const element = document.querySelector(href)
-    if (element) {
-      const offset = 80 // Height of navbar
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-      const offsetPosition = elementPosition - offset
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      })
-    }
-    setIsOpen(false) // Close mobile menu after click
-  }
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    navigate('/');
+  };
 
   return (
-    <motion.nav 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className='bg-slate-900/80 backdrop-blur-xl border-b border-purple-500/30 sticky top-0 z-50 shadow-lg shadow-purple-500/20'
-    >
-      <div className='max-w-7xl mx-auto px-4 lg:px-8'>
-        <div className='flex justify-between items-center h-16'>
+    <nav className="bg-white dark:bg-background-dark-secondary shadow-md sticky top-0 z-50 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
           {/* Logo */}
-          <motion.a 
-            href="#home"
-            onClick={(e) => handleScroll(e, '#home')}
-            whileHover={{ scale: 1.05 }}
-            className='flex items-center gap-3 cursor-pointer'
-          >
-            {/* Logo Image */}
-            <img src={Logo} alt="RentRide Logo" className='h-10 w-auto object-contain' />
-          </motion.a>
-
-          {/* Desktop Menu */}
-          <div className='hidden md:flex items-center gap-8'>
-            {menuItems.map((item) => (
-              <motion.a
-                key={item.name}
-                href={item.href}
-                onClick={(e) => handleScroll(e, item.href)}
-                whileHover={{ scale: 1.1, color: '#06b6d4' }}
-                whileTap={{ scale: 0.95 }}
-                className='text-gray-300 hover:text-cyan-400 font-semibold transition-colors'
-              >
-                {item.name}
-              </motion.a>
-            ))}
+<div className="flex items-center">
+  <Link to="/" className="flex items-center space-x-2">
+    <img
+      src={Logo}
+      alt="RentRide Logo"
+      className="w-10 h-10 object-contain"
+    />
+    <span className="text-xl font-bold text-text-primary dark:text-text-dark-primary">
+      RentRide
+    </span>
+  </Link>
+</div>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-6">
+            <Link 
+              to="/" 
+              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+            >
+              Home
+            </Link>
+            <Link 
+              to="/browsecars" 
+              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+            >
+              Browse Cars
+            </Link>
+            <Link 
+              to="/offers" 
+              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+            >
+              Offers
+            </Link>
+            <Link 
+              to="/aiassistant" 
+              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+            >
+              AI Assistant
+            </Link>
+            <Link 
+              to="/about" 
+              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+            >
+              About
+            </Link>
             
-            {/* Auth Buttons */}
-            <div className='flex items-center gap-3'>
-              <motion.button
-                onClick={() => navigate('/signin')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className='px-5 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-cyan-300 transition-all'
-              >
-                Sign In
-              </motion.button>
-              <motion.button
-                onClick={() => navigate('/signup')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className='px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-400 rounded-lg font-bold text-white glow-blue hover:shadow-cyan-500/50 transition-all'
-              >
-                Sign Up
-              </motion.button>
-            </div>
+            {user ? (
+              <>
+                <Link 
+                  to="/mybookings" 
+                  className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+                >
+                  My Bookings
+                </Link>
+                <Link 
+                  to="/dashboard" 
+                  className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1 text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+                >
+                  <LogOut size={18} />
+                  <span>Logout</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/signin"
+                  className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-lg transition"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-background-secondary dark:bg-background-dark hover:bg-border-light dark:hover:bg-border-dark transition"
+            >
+              {isDarkMode ? (
+                <Sun size={20} className="text-yellow-400" />
+              ) : (
+                <Moon size={20} className="text-text-primary" />
+              )}
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className='md:hidden text-white hover:text-cyan-400 transition-colors'
-          >
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+          <div className="md:hidden flex items-center space-x-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-background-secondary dark:bg-background-dark"
+            >
+              {isDarkMode ? (
+                <Sun size={20} className="text-yellow-400" />
+              ) : (
+                <Moon size={20} className="text-text-primary" />
+              )}
+            </button>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-text-primary dark:text-text-dark-primary"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className='md:hidden pb-4 space-y-3'
-          >
-            {menuItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                onClick={(e) => handleScroll(e, item.href)}
-                className='block text-gray-300 hover:text-cyan-400 font-semibold py-2 px-4 rounded-lg hover:bg-slate-800 transition-all'
-              >
-                {item.name}
-              </a>
-            ))}
-            <div className='space-y-2 px-4'>
-              <button 
-                onClick={() => navigate('/signin')}
-                className='w-full px-6 py-2 border-2 border-purple-500 text-purple-400 rounded-lg font-bold hover:bg-cyan-500 transition-all'
-              >
-                Sign In
-              </button>
-              <button 
-                onClick={() => navigate('/signup')}
-                className='w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-400 rounded-lg font-bold text-white'
-              >
-                Sign Up
-              </button>
-            </div>
-          </motion.div>
-        )}
       </div>
-    </motion.nav>
-  )
-}
 
-export default Navbar
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden bg-white dark:bg-background-dark-secondary border-t border-border-light dark:border-border-dark">
+          <div className="px-4 py-4 space-y-3">
+            <Link
+              to="/"
+              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              to="/browsecars"
+              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              Browse Cars
+            </Link>
+            <Link
+              to="/offers"
+              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              Offers
+            </Link>
+            <Link
+              to="/aiassistant"
+              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              AI Assistant
+            </Link>
+            <Link
+              to="/about"
+              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              About
+            </Link>
+            
+            {user ? (
+              <>
+                <Link
+                  to="/mybookings"
+                  className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  My Bookings
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="block w-full text-left text-text-primary dark:text-text-dark-primary hover:text-primary"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/signin"
+                  className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-lg text-center"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}

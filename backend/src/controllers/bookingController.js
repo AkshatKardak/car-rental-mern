@@ -1,173 +1,228 @@
 const Booking = require('../models/Booking');
 const Car = require('../models/Car');
-const Offer = require('../models/Offer');
-const { ErrorResponse } = require('../middleware/errorHandler');
-const calculatePrice = require('../utils/calculatePrice');
-const { sendBookingConfirmation } = require('../services/emailService');
+const Promotion = require('../models/Promotion');
 
-// @desc    Create new booking
-// @route   POST /api/bookings
-// @access  Private
-exports.createBooking = async (req, res, next) => {
-    try {
-        const { carId, startDate, endDate, offerCode } = req.body;
-
-        const car = await Car.findById(carId);
-
-        if (!car) {
-            return next(new ErrorResponse('Car not found', 404));
-        }
-
-        // Basic Availability Check (Overlap)
-        // Find if any booking for this car overlaps with requested dates
-        // Assuming dates are valid Date objects or strings
-        const existingBooking = await Booking.find({
-            car: carId,
-            status: { $in: ['confirmed', 'pending'] }, // Exclude cancelled/completed maybe? Depends on logic. Usually exclude pending if you block concurrency.
-            // Check overlap
-            $or: [
-                { startDate: { $lte: new Date(endDate) }, endDate: { $gte: new Date(startDate) } }
-            ]
-        });
-
-        if (existingBooking.length > 0) {
-            return next(new ErrorResponse('Car is not available for selected dates', 400));
-        }
-
-        // Calculate Price
-        let { days, totalPrice } = calculatePrice(startDate, endDate, car.pricePerDay);
-
-        // Apply Offer
-        if (offerCode) {
-            const offer = await Offer.findOne({ code: offerCode, isActive: true });
-            if (offer && offer.isValid()) {
-                if (offer.discountType === 'percentage') {
-                    totalPrice = totalPrice - (totalPrice * (offer.discountValue / 100));
-                } else if (offer.discountType === 'fixed') {
-                    totalPrice = totalPrice - offer.discountValue;
-                }
-                // Increment usage
-                offer.usedCount += 1;
-                await offer.save();
-            }
-        }
-
-        const booking = await Booking.create({
-            user: req.user.id,
-            car: carId,
-            startDate,
-            endDate,
-            totalPrice
-        });
-
-        // Send email
-        try {
-            await sendBookingConfirmation(req.user, booking);
-        } catch (err) {
-            console.error('Email send failed', err);
-        }
-
-        res.status(201).json({
-            success: true,
-            data: booking
-        });
-    } catch (err) {
-        next(err);
+// Create booking with promotion
+exports.createBooking = async (req, res) => {
+  try {
+    const { carId, startDate, endDate, promotionCode } = req.body;
+    
+    // Get car details
+    const car = await Car.findById(carId);
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: 'Car not found'
+      });
     }
+    
+    // Check car availability
+    if (!car.available) {
+      return res.status(400).json({
+        success: false,
+        message: 'Car is not available'
+      });
+    }
+    
+    // Calculate base price
+    const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+    let totalPrice = car.pricePerDay * days;
+    
+    // Apply promotion if provided
+    let promotion = null;
+    let discount = 0;
+    
+    if (promotionCode) {
+      promotion = await Promotion.findOne({ 
+        code: promotionCode.toUpperCase() 
+      });
+      
+      if (promotion && promotion.isValid() && promotion.isApplicableToVehicle(carId)) {
+        if (totalPrice >= promotion.minBookingAmount) {
+          discount = promotion.calculateDiscount(totalPrice);
+          totalPrice = totalPrice - discount;
+          
+          // Increment usage count
+          promotion.usedCount += 1;
+          await promotion.save();
+        }
+      }
+    }
+    
+    // Create booking
+    const booking = await Booking.create({
+      user: req.user._id,
+      car: carId,
+      startDate,
+      endDate,
+      promotion: promotion ? promotion._id : null,
+      promotionCode: promotionCode || null,
+      discount,
+      totalPrice
+    });
+    
+    // Populate car details
+    await booking.populate('car', 'name brand model pricePerDay');
+    
+    res.status(201).json({
+      success: true,
+      message: 'Booking created successfully',
+      data: booking
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Error creating booking',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Get my bookings
-// @route   GET /api/bookings/my-bookings
-// @access  Private
-exports.getMyBookings = async (req, res, next) => {
-    try {
-        const bookings = await Booking.find({ user: req.user.id }).populate('car');
-
-        res.status(200).json({
-            success: true,
-            count: bookings.length,
-            data: bookings
-        });
-    } catch (err) {
-        next(err);
+// Get all bookings (Admin only)
+exports.getAllBookings = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+    
+    const filter = {};
+    if (status) {
+      filter.status = status;
     }
+    
+    const bookings = await Booking.find(filter)
+      .populate('user', 'name email phone')
+      .populate('car', 'name brand model')
+      .populate('promotion', 'code name')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+    
+    const count = await Booking.countDocuments(filter);
+    
+    res.json({
+      success: true,
+      count: bookings.length,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      data: bookings
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching bookings',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Get booking by ID
-// @route   GET /api/bookings/:id
-// @access  Private
-exports.getBookingById = async (req, res, next) => {
-    try {
-        const booking = await Booking.findById(req.params.id).populate('car').populate('user', 'name email');
-
-        if (!booking) {
-            return next(new ErrorResponse('Booking not found', 404));
-        }
-
-        // Verify owner or admin
-        if (booking.user.id !== req.user.id && req.user.role !== 'admin') {
-            return next(new ErrorResponse('Not authorized to view this booking', 401));
-        }
-
-        res.status(200).json({
-            success: true,
-            data: booking
-        });
-    } catch (err) {
-        next(err);
+// Get single booking
+exports.getBookingById = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate('user', 'name email phone')
+      .populate('car', 'name brand model pricePerDay')
+      .populate('promotion', 'code name type value');
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
     }
+    
+    // Check if user owns this booking or is admin
+    if (booking.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view this booking'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: booking
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching booking',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Cancel booking
-// @route   PUT /api/bookings/:id/cancel
-// @access  Private
-exports.cancelBooking = async (req, res, next) => {
-    try {
-        let booking = await Booking.findById(req.params.id);
-
-        if (!booking) {
-            return next(new ErrorResponse('Booking not found', 404));
-        }
-
-        if (booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
-            return next(new ErrorResponse('Not authorized to cancel this booking', 401));
-        }
-
-        booking.status = 'cancelled';
-        await booking.save();
-
-        res.status(200).json({
-            success: true,
-            data: booking
-        });
-    } catch (err) {
-        next(err);
-    }
+// Get user's own bookings
+exports.getUserBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find({ user: req.user._id })
+      .populate('car', 'name brand model pricePerDay image')
+      .populate('promotion', 'code name')
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      count: bookings.length,
+      data: bookings
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching your bookings',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Update booking status (Admin)
-// @route   PUT /api/bookings/:id/status
-// @access  Private/Admin
-exports.updateBookingStatus = async (req, res, next) => {
-    try {
-        const { status, paymentStatus } = req.body;
-
-        let booking = await Booking.findById(req.params.id);
-
-        if (!booking) {
-            return next(new ErrorResponse('Booking not found', 404));
-        }
-
-        if (status) booking.status = status;
-        if (paymentStatus) booking.paymentStatus = paymentStatus;
-
-        await booking.save();
-
-        res.status(200).json({
-            success: true,
-            data: booking
-        });
-    } catch (err) {
-        next(err);
+// Update booking (Admin only)
+exports.updateBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    ).populate('car', 'name brand model');
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
     }
+    
+    res.json({
+      success: true,
+      message: 'Booking updated successfully',
+      data: booking
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Error updating booking',
+      error: error.message
+    });
+  }
+};
+
+// Delete booking (Admin only)
+exports.deleteBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndDelete(req.params.id);
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Booking deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting booking',
+      error: error.message
+    });
+  }
 };

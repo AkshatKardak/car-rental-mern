@@ -13,6 +13,9 @@ const offerRoutes = require('./routes/offerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const promotionRoutes = require('./routes/promotionRoutes');
 const damageRoutes = require('./routes/damageRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+
+
 
 const app = express();
 
@@ -39,6 +42,7 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/damage-reports', damageRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Base route
 app.get('/', (req, res) => {

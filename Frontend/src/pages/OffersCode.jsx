@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/DashboardNavbar';
 import { promotionService } from '../services/promotionService';
+import { Tag, Clock, ChevronRight, Copy, CheckCircle2, AlertCircle, History } from 'lucide-react';
 
 const Offers = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const Offers = () => {
   const [promoCode, setPromoCode] = useState('');
   const [showToast, setShowToast] = useState(false);
 
-  // For promo validation (optional - can be passed from booking flow)
+  // For promo validation
   const [selectedCarId, setSelectedCarId] = useState(null);
   const [bookingAmount, setBookingAmount] = useState(0);
 
@@ -26,7 +27,7 @@ const Offers = () => {
     {
       id: 1,
       title: 'Weekend Special',
-      description: 'Save on weekend rentals',
+      description: 'Save on weekend rentals for your next getaway',
       discount: '25%',
       code: 'WEEKEND25',
       category: 'weekend',
@@ -37,18 +38,18 @@ const Offers = () => {
     {
       id: 2,
       title: 'Long-term Discount',
-      description: '7+ days booking',
+      description: 'Book for 7+ days and save big',
       discount: '30%',
       code: 'LONGTERM30',
       category: 'longterm',
-      badge: 'New',
-      badgeColor: 'purple',
+      badge: 'Best Value',
+      badgeColor: 'blue',
       image: 'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=800&q=80'
     },
     {
       id: 3,
       title: 'Luxury Experience',
-      description: 'Premium cars only',
+      description: 'Exclusive discount for premium car models',
       discount: '₹500',
       code: 'LUXURY500',
       category: 'luxury',
@@ -59,12 +60,12 @@ const Offers = () => {
     {
       id: 4,
       title: 'Flash Sale',
-      description: 'Limited time offer',
+      description: 'Limited time offer, book before it expires',
       discount: '40%',
       code: 'FLASH40',
       category: 'flash',
-      badge: 'Limited',
-      badgeColor: 'primary',
+      badge: 'Ending Soon',
+      badgeColor: 'red',
       image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'
     },
   ];
@@ -79,15 +80,14 @@ const Offers = () => {
       setLoading(true);
       setError(null);
       const response = await promotionService.getAllPromotions();
-      
+
       if (response.success && response.data) {
-        // Map API data to card format
         const mappedPromotions = response.data.map((promo) => ({
           id: promo._id,
           title: promo.name || 'Special Offer',
           description: promo.description || 'Limited time discount',
-          discount: promo.discountType === 'percentage' 
-            ? `${promo.discountValue}%` 
+          discount: promo.discountType === 'percentage'
+            ? `${promo.discountValue}%`
             : `₹${promo.discountValue}`,
           code: promo.code,
           category: promo.category || 'all',
@@ -97,16 +97,14 @@ const Offers = () => {
           validUntil: promo.validUntil,
           minBookingAmount: promo.minBookingAmount,
         }));
-        
+
         setPromotions(mappedPromotions);
       } else {
-        // Use dummy data if API fails
         setPromotions(dummyOffers);
       }
     } catch (err) {
       console.error('Failed to fetch promotions:', err);
       setError(err.message || 'Failed to load promotions');
-      // Use dummy data as fallback
       setPromotions(dummyOffers);
     } finally {
       setLoading(false);
@@ -127,7 +125,6 @@ const Offers = () => {
 
     const code = promoCode.trim().toUpperCase();
 
-    // If we have booking context, validate the promo
     if (selectedCarId && bookingAmount) {
       try {
         const response = await promotionService.validatePromoCode(
@@ -138,7 +135,6 @@ const Offers = () => {
 
         if (response.success) {
           alert(`Promo applied! You saved ₹${response.data.discount}`);
-          // Navigate to payment with discount
           navigate('/payment', {
             state: {
               promoCode: code,
@@ -151,94 +147,78 @@ const Offers = () => {
         alert(error.response?.data?.message || 'Invalid or expired promo code');
       }
     } else {
-      // If no booking context, just show success message
       alert(`Promo code "${code}" will be applied at checkout!`);
       setPromoCode('');
     }
   };
 
-  // Use promotions for filtering, fallback to dummy offers if empty
   const offers = promotions.length > 0 ? promotions : dummyOffers;
 
-  const filteredOffers = selectedFilter === 'all' 
-    ? offers 
+  const filteredOffers = selectedFilter === 'all'
+    ? offers
     : offers.filter(offer => offer.category === selectedFilter);
 
   return (
-    <div className="relative min-h-screen w-full bg-dashboard-gradient">
-      {/* Background Effects */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-900/20 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]"></div>
-      </div>
+    <div className="min-h-screen bg-background-secondary text-text-primary">
+      <Navbar />
 
-      {/* Navbar */}
-      <div className="relative z-50">
-        <Navbar />
-      </div>
-
-      {/* Main Content */}
-      <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-10 relative z-10">
-        {/* Page Heading */}
-        <motion.div 
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header Section */}
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12"
+          className="flex flex-col md:flex-row justify-between items-end gap-8 mb-12"
         >
-          <div className="flex flex-col gap-2">
-            <h1 className="text-5xl font-black tracking-tight leading-tight text-white">
-              Exclusive Rewards <br /> <span className="text-primary">& Deals</span>
+          <div className="flex flex-col gap-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-text-primary">
+              Exclusive <span className="text-primary italic">Deals</span> <br /> & Corporate Rewards
             </h1>
-            <p className="text-slate-400 text-lg max-w-md">
-              Fuel your next journey with premium savings and corporate benefits.
+            <p className="text-text-secondary text-lg max-w-lg">
+              Unlock premium savings for your next journey. Whether it's a weekend getaway or a long-term rental, we've got you covered.
             </p>
           </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => navigate('/mybookings')}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-sm font-bold text-white hover:bg-slate-700/50 transition-all"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                strokeWidth={2} 
-                stroke="currentColor" 
-                className="w-5 h-5"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              View History
-            </button>
-          </div>
+
+          <button
+            onClick={() => navigate('/mybookings')}
+            className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white border border-border-light text-sm font-bold text-text-primary hover:bg-gray-50 hover:border-primary/30 transition-all shadow-sm group"
+          >
+            <History className="w-5 h-5 text-primary group-hover:rotate-12 transition-transform" />
+            Booking History
+          </button>
         </motion.div>
 
-        {/* CTA Section / Manual Apply */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
+        {/* Promo Code Input Section */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="glass-panel rounded-2xl p-8 mb-12 relative overflow-hidden group border border-primary/30 shadow-neon"
+          className="rounded-3xl p-8 mb-12 relative overflow-hidden bg-white border border-border-light shadow-xl"
         >
-          <div className="absolute -right-20 -top-20 size-64 bg-primary/10 rounded-full blur-[100px]"></div>
-          <div className="absolute -left-20 -bottom-20 size-64 bg-accent-purple/10 rounded-full blur-[100px]"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 justify-between">
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold mb-2 text-white">Have a secret code?</h2>
-              <p className="text-slate-400">Redeem your voucher or corporate discount here.</p>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-center gap-10 justify-between">
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest mb-3">
+                <Tag className="w-3 h-3" />
+                Voucher Program
+              </div>
+              <h2 className="text-3xl font-black mb-2 text-text-primary">Have a secret code?</h2>
+              <p className="text-text-secondary font-medium">Redeem your corporate discount or gift voucher here.</p>
             </div>
-            <div className="flex w-full max-w-md bg-slate-900/80 border border-white/10 rounded-xl p-1 focus-within:border-primary/50 transition-all">
-              <input 
-                className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none px-4 text-white placeholder:text-slate-500" 
-                placeholder="Enter promo code..." 
+
+            <div className="flex w-full max-w-md bg-background-secondary border border-border-light rounded-2xl p-1.5 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5 transition-all shadow-inner">
+              <input
+                className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none px-6 text-text-primary font-bold placeholder:text-text-secondary/40 text-lg"
+                placeholder="PROMO CODE"
                 type="text"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 onKeyPress={(e) => e.key === 'Enter' && handleApplyPromo()}
               />
-              <button 
+              <button
                 onClick={handleApplyPromo}
-                className="px-8 py-3 rounded-lg font-bold text-slate-900 text-sm uppercase tracking-wider transition-all bg-gradient-to-r from-accent-purple to-primary hover:shadow-neon"
+                className="px-10 py-4 rounded-xl font-black text-white text-sm uppercase tracking-widest transition-all bg-primary hover:bg-primary-hover shadow-lg shadow-primary/20"
               >
                 Apply
               </button>
@@ -246,229 +226,152 @@ const Offers = () => {
           </div>
         </motion.div>
 
+        {/* Filters */}
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex gap-3 mb-10 overflow-x-auto pb-4 no-scrollbar"
+          >
+            {['all', 'weekend', 'longterm', 'luxury', 'flash'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setSelectedFilter(filter)}
+                className={`px-8 py-3 rounded-2xl font-black text-sm whitespace-nowrap transition-all border shadow-sm ${selectedFilter === filter
+                    ? 'bg-primary text-white border-primary shadow-primary/20 scale-105'
+                    : 'bg-white border-border-light text-text-secondary hover:border-primary/30 hover:text-text-primary hover:bg-gray-50'
+                  }`}
+              >
+                {filter.charAt(0).toUpperCase() + filter.slice(1).replace('term', '-Term')}
+              </button>
+            ))}
+          </motion.div>
+        )}
+
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-slate-400">Loading exclusive offers...</p>
-            </div>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 border-4 border-primary/10 border-t-primary rounded-full animate-spin mb-6"></div>
+            <p className="text-text-secondary font-bold text-lg animate-pulse">Fetching the best deals for you...</p>
           </div>
         )}
 
         {/* Error State */}
-        {error && !loading && promotions.length === 0 && (
-          <div className="glass-panel rounded-2xl p-8 text-center mb-8 border border-rose-500/20">
-            <p className="text-rose-400 font-semibold mb-2">Failed to load offers</p>
-            <p className="text-slate-400 text-sm mb-4">{error}</p>
-            <button 
+        {error && !loading && (
+          <div className="rounded-3xl p-12 text-center mb-12 bg-white border border-red-100 shadow-sm">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <p className="text-text-primary font-black text-xl mb-2">Something went wrong</p>
+            <p className="text-text-secondary text-sm mb-8">{error}</p>
+            <button
               onClick={fetchPromotions}
-              className="px-6 py-2 rounded-xl bg-primary text-slate-900 font-bold hover:shadow-neon transition-all"
+              className="px-10 py-3 rounded-2xl bg-primary text-white font-black hover:bg-primary-hover transition-all shadow-lg shadow-primary/20"
             >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {/* Chips / Filters */}
-        {!loading && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex gap-3 mb-8 overflow-x-auto pb-2"
-          >
-            <button 
-              onClick={() => setSelectedFilter('all')}
-              className={`px-6 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all ${
-                selectedFilter === 'all' 
-                  ? 'bg-primary text-slate-900 shadow-neon' 
-                  : 'bg-slate-800/50 border border-white/10 text-slate-400 hover:border-primary/50 hover:text-white'
-              }`}
-            >
-              All Offers
-            </button>
-            <button 
-              onClick={() => setSelectedFilter('weekend')}
-              className={`px-6 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                selectedFilter === 'weekend' 
-                  ? 'bg-primary text-slate-900 font-bold shadow-neon' 
-                  : 'bg-slate-800/50 border border-white/10 text-slate-400 hover:border-primary/50 hover:text-white'
-              }`}
-            >
-              Weekend
-            </button>
-            <button 
-              onClick={() => setSelectedFilter('longterm')}
-              className={`px-6 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                selectedFilter === 'longterm' 
-                  ? 'bg-primary text-slate-900 font-bold shadow-neon' 
-                  : 'bg-slate-800/50 border border-white/10 text-slate-400 hover:border-primary/50 hover:text-white'
-              }`}
-            >
-              Long-term
-            </button>
-            <button 
-              onClick={() => setSelectedFilter('luxury')}
-              className={`px-6 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                selectedFilter === 'luxury' 
-                  ? 'bg-primary text-slate-900 font-bold shadow-neon' 
-                  : 'bg-slate-800/50 border border-white/10 text-slate-400 hover:border-primary/50 hover:text-white'
-              }`}
-            >
-              Luxury
-            </button>
-            <button 
-              onClick={() => setSelectedFilter('flash')}
-              className={`px-6 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                selectedFilter === 'flash' 
-                  ? 'bg-primary text-slate-900 font-bold shadow-neon' 
-                  : 'bg-slate-800/50 border border-white/10 text-slate-400 hover:border-primary/50 hover:text-white'
-              }`}
-            >
-              Flash Deals
-            </button>
-          </motion.div>
-        )}
-
-        {/* No Results */}
-        {!loading && filteredOffers.length === 0 && (
-          <div className="glass-panel rounded-2xl p-12 text-center">
-            <p className="text-slate-400 text-lg">No offers found for this category</p>
-            <button 
-              onClick={() => setSelectedFilter('all')}
-              className="mt-4 px-6 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary font-semibold hover:bg-primary/20 transition-all"
-            >
-              View All Offers
+              Retry Connection
             </button>
           </div>
         )}
 
         {/* Offer Cards Grid */}
-        {!loading && filteredOffers.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredOffers.map((offer, index) => (
-              <motion.div
-                key={offer.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                className="glass-panel rounded-2xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all group relative"
-              >
-                {/* Badge */}
-                {offer.badge && (
-                  <div className="absolute top-4 right-4 z-20">
-                    <span 
-                      className={`${
-                        offer.badgeColor === 'primary' 
-                          ? 'bg-primary text-slate-900 shadow-neon' 
-                          : 'bg-accent-purple text-white'
-                      } text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest`}
-                    >
-                      {offer.badge}
-                    </span>
-                  </div>
-                )}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence mode="popLayout">
+              {filteredOffers.map((offer, index) => (
+                <motion.div
+                  key={offer.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white rounded-3xl overflow-hidden border border-border-light hover:border-primary/50 transition-all group relative flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-2 duration-300"
+                >
+                  {/* Image Header with Gradient */}
+                  <div className="aspect-[16/10] relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20 z-10"></div>
+                    <img
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      src={offer.image}
+                      alt={offer.title}
+                    />
 
-                {/* Image */}
-                <div className="aspect-video relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
-                  <img 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                    src={offer.image}
-                    alt={offer.title}
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80';
-                    }}
-                  />
-                </div>
+                    {offer.badge && (
+                      <div className="absolute top-4 left-4 z-20">
+                        <span className="bg-primary text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-primary/20">
+                          {offer.badge}
+                        </span>
+                      </div>
+                    )}
 
-                {/* Content */}
-                <div className="p-6 relative">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold mb-1 text-white">{offer.title}</h3>
-                      <p className="text-slate-400 text-sm">{offer.description}</p>
+                    <div className="absolute bottom-4 right-6 z-20 text-right">
+                      <p className="text-4xl font-black text-primary drop-shadow-sm">{offer.discount}</p>
+                      <p className="text-[10px] font-black text-text-primary/60 uppercase tracking-widest">Off Total Bill</p>
                     </div>
-                    <span className="text-3xl font-black text-primary">
-                      {offer.discount}
-                    </span>
                   </div>
 
-                  {/* Min Amount */}
-                  {offer.minBookingAmount > 0 && (
-                    <p className="text-xs text-slate-500 mb-3">
-                      Min. booking: ₹{offer.minBookingAmount}
-                    </p>
-                  )}
+                  {/* Content Area */}
+                  <div className="p-8 flex flex-col flex-1">
+                    <h3 className="text-2xl font-black mb-2 text-text-primary group-hover:text-primary transition-colors">{offer.title}</h3>
+                    <p className="text-text-secondary text-sm leading-relaxed mb-6">{offer.description}</p>
 
-                  {/* Promo Code Box */}
-                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-4 flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">Promo Code</p>
-                      <p className="font-mono text-lg font-bold text-white tracking-widest">{offer.code}</p>
+                    <div className="mt-auto space-y-4">
+                      {offer.minBookingAmount > 0 && (
+                        <div className="flex items-center gap-2 text-text-secondary/60 text-xs font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Min. booking of ₹{offer.minBookingAmount}
+                        </div>
+                      )}
+
+                      {/* Promo Code Box */}
+                      <div className="bg-background-secondary border border-border-light rounded-2xl p-5 flex items-center justify-between group/code transition-colors hover:border-primary/30 shadow-inner">
+                        <div>
+                          <p className="text-[9px] uppercase text-text-secondary font-black tracking-widest mb-1 opacity-60">Promo Code</p>
+                          <p className="font-mono text-xl font-bold text-text-primary tracking-[0.2em]">{offer.code}</p>
+                        </div>
+                        <button
+                          onClick={() => handleCopyCode(offer.code)}
+                          className="w-12 h-12 rounded-xl bg-white border border-border-light flex items-center justify-center text-text-secondary hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm active:scale-90"
+                          title="Copy code"
+                        >
+                          <Copy className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => handleCopyCode(offer.code)}
-                      className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-slate-900 transition-all group/btn"
-                      title="Copy code"
-                    >
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        strokeWidth={2} 
-                        stroke="currentColor" 
-                        className="w-5 h-5"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" 
-                        />
-                      </svg>
-                    </button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
 
-        {/* Footer Section */}
-        <footer className="mt-20 border-t border-white/10 py-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <p className="text-slate-500 text-sm font-medium">© 2024 RentRide Premium Mobility Services.</p>
+        {/* Footer info */}
+        <section className="mt-24 border-t border-border-light pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <History className="w-5 h-5 text-primary" />
+            </div>
+            <p className="text-text-secondary text-sm font-bold italic">Corporate Reward Program 2024</p>
           </div>
-          <div className="flex gap-8">
-            <a className="text-slate-500 hover:text-primary transition-colors text-sm cursor-pointer">Terms</a>
-            <a className="text-slate-500 hover:text-primary transition-colors text-sm cursor-pointer">Privacy</a>
-            <a className="text-slate-500 hover:text-primary transition-colors text-sm cursor-pointer">Affiliates</a>
+          <div className="flex gap-8 text-sm font-black text-text-secondary uppercase tracking-widest">
+            <a className="hover:text-primary cursor-pointer transition-colors">Safety</a>
+            <a className="hover:text-primary cursor-pointer transition-colors">Returns</a>
+            <a className="hover:text-primary cursor-pointer transition-colors">Privacy</a>
           </div>
-        </footer>
+        </section>
       </main>
 
-      {/* Toast Notification */}
+      {/* Copy Notification Toast */}
       <AnimatePresence>
         {showToast && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 right-6 z-[100]"
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-10 inset-x-0 flex justify-center z-[100] px-4"
           >
-            <div className="glass-panel border border-primary/50 rounded-xl px-6 py-4 flex items-center gap-4 shadow-neon">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                strokeWidth={2.5} 
-                stroke="currentColor" 
-                className="w-6 h-6 text-primary"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="font-bold text-white">Code Copied!</p>
+            <div className="bg-text-primary text-white rounded-2xl px-8 py-4 flex items-center gap-4 shadow-2xl">
+              <CheckCircle2 className="w-6 h-6 text-primary" />
+              <p className="font-bold">Promo code successfully copied!</p>
             </div>
           </motion.div>
         )}

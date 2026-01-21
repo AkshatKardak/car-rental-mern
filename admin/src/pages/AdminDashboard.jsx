@@ -1,147 +1,153 @@
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import { statsService } from '../services/statsService'
+import {
+  LayoutDashboard,
+  Users,
+  CarFront,
+  CreditCard,
+  CalendarDays,
+  Settings,
+  Bell,
+  RefreshCw,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  PlusCircle,
+  Tag,
+  AlertTriangle,
+  Coins,
+  ChevronDown,
+  Menu,
+  X,
+  ArrowUpRight,
+  Clock
+} from 'lucide-react'
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
   const [selectedDateRange, setSelectedDateRange] = useState('Last 30 Days')
-  const [notifications, setNotifications] = useState(0)
+  const [notifications, setNotifications] = useState(3)
 
   return (
-    <div className="relative flex h-screen w-full bg-dashboard-gradient overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] bg-accent-purple/10 rounded-full blur-[100px]"></div>
-      </div>
-
-      {/* Sidebar */}
+    <div className="relative flex h-screen w-full bg-background-secondary overflow-hidden text-text-primary">
+      {/* Sidebar - Desktop */}
       <Sidebar navigate={navigate} />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <DashboardContent 
+        <DashboardContent
           navigate={navigate}
           selectedDateRange={selectedDateRange}
           setSelectedDateRange={setSelectedDateRange}
           notifications={notifications}
           setNotifications={setNotifications}
+          setSidebarOpen={setSidebarOpen}
         />
       </main>
 
-      {/* Mobile Menu Button */}
-      <div className="fixed bottom-6 right-6 md:hidden z-50">
-        <motion.button 
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="w-14 h-14 bg-gradient-to-r from-accent-purple to-primary rounded-full shadow-neon flex items-center justify-center text-white"
-        >
-          <span 
-            className="material-symbols-outlined"
-            style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              className="fixed inset-y-0 left-0 w-[280px] bg-white z-50 md:hidden shadow-2xl"
+            >
+              <div className="p-6 flex items-center justify-between border-b border-border-light">
+                <img src={logo} alt="Logo" className="h-8 w-auto" />
+                <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-background-secondary rounded-xl transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <SidebarContent navigate={navigate} closeMobile={() => setSidebarOpen(false)} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+const Sidebar = ({ navigate }) => (
+  <aside className="hidden md:flex flex-col w-72 bg-white border-r border-border-light z-20 h-full shadow-xl shadow-black/5">
+    <div className="p-8 pb-10 flex items-center justify-center">
+      <img src={logo} alt="RentRide Logo" className="h-9 w-auto object-contain" />
+    </div>
+    <SidebarContent navigate={navigate} />
+  </aside>
+)
+
+const SidebarContent = ({ navigate, closeMobile }) => {
+  const navItems = [
+    { icon: <LayoutDashboard size={20} />, label: 'Dashboard', active: true, path: '/admin/dashboard' },
+    { icon: <Users size={20} />, label: 'User Management', active: false, path: '/admin/users' },
+    { icon: <CarFront size={20} />, label: 'Vehicles', active: false, path: '/admin/vehicles' },
+    { icon: <CreditCard size={20} />, label: 'Payments', active: false, path: '/admin/payments' },
+    { icon: <CalendarDays size={20} />, label: 'Bookings', active: false, path: '/admin/bookings' },
+  ]
+
+  const handleNav = (path) => {
+    navigate(path)
+    if (closeMobile) closeMobile()
+  }
+
+  return (
+    <div className="flex-1 flex flex-col">
+      <nav className="flex-1 flex flex-col gap-1 px-4 py-2">
+        {navItems.map((item, index) => (
+          <button
+            key={index}
+            onClick={() => handleNav(item.path)}
+            className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-200 group ${item.active
+                ? 'bg-primary/10 text-primary'
+                : 'hover:bg-background-secondary text-text-secondary hover:text-text-primary'
+              }`}
           >
-            menu
-          </span>
-        </motion.button>
+            <span className={item.active ? 'text-primary' : 'text-text-secondary group-hover:text-primary'}>
+              {item.icon}
+            </span>
+            <span className={`text-sm font-black tracking-tight ${item.active ? 'opacity-100' : 'opacity-80'}`}>
+              {item.label}
+            </span>
+          </button>
+        ))}
+
+        <div className="pt-6 mt-6 border-t border-border-light">
+          <p className="px-5 text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-4 opacity-50">System</p>
+          <button className="w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-background-secondary text-text-secondary hover:text-text-primary transition-all">
+            <Settings size={20} />
+            <span className="text-sm font-black tracking-tight opacity-80">Settings</span>
+          </button>
+        </div>
+      </nav>
+
+      <div className="p-5 border-t border-border-light bg-background-secondary/30">
+        <div className="flex items-center gap-4 p-3 rounded-2xl bg-white border border-border-light shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-black text-sm">AM</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black text-text-primary truncate">Admin</p>
+            <p className="text-[10px] text-text-secondary font-bold truncate opacity-60 uppercase">Super Admin</p>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-const Sidebar = ({ navigate }) => {
-  const navItems = [
-    { icon: 'dashboard', label: 'Dashboard', active: true, path: '/admin/dashboard' },
-    { icon: 'group', label: 'User Management', active: false, path: '/admin/users' },
-    { icon: 'directions_car', label: 'Vehicles', active: false, path: '/admin/vehicles' },
-    { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
-    { icon: 'calendar_month', label: 'Bookings', active: false, path: '/admin/bookings' },
-  ]
-
-  return (
-    <aside className="hidden md:flex flex-col w-72 glass-panel border-r border-white/5 z-20 h-full">
-      {/* Logo */}
-      <div className="p-6 flex items-center gap-3">
-        <img
-          src={logo}
-          alt="RentRide Logo"
-          className="h-12 w-auto object-contain"
-        />
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-2 px-4 py-4 overflow-y-auto">
-        {navItems.map((item, index) => (
-          <motion.button
-            key={index}
-            whileHover={{ x: 3 }}
-            onClick={() => navigate(item.path)}
-            className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group text-left ${
-              item.active
-                ? 'bg-primary/10 border border-primary/20 text-white shadow-neon'
-                : 'hover:bg-white/5 hover:text-white text-slate-400'
-            }`}
-          >
-            <span 
-              className={`material-symbols-outlined ${
-                item.active ? 'text-primary' : 'group-hover:text-primary'
-              } transition-colors`}
-              style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-            >
-              {item.icon}
-            </span>
-            <span className="font-medium">{item.label}</span>
-          </motion.button>
-        ))}
-
-        <div className="pt-4 mt-2 border-t border-white/5">
-          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
-            System
-          </p>
-          <motion.button
-            whileHover={{ x: 3 }}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white text-slate-400 transition-all duration-300 group text-left"
-          >
-            <span 
-              className="material-symbols-outlined group-hover:text-primary transition-colors"
-              style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-            >
-              settings
-            </span>
-            <span className="font-medium">Settings</span>
-          </motion.button>
-        </div>
-      </nav>
-
-      {/* User Profile */}
-      <div className="p-4 border-t border-white/5">
-        <motion.div 
-          whileHover={{ scale: 1.02 }}
-          className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent-purple to-primary flex items-center justify-center text-white font-bold text-sm">
-            AM
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Admin</p>
-            <p className="text-xs text-slate-400 truncate">Super Admin</p>
-          </div>
-          <span 
-            className="material-symbols-outlined text-slate-400 text-lg"
-            style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-          >
-            expand_more
-          </span>
-        </motion.div>
-      </div>
-    </aside>
-  )
-}
-
-const DashboardContent = ({ navigate, selectedDateRange, setSelectedDateRange, notifications, setNotifications }) => {
+const DashboardContent = ({ navigate, selectedDateRange, setSelectedDateRange, notifications, setNotifications, setSidebarOpen }) => {
   const [stats, setStats] = useState([])
   const [recentActivity, setRecentActivity] = useState([])
   const [loading, setLoading] = useState(true)
@@ -154,94 +160,57 @@ const DashboardContent = ({ navigate, selectedDateRange, setSelectedDateRange, n
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-
-      // Fetch dashboard statistics
       const statsResponse = await statsService.getDashboardStats()
-      
-      // Map backend data to frontend format
+
       setStats([
         {
           title: 'Total Revenue',
           value: `₹${statsResponse.data.totalRevenue?.toLocaleString() || '0'}`,
-          icon: 'payments',
-          change: statsResponse.data.revenueChange || '+0%',
-          trend: statsResponse.data.revenueChange?.includes('-') ? 'down' : 'up',
+          icon: <Coins className="w-5 h-5" />,
+          change: statsResponse.data.revenueChange || '+12.4%',
+          trend: 'up',
           description: 'vs last month',
           color: 'primary'
         },
         {
           title: 'Active Bookings',
-          value: statsResponse.data.activeBookings || '0',
-          icon: 'key',
-          change: statsResponse.data.bookingsChange || '+0%',
+          value: statsResponse.data.activeBookings || '45',
+          icon: <Calendar className="w-5 h-5" />,
+          change: statsResponse.data.bookingsChange || '+5.2%',
           trend: 'up',
-          description: 'vs last week',
+          description: 'Current active',
           color: 'primary'
         },
         {
           title: 'Fleet Utilization',
-          value: `${statsResponse.data.fleetUtilization || '0'}%`,
-          icon: 'speed',
-          change: statsResponse.data.utilizationChange || '0%',
-          trend: statsResponse.data.utilizationChange?.includes('-') ? 'down' : 'up',
-          description: 'Current capacity',
-          color: 'accent-purple'
+          value: `${statsResponse.data.fleetUtilization || '78'}%`,
+          icon: <CarFront className="w-5 h-5" />,
+          change: statsResponse.data.utilizationChange || '-2.1%',
+          trend: 'down',
+          description: 'Live availability',
+          color: 'orange'
         },
         {
-          title: 'Pending Requests',
-          value: statsResponse.data.pendingRequests || '0',
-          icon: 'pending_actions',
-          change: 'New',
+          title: 'Pending Claims',
+          value: statsResponse.data.pendingRequests || '8',
+          icon: <AlertTriangle className="w-5 h-5" />,
+          change: 'Priority',
           trend: 'neutral',
-          description: 'Require approval',
-          color: 'primary'
+          description: 'Damage reports',
+          color: 'red'
         },
       ])
 
-      // Fetch recent activity
       const activityResponse = await statsService.getRecentActivity(5)
       setRecentActivity(activityResponse.data.bookings || [])
 
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
-      // Keep dummy data on error
+      console.error('Data fetch failed, loading fallback UI');
       setStats([
-        {
-          title: 'Total Revenue',
-          value: '₹128,450',
-          icon: 'payments',
-          change: '+12%',
-          trend: 'up',
-          description: 'vs last month',
-          color: 'primary'
-        },
-        {
-          title: 'Active Bookings',
-          value: '45',
-          icon: 'key',
-          change: '+5%',
-          trend: 'up',
-          description: 'vs last week',
-          color: 'primary'
-        },
-        {
-          title: 'Fleet Utilization',
-          value: '78%',
-          icon: 'speed',
-          change: '-2%',
-          trend: 'down',
-          description: 'Capacity warning',
-          color: 'accent-purple'
-        },
-        {
-          title: 'Pending Requests',
-          value: '8',
-          icon: 'pending_actions',
-          change: 'New',
-          trend: 'neutral',
-          description: 'Require approval',
-          color: 'primary'
-        },
+        { title: 'Total Revenue', value: '₹1,28,450', icon: <Coins className="w-5 h-5" />, change: '+12.4%', trend: 'up', description: 'vs last month', color: 'primary' },
+        { title: 'Active Bookings', value: '45', icon: <Calendar className="w-5 h-5" />, change: '+5.2%', trend: 'up', description: 'Current active', color: 'primary' },
+        { title: 'Fleet Utilization', value: '78%', icon: <CarFront className="w-5 h-5" />, change: '-2.1%', trend: 'down', description: 'Live availability', color: 'primary' },
+        { title: 'Pending Claims', value: '8', icon: <AlertTriangle className="w-5 h-5" />, change: 'New', trend: 'neutral', description: 'Damage reports', color: 'primary' },
       ])
     } finally {
       setLoading(false)
@@ -249,280 +218,226 @@ const DashboardContent = ({ navigate, selectedDateRange, setSelectedDateRange, n
   }
 
   const quickActions = [
-    { icon: 'add_circle', title: 'Add Vehicle', description: 'Register to fleet', color: 'primary', path: '/admin/vehicles' },
-    { icon: 'local_offer', title: 'Create Promo', description: 'Marketing campaign', color: 'accent-purple', path: '/admin/promotions' },
-    { icon: 'car_crash', title: 'Review Damage', description: 'Process claims', color: 'rose', path: '/admin/damage' },
-    { icon: 'currency_exchange', title: 'Refund Request', description: 'View pending', color: 'amber', path: '/admin/payments' },
+    { icon: <PlusCircle size={20} />, title: 'Add Vehicle', description: 'Register to fleet', path: '/admin/vehicles' },
+    { icon: <Tag size={20} />, title: 'Create Promo', description: 'New campaign', path: '/admin/promotions' },
+    { icon: <AlertTriangle size={20} />, title: 'Damage Audit', description: 'Review claims', path: '/admin/damage' },
+    { icon: <RefreshCw size={20} />, title: 'Settlements', description: 'View payouts', path: '/admin/payments' },
   ]
-
-  const handleRefreshData = () => {
-    fetchDashboardData()
-    alert('Data refreshed successfully!')
-  }
-
-  const handleNotificationClick = () => {
-    setNotifications(0)
-    alert('You have checked all notifications!')
-  }
-
-  const handleQuickAction = (action) => {
-    if (action.path !== '#') {
-      navigate(action.path)
-    } else {
-      alert(`${action.title} feature coming soon!`)
-    }
-  }
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-white text-lg">Loading dashboard...</div>
+      <div className="flex-1 flex flex-col items-center justify-center bg-background-secondary gap-4">
+        <div className="w-12 h-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin"></div>
+        <p className="text-text-secondary font-black uppercase tracking-widest text-xs animate-pulse">Initializing Admin Engine</p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-10 pb-20">
-      <div className="max-w-[1400px] mx-auto space-y-8">
-        {/* Header */}
-        <motion.header 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-        >
-          <div>
-            <h2 className="text-3xl font-black text-white tracking-tight">DASHBOARD</h2>
-            <p className="text-slate-400 mt-1">Overview of fleet performance and recent activity</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800/50 border border-white/10 text-sm font-medium text-slate-300 hover:text-white hover:border-primary/50 transition-all"
-              >
-                <span 
-                  className="material-symbols-outlined text-lg"
-                  style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-                >
-                  calendar_today
-                </span>
-                <span>{selectedDateRange}</span>
-                <span 
-                  className="material-symbols-outlined text-lg"
-                  style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-                >
-                  expand_more
-                </span>
-              </motion.button>
-              
-              {showDatePicker && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute top-12 right-0 glass-panel rounded-lg p-2 w-48 z-50 border border-white/10"
-                >
-                  <button onClick={() => { setSelectedDateRange('Last 7 Days'); setShowDatePicker(false) }} className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-white/10 rounded">Last 7 Days</button>
-                  <button onClick={() => { setSelectedDateRange('Last 30 Days'); setShowDatePicker(false) }} className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-white/10 rounded">Last 30 Days</button>
-                  <button onClick={() => { setSelectedDateRange('This Month'); setShowDatePicker(false) }} className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-white/10 rounded">This Month</button>
-                </motion.div>
-              )}
+    <div className="flex-1 overflow-y-auto p-6 lg:p-10 pb-20 no-scrollbar">
+      <div className="max-w-[1400px] mx-auto space-y-10">
+        {/* Top Header Bar */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2.5 bg-white border border-border-light rounded-xl hover:bg-background-secondary transition-colors">
+              <Menu size={20} />
+            </button>
+            <div>
+              <h2 className="text-3xl font-black text-text-primary tracking-tight uppercase">System <span className="text-primary italic">Overview</span></h2>
+              <p className="text-text-secondary text-sm mt-1 font-medium">Real-time performance analytics and fleet heartbeat</p>
             </div>
-            
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleRefreshData}
-              className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800/50 border border-white/10 text-slate-300 hover:text-white hover:border-primary/50 transition-all"
-            >
-              <span 
-                className="material-symbols-outlined"
-                style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:flex-none">
+              <button
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="w-full flex items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-white border border-border-light text-sm font-bold text-text-secondary hover:text-text-primary hover:border-primary/30 transition-all shadow-sm group"
               >
-                refresh
-              </span>
-            </motion.button>
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} className="text-primary" />
+                  <span>{selectedDateRange}</span>
+                </div>
+                <ChevronDown size={16} className={`transition-transform duration-300 ${showDatePicker ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {showDatePicker && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-14 right-0 bg-white shadow-2xl rounded-2xl p-2 w-56 z-50 border border-border-light overflow-hidden"
+                  >
+                    {['Last 7 Days', 'Last 30 Days', 'This Month'].map((range) => (
+                      <button
+                        key={range}
+                        onClick={() => { setSelectedDateRange(range); setShowDatePicker(false) }}
+                        className="w-full text-left px-4 py-3 text-sm font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                      >
+                        {range}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <button
+              onClick={() => { fetchDashboardData(); alert('Data core synchronized') }}
+              className="p-3 bg-white border border-border-light rounded-2xl text-text-secondary hover:text-primary hover:border-primary/30 transition-all shadow-sm active:scale-90"
+              title="Refresh Data"
+            >
+              <RefreshCw size={20} />
+            </button>
 
             <div className="relative">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleNotificationClick}
-                className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-slate-900 hover:bg-white hover:shadow-neon transition-all"
+              <button
+                onClick={() => { setNotifications(0); alert('Alerts cleared') }}
+                className="p-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all relative overflow-hidden active:scale-95"
               >
-                <span 
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-                >
-                  notifications
-                </span>
-              </motion.button>
+                <Bell size={20} />
+              </button>
               {notifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black rounded-lg min-w-[20px] h-5 px-1 flex items-center justify-center border-2 border-background-secondary">
                   {notifications}
                 </span>
               )}
             </div>
           </div>
-        </motion.header>
+        </header>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Major KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+              className="bg-white p-7 rounded-3xl border border-border-light shadow-xl shadow-black/5 relative group hover:border-primary/40 transition-all duration-300"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span 
-                  className={`material-symbols-outlined text-6xl text-${stat.color}`}
-                  style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 48' }}
-                >
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-background-secondary rounded-2xl text-primary group-hover:bg-primary/10 transition-colors">
                   {stat.icon}
-                </span>
-              </div>
-              <p className="text-slate-400 text-sm font-medium mb-1">{stat.title}</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-bold text-white">{stat.value}</h3>
-              </div>
-              <div className="mt-4 flex items-center gap-2">
-                <span className={`flex items-center ${
-                  stat.trend === 'up' ? 'text-emerald-400 bg-emerald-400/10' :
-                  stat.trend === 'down' ? 'text-rose-400 bg-rose-400/10' :
-                  'text-emerald-400 bg-emerald-400/10'
-                } px-2 py-0.5 rounded text-xs font-bold`}>
-                  <span 
-                    className="material-symbols-outlined text-sm mr-1"
-                    style={{ fontVariationSettings: '"FILL" 0, "wght" 700, "GRAD" 0, "opsz" 20' }}
-                  >
-                    {stat.trend === 'up' ? 'trending_up' : stat.trend === 'down' ? 'trending_down' : 'priority_high'}
-                  </span>
+                </div>
+                <div className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${stat.trend === 'up' ? 'bg-green-50 text-green-600' :
+                    stat.trend === 'down' ? 'bg-red-50 text-red-600' :
+                      'bg-blue-50 text-blue-600'
+                  }`}>
+                  {stat.trend === 'up' ? <TrendingUp size={12} /> : stat.trend === 'down' ? <TrendingDown size={12} /> : null}
                   {stat.change}
-                </span>
-                <span className="text-slate-500 text-xs">{stat.description}</span>
+                </div>
               </div>
+              <p className="text-text-secondary text-xs font-black uppercase tracking-[0.1em] mb-1 opacity-60 font-display">{stat.title}</p>
+              <h3 className="text-3xl font-black text-text-primary tracking-tight">{stat.value}</h3>
+              <p className="text-[10px] text-text-secondary mt-3 font-bold opacity-40">{stat.description}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <h3 className="text-lg font-bold text-white mb-4 px-1">Quick Actions</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Control Center */}
+        <div className="space-y-6">
+          <h3 className="text-sm font-black text-text-primary uppercase tracking-[0.2em] px-1 opacity-50 flex items-center gap-2">
+            <Settings size={14} className="text-primary" /> Command Center
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {quickActions.map((action, index) => (
-              <motion.button
+              <button
                 key={index}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleQuickAction(action)}
-                className="group glass-panel p-4 rounded-xl flex items-center gap-4 hover:bg-white/5 transition-all duration-300 text-left border border-white/5 hover:border-primary/40 relative overflow-hidden"
-                type="button"
+                onClick={() => navigate(action.path)}
+                className="group bg-white p-6 rounded-3xl flex items-center gap-5 border border-border-light shadow-xl shadow-black/5 hover:translate-y-[-5px] hover:border-primary/50 transition-all text-left"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className={`w-12 h-12 rounded-lg bg-${action.color}/20 flex items-center justify-center text-${action.color} group-hover:bg-${action.color} group-hover:text-white transition-all relative z-10`}>
-                  <span 
-                    className="material-symbols-outlined"
-                    style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-                  >
-                    {action.icon}
-                  </span>
+                <div className="w-14 h-14 rounded-2xl bg-background-secondary flex items-center justify-center text-text-secondary group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
+                  {action.icon}
                 </div>
-                <div className="relative z-10">
-                  <p className="font-bold text-white">{action.title}</p>
-                  <p className="text-xs text-slate-400">{action.description}</p>
+                <div>
+                  <p className="font-black text-text-primary text-base uppercase tracking-tight">{action.title}</p>
+                  <p className="text-[10px] text-text-secondary font-bold opacity-60 uppercase">{action.description}</p>
                 </div>
-              </motion.button>
+              </button>
             ))}
           </div>
-        </motion.div>
+        </div>
 
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="glass-panel rounded-2xl p-6"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-white">Recent Activity</h3>
-            <button 
+        {/* Activity Ledger */}
+        <div className="bg-white rounded-[32px] border border-border-light shadow-2xl shadow-black/5 overflow-hidden">
+          <div className="flex items-center justify-between p-8 border-b border-border-light bg-background-secondary/20">
+            <h3 className="text-xl font-black text-text-primary uppercase tracking-tight flex items-center gap-3">
+              <RefreshCw size={20} className="text-primary" /> Recent Operations
+            </h3>
+            <button
               onClick={() => navigate('/admin/bookings')}
-              className="text-xs font-semibold text-primary uppercase tracking-wider hover:text-white transition-colors"
+              className="group text-xs font-black text-primary px-4 py-2 rounded-xl bg-primary/5 hover:bg-primary hover:text-white transition-all flex items-center gap-2"
             >
-              View All
+              VIEW FULL LEDGER <ArrowUpRight size={14} />
             </button>
           </div>
 
-          {recentActivity.length === 0 ? (
-            <p className="text-slate-400 text-center py-8">No recent activity</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-slate-400 text-xs uppercase tracking-wider border-b border-white/5">
-                    <th className="pb-4 font-medium pl-2">Vehicle</th>
-                    <th className="pb-4 font-medium">Customer</th>
-                    <th className="pb-4 font-medium">Date</th>
-                    <th className="pb-4 font-medium">Status</th>
-                    <th className="pb-4 font-medium text-right pr-2">Amount</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-text-secondary text-[10px] font-black uppercase tracking-[0.2em] border-b border-border-light bg-background-secondary/10">
+                  <th className="px-8 py-5">Vehicle Core</th>
+                  <th className="px-8 py-5">Customer Node</th>
+                  <th className="px-8 py-5">Date Index</th>
+                  <th className="px-8 py-5">Status Token</th>
+                  <th className="px-8 py-5 text-right">Value (INR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-light">
+                {recentActivity.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-3 opacity-30">
+                        <Clock size={40} />
+                        <p className="font-black text-sm uppercase tracking-widest">No activities recorded today</p>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="text-sm">
-                  {recentActivity.map((activity, index) => (
-                    <motion.tr
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                      className="border-b border-white/5 last:border-0 transition-colors cursor-pointer"
-                    >
-                      <td className="py-4 pl-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded bg-slate-800 border border-white/10"></div>
+                ) : (
+                  recentActivity.map((activity, index) => (
+                    <tr key={index} className="group hover:bg-background-secondary/40 transition-colors cursor-default">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-background-secondary border border-border-light overflow-hidden flex items-center justify-center p-1 group-hover:scale-105 transition-transform">
+                            <CarFront className="text-text-secondary/30" />
+                          </div>
                           <div>
-                            <p className="font-bold text-white">{activity.car?.name || 'Car'}</p>
-                            <p className="text-xs text-slate-500">{activity.car?.model || 'Model'}</p>
+                            <p className="font-black text-text-primary uppercase tracking-tight text-sm">{activity.car?.name || 'Vehicle ID'}</p>
+                            <p className="text-[10px] text-text-secondary font-bold opacity-60">{activity.car?.model || 'Series 2024'}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 text-slate-300">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-slate-700"></div>
-                          <span>{activity.user?.name || 'Customer'}</span>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
+                            {activity.user?.name?.charAt(0) || 'U'}
+                          </div>
+                          <span className="text-sm font-bold text-text-secondary group-hover:text-text-primary transition-colors">{activity.user?.name || 'Standard Client'}</span>
                         </div>
                       </td>
-                      <td className="py-4 text-slate-400">
+                      <td className="px-8 py-5 text-sm font-bold text-text-secondary opacity-70">
                         {new Date(activity.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          activity.status === 'Active' || activity.status === 'Confirmed' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' :
-                          activity.status === 'Completed' ? 'bg-blue-400/10 text-blue-400 border border-blue-400/20' :
-                          'bg-amber-400/10 text-amber-400 border border-amber-400/20'
-                        }`}>
+                      <td className="px-8 py-5">
+                        <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${activity.status === 'Active' || activity.status === 'Confirmed' ? 'bg-green-50 text-green-600' :
+                            activity.status === 'Completed' ? 'bg-blue-50 text-blue-600' :
+                              'bg-orange-50 text-orange-600'
+                          }`}>
                           {activity.status}
                         </span>
                       </td>
-                      <td className="py-4 text-right font-bold text-white pr-2">
+                      <td className="px-8 py-5 text-right font-black text-text-primary text-base">
                         ₹{activity.totalPrice?.toLocaleString()}
                       </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </motion.div>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   )

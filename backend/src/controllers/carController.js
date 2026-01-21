@@ -1,146 +1,180 @@
 const Car = require('../models/Car');
-const { ErrorResponse } = require('../middleware/errorHandler');
-const uploadToImgBB = require('../utils/imgbb');
 
-// @desc    Get all cars with filters (search merged here)
-// @route   GET /api/cars
-// @access  Public
-exports.getAllCars = async (req, res, next) => {
-    try {
-        const { category, minPrice, maxPrice, brand, model, availability } = req.query;
-
-        let query = {};
-
-        if (category) query.category = category;
-        if (brand) query.brand = { $regex: brand, $options: 'i' };
-        if (model) query.model = { $regex: model, $options: 'i' };
-
-        if (minPrice || maxPrice) {
-            query.pricePerDay = {};
-            if (minPrice) query.pricePerDay.$gte = minPrice;
-            if (maxPrice) query.pricePerDay.$lte = maxPrice;
-        }
-
-        if (availability) query.availability = availability === 'true';
-
-        // Check for text search if generic 'search' param is provided
-        if (req.query.search) {
-            // If we want to use the text index
-            query.$text = { $search: req.query.search };
-        }
-
-        const cars = await Car.find(query);
-
-        res.status(200).json({
-            success: true,
-            count: cars.length,
-            data: cars
-        });
-    } catch (err) {
-        next(err);
+// Get all cars with filters
+exports.getAllCars = async (req, res) => {
+  try {
+    const { 
+      category, 
+      fuelType, 
+      transmission, 
+      minPrice, 
+      maxPrice,
+      location,
+      available,
+      search,
+      sortBy = 'createdAt',
+      order = 'desc',
+      page = 1,
+      limit = 12
+    } = req.query;
+    
+    const filter = {};
+    
+    if (category) filter.category = category;
+    if (fuelType) filter.fuelType = fuelType;
+    if (transmission) filter.transmission = transmission;
+    if (location) filter.location = new RegExp(location, 'i');
+    if (available !== undefined) filter.available = available === 'true';
+    
+    if (minPrice || maxPrice) {
+      filter.pricePerDay = {};
+      if (minPrice) filter.pricePerDay.$gte = Number(minPrice);
+      if (maxPrice) filter.pricePerDay.$lte = Number(maxPrice);
     }
+    
+    if (search) {
+      filter.$text = { $search: search };
+    }
+    
+    const cars = await Car.find(filter)
+      .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+    
+    const count = await Car.countDocuments(filter);
+    
+    res.json({
+      success: true,
+      count: cars.length,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      data: cars
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching cars',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Get single car
-// @route   GET /api/cars/:id
-// @access  Public
-exports.getCarById = async (req, res, next) => {
-    try {
-        const car = await Car.findById(req.params.id);
-
-        if (!car) {
-            return next(new ErrorResponse('Car not found', 404));
-        }
-
-        res.status(200).json({
-            success: true,
-            data: car
-        });
-    } catch (err) {
-        next(err);
+// Get single car
+exports.getCarById = async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+    
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: 'Car not found'
+      });
     }
+    
+    res.json({
+      success: true,
+      data: car
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching car',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Create new car
-// @route   POST /api/cars
-// @access  Private/Admin
-exports.createCar = async (req, res, next) => {
-    try {
-        let carData = { ...req.body };
-
-        // Handle image upload if file present
-        if (req.file) {
-            const imageUrl = await uploadToImgBB(req.file.buffer);
-            carData.images = [imageUrl]; // For now single image upload from basic implementation, can be extended
-        }
-
-        // Handle features array if sent as string
-        if (typeof carData.features === 'string') {
-            carData.features = carData.features.split(',').map(f => f.trim());
-        }
-
-        const car = await Car.create(carData);
-
-        res.status(201).json({
-            success: true,
-            data: car
-        });
-    } catch (err) {
-        next(err);
-    }
+// Create car (Admin only)
+exports.createCar = async (req, res) => {
+  try {
+    const car = await Car.create(req.body);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Car created successfully',
+      data: car
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Error creating car',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Update car
-// @route   PUT /api/cars/:id
-// @access  Private/Admin
-exports.updateCar = async (req, res, next) => {
-    try {
-        let car = await Car.findById(req.params.id);
-
-        if (!car) {
-            return next(new ErrorResponse('Car not found', 404));
-        }
-
-        let updateData = { ...req.body };
-
-        // Handle image upload if file present
-        if (req.file) {
-            const imageUrl = await uploadToImgBB(req.file.buffer);
-            // Maybe append or replace? Let's push to array
-            car.images.push(imageUrl);
-            updateData.images = car.images;
-        }
-
-        car = await Car.findByIdAndUpdate(req.params.id, updateData, {
-            new: true,
-            runValidators: true
-        });
-
-        res.status(200).json({
-            success: true,
-            data: car
-        });
-    } catch (err) {
-        next(err);
+// Update car (Admin only)
+exports.updateCar = async (req, res) => {
+  try {
+    const car = await Car.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: 'Car not found'
+      });
     }
+    
+    res.json({
+      success: true,
+      message: 'Car updated successfully',
+      data: car
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Error updating car',
+      error: error.message
+    });
+  }
 };
 
-// @desc    Delete car
-// @route   DELETE /api/cars/:id
-// @access  Private/Admin
-exports.deleteCar = async (req, res, next) => {
-    try {
-        const car = await Car.findByIdAndDelete(req.params.id);
-
-        if (!car) {
-            return next(new ErrorResponse('Car not found', 404));
-        }
-
-        res.status(200).json({
-            success: true,
-            data: {}
-        });
-    } catch (err) {
-        next(err);
+// Delete car (Admin only)
+exports.deleteCar = async (req, res) => {
+  try {
+    const car = await Car.findByIdAndDelete(req.params.id);
+    
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: 'Car not found'
+      });
     }
+    
+    res.json({
+      success: true,
+      message: 'Car deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting car',
+      error: error.message
+    });
+  }
+};
+
+// Get featured cars
+exports.getFeaturedCars = async (req, res) => {
+  try {
+    const cars = await Car.find({ available: true })
+      .sort({ rating: -1 })
+      .limit(6);
+    
+    res.json({
+      success: true,
+      count: cars.length,
+      data: cars
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching featured cars',
+      error: error.message
+    });
+  }
 };

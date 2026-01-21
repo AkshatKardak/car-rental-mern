@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {
+const { 
   getAllPromotions,
   getPromotionById,
   validatePromotionCode,
@@ -9,17 +9,24 @@ const {
   deletePromotion,
   getPromotionStats
 } = require('../controllers/promotionController');
-const { protect, admin } = require('../middleware/auth');
+const { protect } = require('../middleware/authMiddleware');
+const { authorize } = require('../middleware/adminMiddleware');
 
-// Public routes
+// Public routes - no authentication needed
 router.get('/', getAllPromotions);
-router.post('/validate', protect, validatePromotionCode);
+router.post('/validate', validatePromotionCode);
+router.get('/:id', getPromotionById);
 
-// Protected admin routes
-router.post('/', protect, admin, createPromotion);
-router.get('/:id', protect, getPromotionById);
-router.put('/:id', protect, admin, updatePromotion);
-router.delete('/:id', protect, admin, deletePromotion);
-router.get('/:id/stats', protect, admin, getPromotionStats);
+// Admin-only routes
+router.post('/', protect, authorize('admin'), createPromotion);
+
+// Admin OR Manager can update
+router.put('/:id', protect, authorize('admin', 'manager'), updatePromotion);
+
+// Only admin can delete
+router.delete('/:id', protect, authorize('admin'), deletePromotion);
+
+// Admin, Manager, OR Staff can view stats
+router.get('/:id/stats', protect, authorize('admin', 'manager', 'staff'), getPromotionStats);
 
 module.exports = router;

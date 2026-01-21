@@ -6,7 +6,7 @@ const {
     updateUserRole,
     deleteUser
 } = require('../controllers/adminController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect} = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/adminMiddleware');
 
 const router = express.Router();

@@ -23,11 +23,10 @@ const fadeUp = {
 
 const tabClass = (active) =>
   `flex items-center gap-2 px-5 py-4 rounded-xl transition border font-bold text-sm whitespace-nowrap
-   ${
-     active
-       ? "bg-white/10 border-cyan-400/25 text-white shadow-[0_0_20px_rgba(34,211,238,0.10)]"
-       : "bg-transparent border-transparent text-white/60 hover:text-white hover:bg-white/5"
-   }`;
+   ${active
+    ? "bg-primary/5 border-primary/20 text-primary shadow-sm"
+    : "bg-transparent border-transparent text-text-secondary hover:text-text-primary hover:bg-background-secondary"
+  }`;
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -124,7 +123,7 @@ const Payment = () => {
           contact: '9999999999',
         },
         theme: {
-          color: '#13c8ec',
+          color: '#10A310',
         },
       };
 
@@ -153,21 +152,21 @@ const Payment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#101f22]/80 to-purple-900/40 text-white">
+    <div className="min-h-screen bg-background-secondary text-text-primary">
       <DashboardNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
               Select Payment Method
             </h1>
-            <p className="text-white/60 mt-2 text-sm">
+            <p className="text-text-secondary mt-2 text-sm">
               Choose how you want to pay for your ride.
             </p>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-cyan-200">
+          <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-border-light text-xs font-bold text-primary shadow-sm">
             <Lock className="w-4 h-4" />
             Secure Checkout
           </div>
@@ -182,25 +181,25 @@ const Payment = () => {
             className="lg:col-span-8 space-y-6"
           >
             {/* Tabs */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-2 overflow-x-auto">
+            <div className="rounded-2xl border border-border-light bg-white p-2 overflow-x-auto shadow-sm">
               <div className="flex gap-2 min-w-max">
                 <button className={tabClass(method === "card")} onClick={() => setMethod("card")}>
-                  <CreditCard className="w-4 h-4 text-cyan-300" />
+                  <CreditCard className="w-4 h-4" />
                   Credit/Debit Card
                 </button>
                 <button className={tabClass(method === "upi")} onClick={() => setMethod("upi")}>
-                  <Wallet className="w-4 h-4 text-purple-300" />
+                  <Wallet className="w-4 h-4" />
                   UPI / Wallets
                 </button>
                 <button className={tabClass(method === "netbanking")} onClick={() => setMethod("netbanking")}>
-                  <Building2 className="w-4 h-4 text-white/70" />
+                  <Building2 className="w-4 h-4" />
                   Netbanking
                 </button>
               </div>
             </div>
 
             {/* Form */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-8">
+            <div className="rounded-2xl border border-border-light bg-white p-6 md:p-8 shadow-sm">
               {method === "card" && (
                 <div className="space-y-6">
                   <Field label="Card Number">
@@ -209,9 +208,9 @@ const Payment = () => {
                         value={cardNumber}
                         onChange={(e) => setCardNumber(e.target.value)}
                         placeholder="0000 0000 0000 0000"
-                        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+                        className="w-full rounded-xl bg-background-secondary border border-border-light px-4 py-4 text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                       />
-                      <CreditCard className="w-5 h-5 text-cyan-300 absolute right-4 top-1/2 -translate-y-1/2" />
+                      <CreditCard className="w-5 h-5 text-text-secondary absolute right-4 top-1/2 -translate-y-1/2" />
                     </div>
                   </Field>
 
@@ -221,7 +220,7 @@ const Payment = () => {
                         value={expiry}
                         onChange={(e) => setExpiry(e.target.value)}
                         placeholder="MM / YY"
-                        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+                        className="w-full rounded-xl bg-background-secondary border border-border-light px-4 py-4 text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                       />
                     </Field>
 
@@ -231,7 +230,7 @@ const Payment = () => {
                         onChange={(e) => setCvv(e.target.value)}
                         placeholder="•••"
                         type="password"
-                        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+                        className="w-full rounded-xl bg-background-secondary border border-border-light px-4 py-4 text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                       />
                     </Field>
                   </div>
@@ -241,7 +240,7 @@ const Payment = () => {
                       value={holder}
                       onChange={(e) => setHolder(e.target.value)}
                       placeholder="Enter name as on card"
-                      className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+                      className="w-full rounded-xl bg-background-secondary border border-border-light px-4 py-4 text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                   </Field>
 
@@ -250,9 +249,9 @@ const Payment = () => {
                       type="checkbox"
                       checked={saveCard}
                       onChange={() => setSaveCard((v) => !v)}
-                      className="h-5 w-5 rounded border border-white/20 bg-white/5 checked:bg-cyan-500 checked:border-cyan-500"
+                      className="h-5 w-5 rounded border border-border-light bg-background-secondary checked:bg-primary checked:border-primary transition-colors cursor-pointer"
                     />
-                    <span className="text-sm text-white/70">
+                    <span className="text-sm text-text-secondary">
                       Save this card for faster payments securely
                     </span>
                   </label>
@@ -261,24 +260,24 @@ const Payment = () => {
 
               {method === "upi" && (
                 <div className="space-y-4">
-                  <p className="text-white font-black text-lg">UPI / Wallets</p>
-                  <p className="text-white/60 text-sm">
+                  <p className="text-text-primary font-bold text-lg">UPI / Wallets</p>
+                  <p className="text-text-secondary text-sm">
                     Razorpay supports UPI payments. Click Pay button to proceed.
                   </p>
                   <input
                     placeholder="example@upi"
-                    className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+                    className="w-full rounded-xl bg-background-secondary border border-border-light px-4 py-4 text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                   />
                 </div>
               )}
 
               {method === "netbanking" && (
                 <div className="space-y-4">
-                  <p className="text-white font-black text-lg">Netbanking</p>
-                  <p className="text-white/60 text-sm">
+                  <p className="text-text-primary font-bold text-lg">Netbanking</p>
+                  <p className="text-text-secondary text-sm">
                     Razorpay supports netbanking. Click Pay button to proceed.
                   </p>
-                  <select className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-white focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20">
+                  <select className="w-full rounded-xl bg-background-secondary border border-border-light px-4 py-4 text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 appearance-none">
                     <option>HDFC Bank</option>
                     <option>ICICI Bank</option>
                     <option>SBI</option>
@@ -289,12 +288,12 @@ const Payment = () => {
             </div>
 
             {/* Trust row */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-white/60 text-xs font-bold">
-                <Lock className="w-4 h-4 text-cyan-300" />
+            <div className="rounded-2xl border border-border-light bg-white p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-2 text-text-secondary text-xs font-bold">
+                <Lock className="w-4 h-4 text-primary" />
                 256-bit SSL Encrypted
               </div>
-              <div className="flex gap-2 opacity-70">
+              <div className="flex gap-2">
                 <BadgeMini>VISA</BadgeMini>
                 <BadgeMini>MC</BadgeMini>
                 <BadgeMini>AMEX</BadgeMini>
@@ -309,10 +308,10 @@ const Payment = () => {
             animate="show"
             className="lg:col-span-4 space-y-6"
           >
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
-              <div className="p-6 border-b border-white/10">
-                <p className="text-white font-black text-lg">Summary</p>
-                <p className="text-white/60 text-sm mt-1">
+            <div className="rounded-2xl border border-border-light bg-white overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-border-light">
+                <p className="text-text-primary font-bold text-lg">Summary</p>
+                <p className="text-text-secondary text-sm mt-1">
                   {summary.carName} • {summary.days} days
                 </p>
               </div>
@@ -325,71 +324,69 @@ const Payment = () => {
                 {summary.promoDiscount > 0 && (
                   <Row
                     label={
-                      <span className="inline-flex items-center gap-2 text-cyan-200">
+                      <span className="inline-flex items-center gap-2 text-primary">
                         <Tag className="w-4 h-4" />
                         Promo ({summary.promoCode})
                       </span>
                     }
                     value={`-₹${summary.promoDiscount}`}
-                    valueClass="text-cyan-200"
+                    valueClass="text-primary"
                   />
                 )}
 
-                <div className="h-px bg-white/10 my-3" />
+                <div className="h-px bg-border-light my-3" />
 
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-xs text-white/60 font-bold uppercase tracking-wider">
+                    <p className="text-xs text-text-secondary font-bold uppercase tracking-wider">
                       Total Payable
                     </p>
-                    <p className="text-xs text-white/40">Incl. all taxes</p>
+                    <p className="text-xs text-text-secondary/60">Incl. all taxes</p>
                   </div>
-                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+                  <p className="text-3xl font-black text-primary">
                     ₹{summary.total}
                   </p>
                 </div>
 
                 <motion.button
                   whileHover={{
-                    scale: loading ? 1 : 1.03,
-                    boxShadow: loading ? "none" : "0 0 26px rgba(34,211,238,0.25), 0 0 22px rgba(168,85,247,0.18)",
+                    scale: loading ? 1 : 1.02,
                   }}
                   whileTap={{ scale: loading ? 1 : 0.98 }}
                   onClick={handlePay}
                   disabled={loading}
-                  className={`mt-6 w-full py-4 rounded-xl font-black text-lg inline-flex items-center justify-center gap-2 transition-all ${
-                    loading 
-                      ? 'bg-gray-500 cursor-not-allowed' 
-                      : 'bg-cyan-500 text-slate-950 hover:brightness-110'
-                  }`}
+                  className={`mt-6 w-full py-4 rounded-xl font-black text-lg inline-flex items-center justify-center gap-2 transition-all ${loading
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-primary text-white hover:bg-primary-hover shadow-md'
+                    }`}
                 >
                   {loading ? 'Processing...' : `Pay ₹${summary.total}`}
                   {!loading && <ArrowRight className="w-5 h-5" />}
                 </motion.button>
 
-                <p className="text-center text-xs text-white/40 mt-2">
+                <p className="text-center text-xs text-text-secondary/60 mt-2">
                   By clicking pay, you agree to our Terms & Conditions.
                 </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                <ShieldCheck className="w-6 h-6 text-cyan-300" />
+            <div className="rounded-2xl border border-border-light bg-white p-4 flex items-center gap-3 shadow-sm">
+              <div className="w-11 h-11 rounded-xl bg-background-secondary border border-border-light flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-white font-black">Secure payments</p>
-                <p className="text-white/60 text-xs">Powered by Razorpay.</p>
+                <p className="text-text-primary font-bold">Secure payments</p>
+                <p className="text-text-secondary text-xs">Powered by Razorpay.</p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                <Headphones className="w-6 h-6 text-purple-300" />
+            <div className="rounded-2xl border border-border-light bg-white p-4 flex items-center gap-3 shadow-sm">
+              <div className="w-11 h-11 rounded-xl bg-background-secondary border border-border-light flex items-center justify-center">
+                <Headphones className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-white font-black">Need help?</p>
-                <p className="text-white/60 text-xs">Support available 24/7.</p>
+                <p className="text-text-primary font-bold">Need help?</p>
+                <p className="text-text-secondary text-xs">Support available 24/7.</p>
               </div>
             </div>
           </motion.aside>
@@ -402,7 +399,7 @@ const Payment = () => {
 function Field({ label, children }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-bold text-white/70 uppercase tracking-wider">
+      <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">
         {label}
       </label>
       {children}
@@ -410,11 +407,11 @@ function Field({ label, children }) {
   );
 }
 
-function Row({ label, value, hint, valueClass = "text-white" }) {
+function Row({ label, value, hint, valueClass = "text-text-primary" }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <div className="text-white/70">
-        <span>{label}</span> {hint && <span className="text-white/40 text-xs">{hint}</span>}
+      <div className="text-text-secondary">
+        <span>{label}</span> {hint && <span className="text-text-secondary/60 text-xs">{hint}</span>}
       </div>
       <span className={`font-semibold ${valueClass}`}>{value}</span>
     </div>
@@ -423,7 +420,7 @@ function Row({ label, value, hint, valueClass = "text-white" }) {
 
 function BadgeMini({ children }) {
   return (
-    <div className="h-8 w-14 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-black text-xs text-white/80">
+    <div className="h-8 w-14 rounded-lg bg-background-secondary border border-border-light flex items-center justify-center font-bold text-xs text-text-secondary">
       {children}
     </div>
   );

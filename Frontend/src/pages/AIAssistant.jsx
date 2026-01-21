@@ -1,100 +1,212 @@
-import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardNavbar from "../components/layout/DashboardNavbar";
-import { Sparkles, Send, Trash2, Bot, User, Car } from "lucide-react";
+import {
+  Sparkles, Send, Trash2, Bot, User, Car,
+  Camera, Upload, Shield, AlertTriangle, Image as ImageIcon
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
-};
+import { aiService } from "../services/aiService";
 
 const AIAssistant = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
-  // Demo messages (hook it to real AI later)
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Hi! Tell me what kind of car you want (budget, seats, transmission, fuel, city).",
-      time: "Now",
-    },
-    {
-      role: "assistant",
-      text: "Example: “Need an SUV under ₹700/day, automatic, 5 seats.”",
-      time: "Now",
+      text: "Hi! I'm your RentRide AI Assistant. I can help you with:\n\n🔍 Find the perfect car for your needs\n🛡️ Get insurance advice\n📸 Identify cars from photos\n💬 Report damage with guided assistance\n\nWhat can I help you with today?",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
 
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [activeFeature, setActiveFeature] = useState(null);
 
-  // Optional: quick suggestion chips
-  const chips = useMemo(
-    () => [
-      "Suggest a car for my trip",
-      "Show cheapest SUVs",
-      "Electric cars under ₹600/day",
-      "Explain insurance options",
-      "Cancellation policy",
-    ],
-    []
-  );
+  // Feature-specific states
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [insuranceDetails, setInsuranceDetails] = useState({
+    tripType: '',
+    days: 1,
+    carType: '',
+    driverExperience: '',
+    destination: ''
+  });
 
-  const sendMessage = () => {
+  // Feature buttons
+  const features = [
+    { id: 'search', icon: Car, label: 'Find Car', color: 'primary' },
+    { id: 'insurance', icon: Shield, label: 'Insurance Help', color: 'blue' },
+    { id: 'recognize', icon: Camera, label: 'Image Search', color: 'green' },
+    { id: 'damage', icon: AlertTriangle, label: 'Report Damage', color: 'orange' },
+  ];
+
+  // Send regular message
+  const sendMessage = async () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || loading) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", text, time: "Now" },
-      {
-        role: "assistant",
-        text:
-          "Got it. AI integration is pending, but this UI is ready. Next step: connect backend/OpenAI API and return matched cars.",
-        time: "Now",
-      },
-    ]);
+    const userMessage = {
+      role: "user",
+      text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
 
+    setMessages(prev => [...prev, userMessage]);
     setInput("");
+    setLoading(true);
+
+    try {
+      if (activeFeature === 'search') {
+        const response = await aiService.searchCars(text);
+
+        const aiMessage = {
+          role: "assistant",
+          text: response.data.message,
+          recommendations: response.data.recommendations,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      }
+      else {
+        const response = await aiService.sendMessage(text, messages.slice(1));
+
+        const aiMessage = {
+          role: "assistant",
+          text: response.data.content,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      }
+
+    } catch (error) {
+      const errorMessage = {
+        role: "assistant",
+        text: "Sorry, I'm having trouble processing that. Please try again or browse cars manually.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+      setActiveFeature(null);
+    }
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadedImage(URL.createObjectURL(file));
+    setLoading(true);
+
+    const userMessage = {
+      role: "user",
+      text: "📸 [Uploaded car image]",
+      image: URL.createObjectURL(file),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      const response = await aiService.recognizeCar(file, 'find_similar');
+
+      const aiMessage = {
+        role: "assistant",
+        text: response.data.message,
+        similarCars: response.data.similarCars,
+        analysis: response.data.analysis,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage = {
+        role: "assistant",
+        text: "Couldn't analyze the image. Please upload a clear car photo.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+      setUploadedImage(null);
+    }
+  };
+
+  const getInsuranceAdvice = async () => {
+    if (!insuranceDetails.tripType || !insuranceDetails.days) {
+      alert('Please fill in trip type and duration');
+      return;
+    }
+
+    setLoading(true);
+
+    const userMessage = {
+      role: "user",
+      text: `🛡️ Need insurance advice for ${insuranceDetails.days}-day ${insuranceDetails.tripType} trip`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      const response = await aiService.getInsuranceAdvice(insuranceDetails);
+
+      const aiMessage = {
+        role: "assistant",
+        text: response.data.summary,
+        insuranceAdvice: response.data,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage = {
+        role: "assistant",
+        text: "Couldn't generate insurance advice. Please contact support.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+      setActiveFeature(null);
+      setInsuranceDetails({ tripType: '', days: 1, carType: '', driverExperience: '', destination: '' });
+    }
   };
 
   const clearChat = () => {
     setMessages([
       {
         role: "assistant",
-        text: "Hi! Tell me what kind of car you want (budget, seats, transmission, fuel, city).",
-        time: "Now",
+        text: "Chat cleared! How can I assist you now?",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ]);
+    setActiveFeature(null);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#101f22]/80 to-purple-900/40 text-white">
+    <div className="min-h-screen bg-background-secondary text-text-primary">
       <DashboardNavbar />
 
-      <motion.main
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-      >
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div variants={fadeUp} className="flex items-end justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-slate-950" />
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-end justify-between gap-4 mb-8"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm">
+              <Sparkles className="w-7 h-7 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
                 AI Assistant
               </h1>
-              <p className="text-white/70 text-sm mt-1">
-                Get personalized car recommendations
+              <p className="text-text-secondary text-sm mt-1">
+                Smart car recommendations & instant help
               </p>
             </div>
           </div>
@@ -102,122 +214,258 @@ const AIAssistant = () => {
           <div className="flex gap-2">
             <button
               onClick={clearChat}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border-light text-text-primary font-bold hover:bg-gray-50 transition shadow-sm"
             >
               <Trash2 className="w-4 h-4" />
               Clear
             </button>
-            <button
-              onClick={() => navigate("/browse-cars")}
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black hover:brightness-110 transition"
-            >
-              <Car className="w-4 h-4" />
-              Browse
-            </button>
           </div>
         </motion.div>
 
-        {/* Main chat card */}
-        <motion.div variants={fadeUp} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
-          {/* Chat top bar */}
-          <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white/80">
-              <Bot className="w-5 h-5 text-cyan-300" />
-              <p className="font-black text-white">RentRide AI</p>
-              <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
-              <p className="text-xs text-white/60">Online</p>
-            </div>
-
-            <p className="text-xs text-white/50">
-              Theme: cyan-purple dashboard
-            </p>
+        {/* Chat Container */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-3xl border border-border-light bg-white shadow-xl overflow-hidden flex flex-col h-[750px]"
+        >
+          {/* Feature Tabs */}
+          <div className="px-6 py-4 bg-background-secondary border-b border-border-light flex flex-wrap gap-2">
+            {features.map((feature) => (
+              <button
+                key={feature.id}
+                onClick={() => {
+                  setActiveFeature(feature.id);
+                  if (feature.id === 'recognize') {
+                    fileInputRef.current?.click();
+                  }
+                }}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border shadow-sm ${activeFeature === feature.id
+                    ? 'bg-primary text-white border-primary shadow-primary/20'
+                    : 'bg-white border-border-light text-text-secondary hover:text-text-primary hover:border-primary/30'
+                  }`}
+              >
+                <feature.icon className="w-4 h-4" />
+                {feature.label}
+              </button>
+            ))}
           </div>
 
-          {/* Messages */}
-          <div className="h-[520px] overflow-y-auto px-6 py-6 space-y-4">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto px-8 py-8 space-y-6">
             {messages.map((m, idx) => {
               const isUser = m.role === "user";
               return (
                 <div
                   key={idx}
-                  className={`flex items-end gap-3 ${isUser ? "justify-end" : "justify-start"}`}
+                  className={`flex items-start gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  {!isUser && (
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                      <Bot className="w-5 h-5 text-cyan-300" />
-                    </div>
-                  )}
-
-                  <div className={`${isUser ? "text-right" : "text-left"} max-w-[80%]`}>
-                    <p className="text-[11px] text-white/50 mb-1">{m.time}</p>
-
-                    <div
-                      className={
-                        isUser
-                          ? "px-4 py-3 rounded-2xl rounded-br-none bg-cyan-500 text-slate-950 font-semibold shadow-[0_0_18px_rgba(34,211,238,0.25)]"
-                          : "px-4 py-3 rounded-2xl rounded-bl-none bg-white/5 border border-white/10 text-white/90"
-                      }
-                    >
-                      {m.text}
-                    </div>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${isUser ? "bg-primary text-white" : "bg-white border border-border-light text-primary"
+                    }`}>
+                    {isUser ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                   </div>
 
-                  {isUser && (
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                      <User className="w-5 h-5 text-purple-300" />
+                  <div className={`max-w-[80%] ${isUser ? "text-right" : "text-left"}`}>
+                    <p className="text-[11px] text-text-secondary mb-1.5 font-bold uppercase tracking-wider">{m.role} • {m.time}</p>
+
+                    <div
+                      className={`px-5 py-4 rounded-2xl shadow-sm border ${isUser
+                          ? "rounded-tr-none bg-primary text-white border-primary"
+                          : "rounded-tl-none bg-background-secondary text-text-primary border-border-light"
+                        }`}
+                    >
+                      {m.image && (
+                        <div className="rounded-xl overflow-hidden mb-3 border border-white/20 shadow-lg max-w-sm">
+                          <img src={m.image} alt="Uploaded" className="w-full h-auto" />
+                        </div>
+                      )}
+                      <p className="whitespace-pre-wrap leading-relaxed">{m.text}</p>
+
+                      {/* AI Enhanced Content */}
+                      {m.recommendations && m.recommendations.length > 0 && (
+                        <div className="mt-5 space-y-3">
+                          {m.recommendations.slice(0, 3).map((rec, i) => (
+                            <div key={i} className="bg-white rounded-xl p-4 border border-border-light shadow-sm hover:border-primary/50 transition-colors">
+                              <div className="flex justify-between items-start mb-2">
+                                <p className="font-black text-primary text-lg">{rec.carName}</p>
+                                <p className="text-text-primary font-black bg-primary/10 px-2 py-1 rounded text-sm">{rec.price}</p>
+                              </div>
+                              <p className="text-sm text-text-secondary mb-3">{rec.reason}</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {rec.highlights?.slice(0, 3).map((h, j) => (
+                                  <span key={j} className="text-[10px] px-2 py-1 rounded-lg bg-background-secondary border border-border-light font-bold text-text-secondary">
+                                    {h}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Insurance Logic */}
+                      {m.insuranceAdvice && (
+                        <div className="mt-5 space-y-3">
+                          <p className="font-black text-text-primary text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" />
+                            Recommended Coverage
+                          </p>
+                          {m.insuranceAdvice.recommended?.slice(0, 3).map((item, i) => (
+                            <div key={i} className="bg-white rounded-xl p-4 border border-border-light shadow-sm">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-bold text-text-primary">{item.item}</p>
+                                  <p className="text-xs text-text-secondary mt-1">{item.reason}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-black text-primary">{item.price}</p>
+                                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${item.priority === 'Must Have' ? 'bg-red-50 text-red-600 border border-red-100' :
+                                      item.priority === 'Good to Have' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                        'bg-green-50 text-green-600 border border-green-100'
+                                    }`}>
+                                    {item.priority}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="bg-primary rounded-xl p-4 text-white shadow-lg shadow-primary/20 mt-4 flex justify-between items-center">
+                            <p className="font-bold">Total Annual Estimate</p>
+                            <p className="text-xl font-black">{m.insuranceAdvice.totalEstimate}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
+
+            {loading && (
+              <div className="flex items-center gap-4 justify-start">
+                <div className="w-10 h-10 rounded-full bg-white border border-border-light flex items-center justify-center shadow-md">
+                  <Bot className="w-5 h-5 text-primary animate-pulse" />
+                </div>
+                <div className="px-5 py-3 rounded-2xl rounded-tl-none bg-background-secondary border border-border-light">
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Quick chips */}
-          <div className="px-6 pb-4 flex gap-2 overflow-x-auto">
-            {chips.map((c) => (
-              <button
-                key={c}
-                onClick={() => setInput(c)}
-                className="whitespace-nowrap px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white transition text-sm font-semibold"
+          {/* Form Overlay */}
+          <AnimatePresence>
+            {activeFeature === 'insurance' && (
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                className="px-8 pb-6 border-t border-border-light pt-6 bg-white"
               >
-                {c}
-              </button>
-            ))}
-          </div>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-black text-text-primary uppercase tracking-widest flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-primary" />
+                    Insurance Advisor Form
+                  </p>
+                  <button onClick={() => setActiveFeature(null)} className="text-text-secondary hover:text-text-primary transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <select
+                    value={insuranceDetails.tripType}
+                    onChange={(e) => setInsuranceDetails({ ...insuranceDetails, tripType: e.target.value })}
+                    className="bg-background-secondary border border-border-light rounded-xl px-4 py-3 text-sm text-text-primary font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  >
+                    <option value="">Trip Type</option>
+                    <option value="City driving">City Driving</option>
+                    <option value="Highway">Highway</option>
+                    <option value="Hills/Mountains">Hills/Mountains</option>
+                    <option value="Off-road">Off-road</option>
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="Duration (Days)"
+                    value={insuranceDetails.days}
+                    onChange={(e) => setInsuranceDetails({ ...insuranceDetails, days: parseInt(e.target.value) || 1 })}
+                    className="bg-background-secondary border border-border-light rounded-xl px-4 py-3 text-sm text-text-primary font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Car Model (optional)"
+                    value={insuranceDetails.carType}
+                    onChange={(e) => setInsuranceDetails({ ...insuranceDetails, carType: e.target.value })}
+                    className="bg-background-secondary border border-border-light rounded-xl px-4 py-3 text-sm text-text-primary font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                  <button
+                    onClick={getInsuranceAdvice}
+                    disabled={loading}
+                    className="bg-primary text-white font-black py-3 rounded-xl hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all disabled:opacity-50"
+                  >
+                    Get Advice
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Input */}
-          <div className="px-6 py-4 border-t border-white/10">
-            <div className="flex items-center gap-3">
+          {/* Input Area */}
+          <div className="px-8 py-6 border-t border-border-light bg-white">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 relative">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !loading) sendMessage();
+                  }}
+                  placeholder={
+                    activeFeature === 'search' ? "Describe your perfect car (e.g. SUV for family trip to hills)..." :
+                      activeFeature === 'damage' ? "Describe the car damage..." :
+                        "Ask me anything about RentRide..."
+                  }
+                  disabled={loading}
+                  className="w-full bg-background-secondary border border-border-light rounded-2xl px-6 py-4 text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all disabled:opacity-50 font-medium"
+                />
+              </div>
+
               <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendMessage();
-                }}
-                placeholder="Type your message..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
 
               <motion.button
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: "0 0 26px rgba(34,211,238,0.28), 0 0 22px rgba(168,85,247,0.20)",
-                }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: loading ? 1 : 1.05 }}
+                whileTap={{ scale: loading ? 1 : 0.95 }}
                 onClick={sendMessage}
-                className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black hover:brightness-110 transition inline-flex items-center gap-2"
+                disabled={loading}
+                className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all disabled:opacity-50"
               >
-                Send
-                <Send className="w-4 h-4" />
+                <Send className="w-6 h-6" />
               </motion.button>
             </div>
 
-            <p className="text-[10px] text-white/40 mt-2">
-              AI Assistant UI ready. Connect real AI later (OpenAI / backend).
-            </p>
+            <div className="mt-3 flex items-center gap-4 text-[11px] text-text-secondary font-bold uppercase tracking-widest pl-2">
+              <span className="flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-primary" />
+                Secure Chat
+              </span>
+              <span className="w-1 h-1 bg-border-light rounded-full"></span>
+              <span>
+                {activeFeature === 'search' ? '🔍 Recommendation Mode' :
+                  activeFeature === 'recognize' ? '📸 Visual Identification Mode' :
+                    'AI Powered Assistant'}
+              </span>
+            </div>
           </div>
         </motion.div>
-      </motion.main>
+      </main>
     </div>
   );
 };

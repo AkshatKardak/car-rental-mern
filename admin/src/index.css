@@ -1,66 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #13c8ec;
-  --color-primary-hover: #0ea5c3;
-  --color-background-light: #f6f8f8;
-  --color-background-dark: #0f172a;
-  --color-accent-purple: #8b5cf6;
-  
-  /* Your exact purple gradient colors */
-  --color-bg-dark-blue: #1a1b3a;
-  --color-bg-purple: #2d1b4e;
-  --color-bg-dark-purple: #1f1035;
-  
+  --color-primary: #10A310;
+  --color-primary-hover: #13C113;
+  --color-background: #FFFFFF;
+  --color-background-secondary: #F8F9FA;
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-border-light: #E5E7EB;
   --font-display: 'Inter', sans-serif;
-  
-  --shadow-neon: 0 0 10px rgb(19 200 236 / 0.5), 0 0 20px rgb(19 200 236 / 0.3);
-  --shadow-glass: 0 8px 32px 0 rgb(0 0 0 / 0.37);
 }
 
 @layer base {
   body {
     font-family: var(--font-display);
+    @apply bg-background text-text-primary;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-  
-  html {
-    color-scheme: dark;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    background: rgb(30 41 59 / 0.4);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgb(255 255 255 / 0.08);
-    border-top: 1px solid rgb(255 255 255 / 0.15);
+    @apply bg-white border border-border-light shadow-sm;
   }
 
   .input-glass {
-    background: rgb(15 23 42 / 0.6);
-    border: 1px solid rgb(255 255 255 / 0.05);
-    transition: all 0.3s ease;
-  }
-
-  .input-glass:focus-within {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 15px rgb(19 200 236 / 0.2);
-  }
-
-  .text-glow {
-    text-shadow: 0 0 20px rgb(19 200 236 / 0.5);
-  }
-
-  .chart-glow {
-    filter: drop-shadow(0px 0px 4px rgba(19, 200, 236, 0.4));
-  }
-
-  /* Your exact purple gradient background */
-  .bg-dashboard-gradient {
-    background: linear-gradient(135deg, #1a1b3a 0%, #2d1b4e 50%, #1f1035 100%);
+    @apply bg-white border border-border-light rounded-xl px-4 py-2 text-sm text-text-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all;
   }
 
   /* Custom scrollbar */
@@ -68,14 +34,16 @@
     width: 8px;
     height: 8px;
   }
+
   ::-webkit-scrollbar-track {
-    background: #1a1b3a;
+    @apply bg-background-secondary;
   }
+
   ::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 4px;
+    @apply bg-border-light rounded-full;
   }
+
   ::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+    @apply bg-text-secondary/30;
   }
 }

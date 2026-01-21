@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  SlidersHorizontal, 
-  Star, 
-  Users, 
-  Fuel, 
+import {
+  Search,
+  SlidersHorizontal,
+  Star,
+  Users,
+  Fuel,
   Gauge,
   MapPin,
   Calendar,
@@ -92,7 +92,7 @@ const BrowseCars = () => {
     // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(car => 
+      filtered = filtered.filter(car =>
         car.name?.toLowerCase().includes(query) ||
         car.brand?.toLowerCase().includes(query) ||
         car.model?.toLowerCase().includes(query) ||
@@ -116,7 +116,7 @@ const BrowseCars = () => {
     }
 
     // Price range filter
-    filtered = filtered.filter(car => 
+    filtered = filtered.filter(car =>
       car.pricePerDay >= priceRange[0] && car.pricePerDay <= priceRange[1]
     );
 
@@ -178,7 +178,7 @@ const BrowseCars = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1a] via-[#0f1729] to-[#1a0f2e] text-white">
+    <div className="min-h-screen bg-background-secondary text-text-primary">
       <DashboardNavbar />
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -188,10 +188,10 @@ const BrowseCars = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary mb-2">
             Browse Cars
           </h1>
-          <p className="text-slate-400 text-lg">
+          <p className="text-text-secondary text-lg">
             Find your perfect ride from our premium collection
           </p>
         </motion.div>
@@ -207,13 +207,13 @@ const BrowseCars = () => {
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search Bar */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
               <input
                 type="text"
                 placeholder="Search by name, brand, model..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 transition-all"
+                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-border-light text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
               />
             </div>
 
@@ -222,7 +222,7 @@ const BrowseCars = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white appearance-none cursor-pointer focus:outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 transition-all"
+                className="w-full px-4 py-4 rounded-xl bg-white border border-border-light text-text-primary appearance-none cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -230,23 +230,26 @@ const BrowseCars = () => {
                 <option value="rating">Highest Rated</option>
                 <option value="newest">Newest First</option>
               </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary pointer-events-none" />
             </div>
 
             {/* Filter Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 hover:bg-cyan-500/20 transition-all min-w-[140px]"
+              className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl border font-semibold transition-all min-w-[140px] ${showFilters
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-white text-primary border-primary hover:bg-background-secondary'
+                }`}
             >
               <SlidersHorizontal className="w-5 h-5" />
-              <span className="font-semibold">Filters</span>
+              <span>Filters</span>
             </button>
           </div>
 
           {/* Active Filters Display */}
           {(selectedBrand !== 'All' || selectedFuelType !== 'All' || selectedTransmission !== 'All' || selectedSeats !== 'All' || searchQuery) && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-slate-400">Active filters:</span>
+              <span className="text-sm text-text-secondary">Active filters:</span>
               {searchQuery && (
                 <FilterChip label={`Search: "${searchQuery}"`} onRemove={() => setSearchQuery('')} />
               )}
@@ -264,7 +267,7 @@ const BrowseCars = () => {
               )}
               <button
                 onClick={handleClearFilters}
-                className="text-sm text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
+                className="text-sm text-primary hover:text-primary-hover font-semibold transition-colors"
               >
                 Clear all
               </button>
@@ -281,7 +284,7 @@ const BrowseCars = () => {
               exit={{ opacity: 0, height: 0 }}
               className="mb-6 overflow-hidden"
             >
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-xl">
+              <div className="rounded-2xl bg-white border border-border-light p-6 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Brand Filter */}
                   <FilterSelect
@@ -318,7 +321,7 @@ const BrowseCars = () => {
 
                 {/* Price Range Filter */}
                 <div className="mt-6">
-                  <label className="text-sm font-semibold text-slate-300 mb-3 block">
+                  <label className="text-sm font-semibold text-text-primary mb-3 block">
                     Price Range: ₹{priceRange[0]} - ₹{priceRange[1]} / day
                   </label>
                   <input
@@ -327,7 +330,7 @@ const BrowseCars = () => {
                     max={Math.max(...cars.map(c => c.pricePerDay || 0), 10000)}
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    className="w-full h-2 bg-background-secondary rounded-lg appearance-none cursor-pointer accent-primary"
                   />
                 </div>
               </div>
@@ -342,31 +345,31 @@ const BrowseCars = () => {
           transition={{ delay: 0.2 }}
           className="mb-6"
         >
-          <p className="text-slate-400">
-            Showing <span className="text-white font-semibold">{filteredCars.length}</span> of{' '}
-            <span className="text-white font-semibold">{cars.length}</span> vehicles
+          <p className="text-text-secondary">
+            Showing <span className="text-text-primary font-semibold">{filteredCars.length}</span> of{' '}
+            <span className="text-text-primary font-semibold">{cars.length}</span> vehicles
           </p>
         </motion.div>
 
         {/* Loading State */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
-            <p className="text-slate-400 text-lg">Loading amazing cars for you...</p>
+            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+            <p className="text-text-secondary text-lg">Loading amazing cars for you...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && !loading && (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
-              <X className="w-8 h-8 text-rose-400" />
+            <div className="w-16 h-16 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-4">
+              <X className="w-8 h-8 text-red-500" />
             </div>
-            <p className="text-rose-400 text-lg font-semibold mb-2">Failed to load cars</p>
-            <p className="text-slate-400 mb-6">{error}</p>
+            <p className="text-red-500 text-lg font-semibold mb-2">Failed to load cars</p>
+            <p className="text-text-secondary mb-6">{error}</p>
             <button
               onClick={fetchCars}
-              className="px-6 py-3 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-400 transition-colors"
+              className="px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-hover transition-colors"
             >
               Try Again
             </button>
@@ -376,14 +379,14 @@ const BrowseCars = () => {
         {/* No Results */}
         {!loading && !error && filteredCars.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-              <Search className="w-8 h-8 text-slate-400" />
+            <div className="w-16 h-16 rounded-full bg-background-secondary border border-border-light flex items-center justify-center mb-4">
+              <Search className="w-8 h-8 text-text-secondary" />
             </div>
-            <p className="text-slate-300 text-lg font-semibold mb-2">No cars found</p>
-            <p className="text-slate-400 mb-6">Try adjusting your filters or search terms</p>
+            <p className="text-text-primary text-lg font-semibold mb-2">No cars found</p>
+            <p className="text-text-secondary mb-6">Try adjusting your filters or search terms</p>
             <button
               onClick={handleClearFilters}
-              className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-colors"
+              className="px-6 py-3 rounded-xl bg-white border border-border-light text-text-primary font-semibold hover:bg-background-secondary transition-colors"
             >
               Clear Filters
             </button>
@@ -416,11 +419,11 @@ const BrowseCars = () => {
 
 // Filter Chip Component
 const FilterChip = ({ label, onRemove }) => (
-  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 text-sm">
+  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
     <span>{label}</span>
     <button
       onClick={onRemove}
-      className="hover:bg-cyan-400/20 rounded-full p-0.5 transition-colors"
+      className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
     >
       <X className="w-3.5 h-3.5" />
     </button>
@@ -430,12 +433,12 @@ const FilterChip = ({ label, onRemove }) => (
 // Filter Select Component
 const FilterSelect = ({ label, value, onChange, options }) => (
   <div>
-    <label className="text-sm font-semibold text-slate-300 mb-2 block">{label}</label>
+    <label className="text-sm font-semibold text-text-primary mb-2 block">{label}</label>
     <div className="relative">
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white appearance-none cursor-pointer focus:outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 transition-all"
+        className="w-full px-4 py-3 rounded-xl bg-white border border-border-light text-text-primary appearance-none cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -443,7 +446,7 @@ const FilterSelect = ({ label, value, onChange, options }) => (
           </option>
         ))}
       </select>
-      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary pointer-events-none" />
     </div>
   </div>
 );
@@ -451,7 +454,7 @@ const FilterSelect = ({ label, value, onChange, options }) => (
 // Car Card Component
 const CarCard = ({ car, index, onViewDetails, onBookNow }) => {
   const [imageError, setImageError] = useState(false);
-  const defaultImage = 'https://via.placeholder.com/400x300/1e293b/64748b?text=Car+Image';
+  const defaultImage = 'https://via.placeholder.com/400x300/f1f1f1/999999?text=Car+Image';
 
   return (
     <motion.div
@@ -459,81 +462,78 @@ const CarCard = ({ car, index, onViewDetails, onBookNow }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       whileHover={{ y: -5 }}
-      className="group rounded-2xl bg-white/5 border border-white/10 overflow-hidden backdrop-blur-xl hover:border-cyan-400/30 transition-all duration-300"
+      className="group rounded-2xl bg-white border border-border-light overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
     >
       {/* Car Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-slate-800">
+      <div className="relative aspect-[4/3] overflow-hidden bg-background-secondary">
         <img
           src={imageError ? defaultImage : (car.images?.[0] || defaultImage)}
           alt={car.name || 'Car'}
           onError={() => setImageError(true)}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        
+
         {/* Featured Badge */}
         {car.featured && (
-          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-yellow-500/90 backdrop-blur-sm text-slate-900 text-xs font-bold">
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-yellow-400 text-black text-xs font-bold shadow-sm">
             Featured
           </div>
         )}
 
         {/* Rating Badge */}
         {car.rating && (
-          <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-slate-900/80 backdrop-blur-sm flex items-center gap-1.5">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-white text-sm font-bold">{car.rating.toFixed(1)}</span>
+          <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-white/90 backdrop-blur-sm flex items-center gap-1.5 shadow-sm">
+            <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+            <span className="text-text-primary text-sm font-bold">{car.rating.toFixed(1)}</span>
           </div>
         )}
-
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
       {/* Car Details */}
       <div className="p-6">
         {/* Brand & Model */}
         <div className="mb-3">
-          <p className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
             {car.brand || 'Brand'}
           </p>
-          <h3 className="text-xl font-black text-white group-hover:text-cyan-400 transition-colors">
+          <h3 className="text-xl font-bold text-text-primary group-hover:text-primary transition-colors">
             {car.model || car.name || 'Car Model'}
           </h3>
         </div>
 
         {/* Specs */}
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="flex items-center gap-2 text-slate-400">
-            <Users className="w-4 h-4 text-cyan-400" />
+          <div className="flex items-center gap-2 text-text-secondary">
+            <Users className="w-4 h-4 text-primary" />
             <span className="text-sm">{car.seats || 4} Seats</span>
           </div>
-          <div className="flex items-center gap-2 text-slate-400">
-            <Fuel className="w-4 h-4 text-purple-400" />
+          <div className="flex items-center gap-2 text-text-secondary">
+            <Fuel className="w-4 h-4 text-primary" />
             <span className="text-sm text-xs">{car.fuelType || 'Petrol'}</span>
           </div>
-          <div className="flex items-center gap-2 text-slate-400">
-            <Gauge className="w-4 h-4 text-rose-400" />
+          <div className="flex items-center gap-2 text-text-secondary">
+            <Gauge className="w-4 h-4 text-primary" />
             <span className="text-sm text-xs">{car.transmission || 'Auto'}</span>
           </div>
         </div>
 
         {/* Location */}
         {car.location && (
-          <div className="flex items-center gap-2 text-slate-400 mb-4 text-sm">
-            <MapPin className="w-4 h-4 text-slate-500" />
+          <div className="flex items-center gap-2 text-text-secondary mb-4 text-sm">
+            <MapPin className="w-4 h-4 text-text-secondary" />
             <span>{car.location}</span>
           </div>
         )}
 
         {/* Price & Actions */}
-        <div className="flex items-end justify-between pt-4 border-t border-white/10">
+        <div className="flex items-end justify-between pt-4 border-t border-border-light">
           <div>
-            <p className="text-xs text-slate-500 mb-1">Starting from</p>
+            <p className="text-xs text-text-secondary mb-1">Starting from</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
+              <span className="text-2xl font-bold text-primary">
                 ₹{car.pricePerDay || 0}
               </span>
-              <span className="text-sm text-slate-500">/day</span>
+              <span className="text-sm text-text-secondary">/day</span>
             </div>
           </div>
 
@@ -542,7 +542,7 @@ const CarCard = ({ car, index, onViewDetails, onBookNow }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onViewDetails}
-              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 transition-colors"
+              className="px-4 py-2 rounded-lg bg-white border border-border-light text-text-primary text-sm font-semibold hover:bg-background-secondary transition-colors"
             >
               Details
             </motion.button>
@@ -550,7 +550,7 @@ const CarCard = ({ car, index, onViewDetails, onBookNow }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onBookNow}
-              className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary-hover transition-colors flex items-center gap-2"
             >
               <Calendar className="w-4 h-4" />
               Book

@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "test:env": "node scripts/testEnv.js",
     "test:db": "node scripts/testDatabase.js",
-   "test:email": "node scripts/testResend.js",
+    "test:email": "node scripts/testResend.js",
     "test:resend": "node scripts/testResend.js",
     "test:razorpay": "node scripts/testRazorpay.js",
     "test:imgbb": "node scripts/testImgBB.js",
@@ -19,6 +19,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@huggingface/inference": "^4.13.10",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -27,13 +29,15 @@
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
     "form-data": "^4.0.5",
+    "groq-sdk": "^0.37.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.4",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
     "razorpay": "^2.9.6",
-    "resend": "^6.7.0"
+    "resend": "^6.7.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

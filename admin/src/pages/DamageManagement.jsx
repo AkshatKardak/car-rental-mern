@@ -1,122 +1,83 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import logo from '../assets/logo.png'
+import Sidebar from '../components/Sidebar'
+import {
+  Search,
+  Filter,
+  Printer,
+  Mail,
+  Car,
+  User,
+  History,
+  ShieldCheck,
+  Info,
+  Image as ImageIcon,
+  Download,
+  Camera,
+  Calculator,
+  X,
+  Check,
+  AlertCircle,
+  Clock,
+  ExternalLink,
+  ChevronRight
+} from 'lucide-react'
 
 const DamageManagement = () => {
-  const navigate = useNavigate()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="relative flex h-screen w-full bg-dashboard-gradient overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] bg-accent-purple/10 rounded-full blur-[100px]"></div>
-      </div>
-
+    <div className="relative flex h-screen w-full bg-background-secondary overflow-hidden text-text-primary">
       {/* Sidebar */}
-      <Sidebar navigate={navigate} />
+      <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <ContentArea navigate={navigate} />
+        <Header setSidebarOpen={setSidebarOpen} />
+        <ContentArea />
       </main>
     </div>
   )
 }
 
-const Sidebar = ({ navigate }) => {
-const navItems = [
-  { icon: 'dashboard', label: 'Dashboard', active: false, path: '/admin/dashboard' },
-  { icon: 'group', label: 'User Management', active: false, path: '/admin/users' },
-  { icon: 'directions_car', label: 'Vehicles', active: false, path: '/admin/vehicles' },
-  { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
-  { icon: 'calendar_month', label: 'Bookings', active: false, path: '/admin/bookings' },
-  { icon: 'local_offer', label: 'Promotions', active: false, path: '/admin/promotions' },
-  { icon: 'car_crash', label: 'Damage Reports', active: true, path: '/admin/damage' },
-  { icon: 'bar_chart', label: 'Analytics', active: false, path: '/admin/analytics' },
-]
-
-
+const Header = ({ setSidebarOpen }) => {
   return (
-    <aside className="hidden md:flex flex-col w-72 glass-panel border-r border-white/5 z-20 h-full">
-      {/* Logo */}
-      <div className="p-6 flex items-center gap-3">
-        <img
-          src={logo}
-          alt="RentRide Logo"
-          className="h-12 w-auto object-contain"
-        />
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-2 px-4 py-4 overflow-y-auto">
-        {navItems.map((item, index) => (
-          <motion.button
-            key={index}
-            whileHover={{ x: 3 }}
-            onClick={() => navigate(item.path)}
-            className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group text-left ${
-              item.active
-                ? 'bg-primary/10 border border-primary/20 text-white shadow-neon'
-                : 'hover:bg-white/5 hover:text-white text-slate-400'
-            }`}
-          >
-            <span 
-              className={`material-symbols-outlined ${
-                item.active ? 'text-primary' : 'group-hover:text-primary'
-              } transition-colors`}
-              style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-            >
-              {item.icon}
-            </span>
-            <span className="font-medium">{item.label}</span>
-          </motion.button>
-        ))}
-
-        <div className="pt-4 mt-2 border-t border-white/5">
-          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
-            System
-          </p>
-          <motion.button
-            whileHover={{ x: 3 }}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white text-slate-400 transition-all duration-300 group text-left"
-          >
-            <span 
-              className="material-symbols-outlined group-hover:text-primary transition-colors"
-              style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-            >
-              settings
-            </span>
-            <span className="font-medium">Settings</span>
-          </motion.button>
-        </div>
-      </nav>
-
-      {/* User Profile */}
-      <div className="p-4 border-t border-white/5">
-        <motion.div 
-          whileHover={{ scale: 1.02 }}
-          className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+    <header className="h-20 bg-background-primary border-b border-border-light flex items-center justify-between px-8 shrink-0 z-20">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden p-2 hover:bg-background-secondary rounded-lg transition-colors"
         >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent-purple to-primary flex items-center justify-center text-white font-bold text-sm">
-            AM
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Alex Morgan</p>
-            <p className="text-xs text-slate-400 truncate">Super Admin</p>
-          </div>
-          <span 
-            className="material-symbols-outlined text-slate-400 text-lg"
-            style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-          >
-            expand_more
-          </span>
-        </motion.div>
+          <Menu size={20} />
+        </button>
+        <div>
+          <h1 className="text-xl font-black tracking-tight uppercase">Damage Reports</h1>
+          <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Fleet Incident & Insurance Oversight</p>
+        </div>
       </div>
-    </aside>
+
+      <div className="flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-2 border-r border-border-light pr-4">
+          <div className="text-right">
+            <p className="text-[10px] font-black uppercase text-text-muted">System Integrity</p>
+            <p className="text-xs font-bold text-primary flex items-center gap-1 justify-end">
+              <span className="size-1.5 rounded-full bg-primary animate-pulse"></span>
+              LIVE MONITORING
+            </p>
+          </div>
+        </div>
+        <button className="p-2.5 bg-background-secondary hover:bg-border-light rounded-xl transition-all relative group">
+          <Bell size={20} className="text-text-secondary group-hover:text-primary transition-colors" />
+          <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-background-primary"></span>
+        </button>
+      </div>
+    </header>
   )
 }
+
+const Menu = ({ size }) => <span className="material-symbols-outlined" style={{ fontSize: size }}>menu</span>
+const Bell = ({ size, className }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size }}>notifications</span>
 
 const ContentArea = () => {
   const [claims] = useState([
@@ -228,17 +189,17 @@ const ContentArea = () => {
 
   // Filter claims
   const filteredClaims = claims.filter(claim => {
-    const matchesSearch = 
+    const matchesSearch =
       claim.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       claim.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       claim.user.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesFilter = 
+
+    const matchesFilter =
       filterStatus === 'all' ||
       (filterStatus === 'pending' && claim.status === 'Pending') ||
       (filterStatus === 'in-progress' && claim.status === 'In Progress') ||
       (filterStatus === 'resolved' && claim.status === 'Resolved')
-    
+
     return matchesSearch && matchesFilter
   })
 
@@ -262,304 +223,280 @@ const ContentArea = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <header className="flex flex-col gap-4 p-6 pb-4 shrink-0 border-b border-white/5">
-        <div className="flex justify-between items-end">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-white text-3xl font-black tracking-tight uppercase">Damage Management</h2>
-            <p className="text-slate-400 text-sm">Review and resolve incoming vehicle damage reports</p>
-          </div>
-          {/* Search Bar */}
-          <div className="relative group w-96">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="material-symbols-outlined text-primary/70">search</span>
-            </div>
-            <input 
-              className="block w-full pl-10 pr-3 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-              placeholder="Search Claim ID, Vehicle, or User..." 
+      {/* Sub-Header / Filters */}
+      <div className="bg-background-primary border-b border-border-light p-6 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-6">
+          {/* Search */}
+          <div className="relative group w-80">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+            <input
               type="text"
+              placeholder="Search reports, vehicles, users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 bg-background-secondary border border-border-light rounded-xl text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-text-muted"
             />
           </div>
-        </div>
 
-        {/* Filters */}
-        <div className="flex gap-3">
-          <button 
-            onClick={() => setFilterStatus('all')}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide transition-all ${
-              filterStatus === 'all'
-                ? 'bg-primary/20 border border-primary/30 text-primary shadow-neon'
-                : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
-            }`}
-          >
-            All Claims ({claims.length})
-          </button>
-          <button 
-            onClick={() => setFilterStatus('pending')}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium uppercase tracking-wide transition-all ${
-              filterStatus === 'pending'
-                ? 'bg-primary/20 border border-primary/30 text-primary'
-                : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
-            }`}
-          >
-            Pending ({claims.filter(c => c.status === 'Pending').length})
-          </button>
-          <button 
-            onClick={() => setFilterStatus('in-progress')}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium uppercase tracking-wide transition-all ${
-              filterStatus === 'in-progress'
-                ? 'bg-primary/20 border border-primary/30 text-primary'
-                : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
-            }`}
-          >
-            In Progress ({claims.filter(c => c.status === 'In Progress').length})
-          </button>
-          <button 
-            onClick={() => setFilterStatus('resolved')}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium uppercase tracking-wide transition-all ${
-              filterStatus === 'resolved'
-                ? 'bg-primary/20 border border-primary/30 text-primary'
-                : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
-            }`}
-          >
-            Resolved ({claims.filter(c => c.status === 'Resolved').length})
-          </button>
-        </div>
-      </header>
+          <div className="h-8 w-px bg-border-light" />
 
-      {/* Split View */}
-      <div className="flex flex-1 overflow-hidden p-6 pt-4 gap-6">
-        {/* Left Panel: Claims List */}
-        <div className="w-1/3 min-w-[320px] max-w-[400px] flex flex-col gap-3 overflow-y-auto pr-2">
-          {filteredClaims.map((claim, index) => (
-            <motion.div
-              key={claim.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => handleSelectClaim(claim)}
-              className={`p-4 rounded-xl cursor-pointer transition-all group relative overflow-hidden ${
-                selectedClaim.id === claim.id
-                  ? 'bg-primary/10 border border-primary/20 shadow-neon'
-                  : 'glass-panel hover:bg-white/5'
-              }`}
-            >
-              {claim.priority === 'High' && (
-                <div className="absolute top-0 right-0 p-3">
-                  <span className="size-2 rounded-full bg-yellow-400 block shadow-[0_0_8px_rgba(250,204,21,0.6)]"></span>
-                </div>
-              )}
-              
-              <div className="flex justify-between items-start mb-2">
-                <span className={`text-xs font-mono ${selectedClaim.id === claim.id ? 'text-primary' : 'text-slate-500 group-hover:text-primary/70'}`}>
-                  {claim.id}
-                </span>
-                <span className="text-[10px] text-slate-400">{claim.date}</span>
-              </div>
-              
-              <h3 className={`font-bold text-lg leading-tight mb-1 transition-colors ${
-                selectedClaim.id === claim.id ? 'text-white' : 'text-slate-200 group-hover:text-white'
-              }`}>
-                {claim.vehicle}
-              </h3>
-              
-              <div className="flex items-center gap-2 mb-3">
-                <div className="size-5 rounded-full bg-gradient-to-br from-slate-600 to-slate-700"></div>
-                <span className="text-sm text-slate-300">{claim.user}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
-                  claim.statusColor === 'yellow' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                  claim.statusColor === 'green' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                  'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                }`}>
-                  {claim.status}
-                </span>
-                <span className={`text-xs font-medium flex items-center gap-1 ${
-                  claim.priority === 'High' ? 'text-red-400' : 
-                  claim.priority === 'Medium' ? 'text-yellow-500/80' : 
-                  'text-slate-500'
-                }`}>
-                  {claim.priority === 'High' && <span className="material-symbols-outlined text-[14px]">priority_high</span>}
-                  {claim.priority} Priority
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Right Panel: Claim Details */}
-        <div className="flex-1 glass-panel rounded-2xl overflow-y-auto relative shadow-2xl">
-          {/* Detail Header */}
-          <div className="sticky top-0 z-10 glass-panel border-x-0 border-t-0 border-b border-white/5 p-6 flex justify-between items-center backdrop-blur-xl bg-slate-900/80">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Claim {selectedClaim.id}</h2>
-              <span className={`px-3 py-1 rounded-md ${
-                selectedClaim.statusColor === 'yellow' ? 'bg-yellow-500/20 border border-yellow-500/30 text-yellow-400' :
-                selectedClaim.statusColor === 'green' ? 'bg-green-500/20 border border-green-500/30 text-green-400' :
-                'bg-blue-500/20 border border-blue-500/30 text-blue-400'
-              } text-xs font-bold uppercase tracking-wide flex items-center gap-1 shadow-[0_0_10px_rgba(234,179,8,0.2)]`}>
-                <span className="material-symbols-outlined text-[16px]">
-                  {selectedClaim.status === 'Pending' ? 'pending' : selectedClaim.status === 'Resolved' ? 'check_circle' : 'sync'}
-                </span>
-                {selectedClaim.status === 'Pending' ? 'Pending Review' : selectedClaim.status}
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <button className="size-9 rounded-lg flex items-center justify-center bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all border border-slate-700">
-                <span className="material-symbols-outlined text-[20px]">print</span>
+          {/* Status Filters */}
+          <div className="flex items-center gap-2">
+            {['all', 'pending', 'in-progress', 'resolved'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${filterStatus === status
+                    ? 'bg-primary/10 border-primary/20 text-primary'
+                    : 'bg-transparent border-transparent text-text-muted hover:bg-background-secondary hover:text-text-primary'
+                  }`}
+              >
+                {status.replace('-', ' ')}
               </button>
-              <button className="size-9 rounded-lg flex items-center justify-center bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all border border-slate-700">
-                <span className="material-symbols-outlined text-[20px]">mail</span>
-              </button>
-            </div>
+            ))}
           </div>
+        </div>
+      </div>
 
-          <div className="p-8 flex flex-col gap-8 pb-32">
-            {/* Info Grid */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* Vehicle Card */}
-              <div className="bg-slate-800/30 rounded-xl p-4 border border-white/5 flex gap-4 items-center">
-                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 shrink-0 shadow-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-4xl text-slate-600">directions_car</span>
+      {/* Main Content Split View */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Side: Claims List */}
+        <div className="w-96 bg-background-primary border-r border-border-light overflow-y-auto no-scrollbar shrink-0">
+          <div className="p-4 flex flex-col gap-2">
+            <p className="px-4 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-2">Active Reports ({filteredClaims.length})</p>
+            {filteredClaims.map((claim) => (
+              <motion.button
+                key={claim.id}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleSelectClaim(claim)}
+                className={`w-full p-5 rounded-2xl flex flex-col gap-3 group transition-all text-left relative ${selectedClaim.id === claim.id
+                    ? 'bg-background-secondary border border-border-light shadow-sm'
+                    : 'hover:bg-background-secondary/50 border border-transparent'
+                  }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${selectedClaim.id === claim.id ? 'text-primary' : 'text-text-muted'}`}>
+                    {claim.id}
+                  </span>
+                  <span className="text-[10px] font-bold text-text-muted">{claim.date}</span>
+                </div>
+
+                <div>
+                  <h3 className="font-black text-sm tracking-tight text-text-primary group-hover:text-primary transition-colors">{claim.vehicle}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <User size={12} className="text-text-muted" />
+                    <span className="text-xs font-bold text-text-secondary">{claim.user}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-2">
+                  <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${claim.status === 'Resolved' ? 'bg-green-100 text-green-600' :
+                      claim.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' :
+                        'bg-blue-100 text-blue-600'
+                    }`}>
+                    {claim.status}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`size-1.5 rounded-full ${claim.priority === 'High' ? 'bg-red-500 animate-pulse' :
+                        claim.priority === 'Medium' ? 'bg-yellow-500' : 'bg-slate-400'
+                      }`} />
+                    <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">{claim.priority} PRIORITY</span>
+                  </div>
+                </div>
+
+                {selectedClaim.id === claim.id && (
+                  <motion.div layoutId="selection-bar" className="absolute left-0 top-6 bottom-6 w-1 bg-primary rounded-r-full" />
+                )}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Side: Claim Detail */}
+        <div className="flex-1 bg-background-secondary overflow-y-auto no-scrollbar relative p-8">
+          <div className="max-w-5xl mx-auto flex flex-col gap-6">
+            {/* Header Card */}
+            <div className="bg-background-primary rounded-3xl p-8 border border-border-light shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck size={32} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Vehicle</p>
-                  <h3 className="text-white font-bold text-lg">{selectedClaim.vehicle}</h3>
-                  <p className="text-slate-400 text-sm mb-2">License: {selectedClaim.license}</p>
-                  <div className="flex items-center gap-1 text-xs text-primary">
-                    <span className="material-symbols-outlined text-[14px]">history</span>
-                    <span>Trip ID: #{selectedClaim.tripId}</span>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-text-primary">CLAIM {selectedClaim.id}</h2>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${selectedClaim.status === 'Resolved' ? 'bg-green-100 text-green-600' :
+                        selectedClaim.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' :
+                          'bg-blue-100 text-blue-600'
+                      }`}>
+                      {selectedClaim.status}
+                    </span>
                   </div>
+                  <p className="text-text-secondary text-sm font-medium mt-1">Reported on {selectedClaim.date}</p>
                 </div>
               </div>
 
-              {/* User Card */}
-              <div className="bg-slate-800/30 rounded-xl p-4 border border-white/5 flex gap-4 items-center">
-                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-accent-purple to-primary shrink-0 shadow-lg flex items-center justify-center text-white font-bold text-2xl">
-                  {selectedClaim.user.charAt(0)}{selectedClaim.user.charAt(selectedClaim.user.indexOf(' ') + 1)}
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Renter</p>
-                  <h3 className="text-white font-bold text-lg">{selectedClaim.user}</h3>
-                  <p className="text-slate-400 text-sm mb-2">Member since {selectedClaim.userSince}</p>
-                  <div className="flex items-center gap-1 text-xs text-accent-purple">
-                    <span className="material-symbols-outlined text-[14px]">verified</span>
-                    <span>{selectedClaim.userTier}</span>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2">
+                <button className="p-3 bg-background-secondary border border-border-light rounded-xl hover:bg-border-light transition-all">
+                  <Printer size={20} className="text-text-secondary" />
+                </button>
+                <button className="p-3 bg-background-secondary border border-border-light rounded-xl hover:bg-border-light transition-all">
+                  <Mail size={20} className="text-text-secondary" />
+                </button>
               </div>
             </div>
 
-            {/* Incident Details */}
-            <div className="bg-slate-800/20 rounded-xl border border-white/5 p-6">
-              <h4 className="text-white text-sm font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[18px]">info</span> Incident Summary
-              </h4>
-              <p className="text-slate-300 leading-relaxed text-sm">
-                {selectedClaim.description}
-              </p>
+            <div className="grid grid-cols-2 gap-6">
+              {/* Vehicle & User Grid */}
+              <div className="flex flex-col gap-6">
+                {/* Vehicle Card */}
+                <div className="bg-background-primary rounded-3xl p-6 border border-border-light shadow-sm">
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4">Vehicle Assets</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-2xl bg-background-secondary flex items-center justify-center">
+                      <Car size={32} className="text-text-muted" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-lg tracking-tight text-text-primary">{selectedClaim.vehicle}</h4>
+                      <p className="text-sm font-bold text-text-secondary">License: {selectedClaim.license}</p>
+                      <div className="flex items-center gap-2 mt-2 px-2.5 py-1 bg-primary/10 rounded-lg w-fit">
+                        <History size={12} className="text-primary" />
+                        <span className="text-[10px] font-black text-primary uppercase">TRIP #{selectedClaim.tripId}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* User Card */}
+                <div className="bg-background-primary rounded-3xl p-6 border border-border-light shadow-sm">
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4">Customer Profile</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-primary/20">
+                      {selectedClaim.user.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div>
+                      <h4 className="font-black text-lg tracking-tight text-text-primary">{selectedClaim.user}</h4>
+                      <p className="text-sm font-bold text-text-secondary">Member Since {selectedClaim.userSince}</p>
+                      <div className="flex items-center gap-2 mt-2 px-2.5 py-1 bg-text-primary/5 rounded-lg w-fit">
+                        <User size={12} className="text-text-primary" />
+                        <span className="text-[10px] font-black text-text-primary uppercase">{selectedClaim.userTier}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary Card */}
+              <div className="bg-background-primary rounded-3xl p-6 border border-border-light shadow-sm flex flex-col">
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4">Incident Intelligence</p>
+                <div className="bg-background-secondary rounded-2xl p-5 border border-border-light flex-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Info size={16} className="text-primary" />
+                    <span className="text-xs font-black uppercase tracking-widest">Description</span>
+                  </div>
+                  <p className="text-sm font-medium text-text-secondary leading-relaxed">
+                    {selectedClaim.description}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Evidence Gallery */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-white text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                  <span className="material-symbols-outlined text-accent-purple text-[18px]">image</span> Evidence Gallery
-                </h4>
-                <button className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1">
-                  Download All <span className="material-symbols-outlined text-[14px]">download</span>
+            <div className="bg-background-primary rounded-3xl p-6 border border-border-light shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <ImageIcon size={18} className="text-primary" />
+                  <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Visual Evidence</h4>
+                </div>
+                <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest hover:opacity-70 transition-all">
+                  <Download size={14} /> DOWNLOAD ARCHIVE
                 </button>
               </div>
+
               <div className="grid grid-cols-4 gap-4">
                 {selectedClaim.evidenceImages.map((image, i) => (
-                  <div 
-                    key={i}
-                    className="aspect-square rounded-lg bg-cover bg-center cursor-pointer hover:ring-2 hover:ring-primary transition-all relative group overflow-hidden"
-                    style={{ backgroundImage: `url(${image})` }}
-                  >
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="material-symbols-outlined text-white">visibility</span>
+                  <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-border-light group cursor-pointer relative shadow-sm">
+                    <img src={image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                      <ExternalLink size={24} className="text-white" />
                     </div>
                   </div>
                 ))}
-                <div className="aspect-square rounded-lg bg-slate-800 border border-slate-700 border-dashed flex flex-col items-center justify-center text-slate-500 cursor-pointer hover:bg-slate-700/50 hover:text-slate-300 transition-all">
-                  <span className="material-symbols-outlined mb-1">add_a_photo</span>
-                  <span className="text-xs">Add Photo</span>
+                <div className="aspect-square rounded-2xl border-2 border-dashed border-border-light flex flex-col items-center justify-center gap-2 text-text-muted hover:border-primary hover:text-primary transition-all cursor-pointer group">
+                  <Camera size={24} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Add Evidence</span>
                 </div>
               </div>
             </div>
 
-            {/* Assessment Tools */}
-            <div className="grid grid-cols-2 gap-6 p-6 rounded-xl bg-gradient-to-br from-slate-800/30 to-accent-purple/10 border border-accent-purple/20 shadow-lg">
-              <div className="col-span-2">
-                <h4 className="text-white text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-[18px]">calculate</span> Cost Assessment
-                </h4>
+            {/* Assessment Section */}
+            <div className="bg-background-primary rounded-3xl p-8 border border-border-light shadow-sm flex flex-col gap-8">
+              <div className="flex items-center gap-3">
+                <Calculator size={20} className="text-primary" />
+                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Financial Assessment</h4>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs text-slate-400 font-medium">Estimated Repair Cost</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-slate-500">$</span>
-                  <input 
-                    className="w-full bg-slate-900/80 border border-slate-600 rounded-lg py-2 pl-7 pr-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                    type="number"
-                    value={repairCost}
-                    onChange={(e) => setRepairCost(parseFloat(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs text-primary font-medium">Deduction Amount (Charge to User)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-primary">$</span>
-                  <input 
-                    className="w-full bg-slate-900/80 border border-primary/50 rounded-lg py-2 pl-7 pr-3 text-primary font-bold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-[0_0_10px_rgba(19,200,236,0.1)] transition-all" 
-                    type="number"
-                    value={deductionAmount}
-                    onChange={(e) => setDeductionAmount(parseFloat(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-              
-              <div className="col-span-2 space-y-2 mt-2">
-                <label className="text-xs text-slate-400 font-medium">Admin Notes</label>
-                <textarea 
-                  className="w-full bg-slate-900/80 border border-slate-600 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-all min-h-[80px]" 
-                  placeholder="Add internal notes regarding this claim..."
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                ></textarea>
-              </div>
-            </div>
-          </div>
 
-          {/* Sticky Action Footer */}
-          <div className="sticky bottom-0 left-0 w-full p-6 glass-panel border-t border-white/10 flex justify-between items-center bg-slate-900/90 backdrop-blur-xl z-20">
-            <button 
-              onClick={handleRejectClaim}
-              className="px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 transition-all text-sm font-semibold flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[18px]">close</span> Reject Claim
-            </button>
-            <div className="flex gap-4">
-              <button 
-                onClick={handleSaveDraft}
-                className="px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-all text-sm font-semibold"
-              >
-                Save Draft
-              </button>
-              <button 
-                onClick={handleApproveClaim}
-                className="px-6 py-2 rounded-lg bg-gradient-to-r from-accent-purple to-primary text-white font-bold shadow-neon hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] hover:brightness-110 transition-all flex items-center gap-2 text-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">check</span> Approve & Charge ${deductionAmount}
-              </button>
+              <div className="grid grid-cols-2 gap-8">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Estimated Repair Cost</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">$</span>
+                    <input
+                      type="number"
+                      value={repairCost}
+                      onChange={(e) => setRepairCost(parseFloat(e.target.value) || 0)}
+                      className="w-full pl-10 pr-4 py-4 bg-background-secondary border border-border-light rounded-2xl font-black text-lg focus:border-primary outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-1">Member Deduction</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold">$</span>
+                    <input
+                      type="number"
+                      value={deductionAmount}
+                      onChange={(e) => setDeductionAmount(parseFloat(e.target.value) || 0)}
+                      className="w-full pl-10 pr-4 py-4 bg-primary/5 border border-primary/20 rounded-2xl font-black text-lg text-primary focus:border-primary outline-none transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="col-span-2 flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Administrative Notes</label>
+                  <textarea
+                    placeholder="Enter internal resolution notes..."
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    className="w-full p-5 bg-background-secondary border border-border-light rounded-2xl font-medium text-sm min-h-[120px] focus:border-primary outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-6 border-t border-border-light">
+                <button
+                  onClick={handleRejectClaim}
+                  className="px-8 py-4 rounded-2xl bg-red-50 text-red-600 border border-red-100 font-black text-xs uppercase tracking-[0.1em] hover:bg-red-100 transition-all flex items-center gap-2"
+                >
+                  <X size={16} /> REJECT CLAIM
+                </button>
+
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleSaveDraft}
+                    className="px-8 py-4 rounded-2xl bg-background-secondary text-text-primary font-black text-xs uppercase tracking-[0.1em] hover:bg-border-light transition-all"
+                  >
+                    SAVE DRAFT
+                  </button>
+                  <button
+                    onClick={handleApproveClaim}
+                    className="px-10 py-4 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3"
+                  >
+                    <Check size={18} /> APPROVE & CHARGE ${deductionAmount}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -568,4 +505,4 @@ const ContentArea = () => {
   )
 }
 
-export default DamageManagement
+export default DamageManagement;

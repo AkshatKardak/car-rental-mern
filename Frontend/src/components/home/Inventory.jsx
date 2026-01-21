@@ -58,10 +58,10 @@ const Inventory = () => {
   ]
 
   return (
-    <div id="inventory" className='bg-gradient-to-b from-slate-900 to-purple-900/20 py-20 px-4 relative overflow-hidden'>
-      {/* Animated Background Circles */}
-      <div className='absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow'></div>
-      <div className='absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow'></div>
+    <div id="inventory" className='bg-gradient-to-b from-background-secondary to-background-light dark:from-background-dark-secondary dark:to-background-dark py-20 px-4 relative overflow-hidden'>
+      {/* Background Effects */}
+      <div className='absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse'></div>
+      <div className='absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse'></div>
       
       <div className='max-w-7xl mx-auto relative z-10'>
         <div className='flex flex-col space-y-3 text-center'>
@@ -70,7 +70,7 @@ const Inventory = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className='text-4xl lg:text-6xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent'
+            className='text-4xl lg:text-6xl font-bold text-primary'
           >
             Our Elite Fleet
           </motion.h1>
@@ -79,7 +79,7 @@ const Inventory = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className='text-sm text-gray-300'
+            className='text-sm text-text-secondary dark:text-text-dark-secondary'
           >
             Discover legendary vehicles in your collection
           </motion.p>
@@ -107,7 +107,7 @@ const Inventory = () => {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className='px-6 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 text-white mx-auto flex rounded-lg font-bold glow-blue hover:glow-purple transition-all duration-300'
+            className='px-6 py-3 bg-primary hover:bg-primary-hover text-white mx-auto flex rounded-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300'
           >
             Load More <ChevronRight/>
           </motion.button>

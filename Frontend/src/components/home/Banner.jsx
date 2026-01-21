@@ -6,18 +6,16 @@ import { Send } from 'lucide-react'
 
 const Banner = () => {
   return (
-    <div id="contact" className='relative overflow-hidden bg-slate-900'>
-      {/* Background Image with Overlay */}
+    <div id="contact" className='relative overflow-hidden bg-background-light dark:bg-background-dark'>
       <div className='absolute inset-0'>
         <img 
           src={banner} 
           alt="Banner" 
-          className='w-full h-full object-cover opacity-30'
+          className='w-full h-full object-cover opacity-20 dark:opacity-30'
         />
-        <div className='absolute inset-0 bg-gradient-to-r from-purple-900/80 via-slate-900/80 to-cyan-900/80'></div>
+        <div className='absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/80'></div>
       </div>
 
-      {/* Contact Form - Right Side */}
       <div className='relative min-h-[700px] lg:min-h-[800px] flex items-center justify-end px-4 lg:px-16 max-w-7xl mx-auto py-20'>
         <motion.div
           variants={FadeLeft(0.2)}
@@ -26,39 +24,39 @@ const Banner = () => {
           viewport={{ once: true }}
           className='w-full max-w-md'
         >
-          <h2 className='text-4xl lg:text-5xl font-bold mb-2'>
-            <span className='gradient-text'>Get In Touch</span>
+          <h2 className='text-4xl lg:text-5xl font-bold mb-2 text-white'>
+            Get In Touch
           </h2>
-          <p className='text-gray-400 mb-6'>Connect with our team to book your ride</p>
+          <p className='text-gray-200 mb-6'>Connect with our team to book your ride</p>
 
-          <form className='bg-slate-800/90 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl p-8 space-y-4 shadow-2xl'>
+          <form className='bg-white dark:bg-background-dark-secondary backdrop-blur-xl border-2 border-primary/30 rounded-2xl p-8 space-y-4 shadow-2xl'>
             <div className='grid grid-cols-2 gap-4'>
               <div className='flex flex-col gap-2'>
-                <label className='font-semibold text-cyan-400 text-sm'>First Name</label>
+                <label className='font-semibold text-primary text-sm'>First Name</label>
                 <input
-                  className='p-3 rounded-lg bg-slate-900/50 border-2 border-slate-700 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-all'
+                  className='p-3 rounded-lg bg-background-secondary dark:bg-background-dark border-2 border-border-light dark:border-border-dark text-text-primary dark:text-text-dark-primary placeholder-text-secondary focus:outline-none focus:border-primary transition-all'
                   type="text"
                   name="firstName"
-                  placeholder='firstName'
+                  placeholder='First name'
                   required
                 />
               </div>
               <div className='flex flex-col gap-2'>
-                <label className='font-semibold text-cyan-400 text-sm'>Last Name</label>
+                <label className='font-semibold text-primary text-sm'>Last Name</label>
                 <input
-                  className='p-3 rounded-lg bg-slate-900/50 border-2 border-slate-700 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-all'
+                  className='p-3 rounded-lg bg-background-secondary dark:bg-background-dark border-2 border-border-light dark:border-border-dark text-text-primary dark:text-text-dark-primary placeholder-text-secondary focus:outline-none focus:border-primary transition-all'
                   type="text"
                   name="lastName"
-                  placeholder='lastName'
+                  placeholder='Last name'
                   required
                 />
               </div>
             </div>
 
             <div className='flex flex-col gap-2'>
-              <label className='font-semibold text-purple-400 text-sm'>Email</label>
+              <label className='font-semibold text-primary text-sm'>Email</label>
               <input
-                className='p-3 rounded-lg bg-slate-900/50 border-2 border-slate-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-400 transition-all'
+                className='p-3 rounded-lg bg-background-secondary dark:bg-background-dark border-2 border-border-light dark:border-border-dark text-text-primary dark:text-text-dark-primary placeholder-text-secondary focus:outline-none focus:border-primary transition-all'
                 type="email"
                 name="email"
                 placeholder='john@example.com'
@@ -67,9 +65,9 @@ const Banner = () => {
             </div>
 
             <div className='flex flex-col gap-2'>
-              <label className='font-semibold text-pink-400 text-sm'>Phone Number</label>
+              <label className='font-semibold text-primary text-sm'>Phone Number</label>
               <input
-                className='p-3 rounded-lg bg-slate-900/50 border-2 border-slate-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-400 transition-all'
+                className='p-3 rounded-lg bg-background-secondary dark:bg-background-dark border-2 border-border-light dark:border-border-dark text-text-primary dark:text-text-dark-primary placeholder-text-secondary focus:outline-none focus:border-primary transition-all'
                 type="tel"
                 name="phone"
                 placeholder='+91 98765 43210'
@@ -78,9 +76,9 @@ const Banner = () => {
             </div>
 
             <div className='flex flex-col gap-2'>
-              <label className='font-semibold text-yellow-400 text-sm'>Message</label>
+              <label className='font-semibold text-primary text-sm'>Message</label>
               <textarea
-                className='p-3 rounded-lg bg-slate-900/50 border-2 border-slate-700 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition-all min-h-[100px] resize-none'
+                className='p-3 rounded-lg bg-background-secondary dark:bg-background-dark border-2 border-border-light dark:border-border-dark text-text-primary dark:text-text-dark-primary placeholder-text-secondary focus:outline-none focus:border-primary transition-all min-h-[100px] resize-none'
                 name="message"
                 placeholder='Tell us about your requirements...'
                 required
@@ -91,7 +89,7 @@ const Banner = () => {
               type="submit"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className='w-full py-3 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 glow-blue hover:shadow-cyan-500/50 transition-all'
+              className='w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl'
             >
               <Send size={20} />
               Send Message

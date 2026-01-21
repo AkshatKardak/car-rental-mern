@@ -15,6 +15,7 @@ const PricingPromotions = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedPromo, setSelectedPromo] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -179,11 +180,11 @@ const PricingPromotions = () => {
       usedCount: 0,
       createdAt: new Date().toISOString()
     }
-    
+
     setPromotions([newPromo, ...promotions])
     setShowAddModal(false)
     alert('Promotion added successfully!')
-    
+
     // Reset form
     setFormData({
       code: '', name: '', description: '', type: 'percentage',
@@ -223,17 +224,17 @@ const PricingPromotions = () => {
   }
 
   const filteredPromotions = promotions.filter(promo => {
-    const matchesSearch = 
+    const matchesSearch =
       promo.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       promo.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       promo.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === 'all' || 
+
+    const matchesStatus = statusFilter === 'all' ||
       (statusFilter === 'active' && promo.active) ||
       (statusFilter === 'inactive' && !promo.active)
-    
+
     const matchesType = typeFilter === 'all' || promo.type === typeFilter
-    
+
     return matchesSearch && matchesStatus && matchesType
   })
 
@@ -250,17 +251,12 @@ const PricingPromotions = () => {
   }
 
   return (
-    <div className="relative flex h-screen w-full bg-dashboard-gradient overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] bg-accent-purple/10 rounded-full blur-[100px]"></div>
-      </div>
-
-      <Sidebar navigate={navigate} />
+    <div className="relative flex h-screen w-full bg-background-secondary overflow-hidden text-text-primary">
+      <Sidebar />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <ContentArea 
+        <Header setSidebarOpen={setSidebarOpen} />
+        <ContentArea
           promotions={promotions}
           loading={loading}
           searchTerm={searchTerm}
@@ -290,90 +286,67 @@ const PricingPromotions = () => {
   )
 }
 
-const Sidebar = ({ navigate }) => {
-  const navItems = [
-    { icon: 'dashboard', label: 'Dashboard', active: false, path: '/admin/dashboard' },
-    { icon: 'group', label: 'User Management', active: false, path: '/admin/users' },
-    { icon: 'directions_car', label: 'Vehicles', active: false, path: '/admin/vehicles' },
-    { icon: 'payments', label: 'Payments', active: false, path: '/admin/payments' },
-    { icon: 'calendar_month', label: 'Bookings', active: false, path: '/admin/bookings' },
-    { icon: 'local_offer', label: 'Promotions', active: true, path: '/admin/promotions' },
-    { icon: 'car_crash', label: 'Damage Reports', active: false, path: '/admin/damage' },
-    { icon: 'bar_chart', label: 'Analytics', active: false, path: '/admin/analytics' },
-  ]
-
+const Header = ({ setSidebarOpen }) => {
   return (
-    <aside className="hidden md:flex flex-col w-72 glass-panel border-r border-white/5 z-20 h-full">
-      <div className="p-6 flex items-center gap-3">
-        <img src={logo} alt="RentRide Logo" className="h-12 w-auto object-contain" />
-      </div>
-
-      <nav className="flex-1 flex flex-col gap-2 px-4 py-4 overflow-y-auto">
-        {navItems.map((item, index) => (
-          <motion.button
-            key={index}
-            whileHover={{ x: 3 }}
-            onClick={() => navigate(item.path)}
-            className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group text-left ${
-              item.active
-                ? 'bg-primary/10 border border-primary/20 text-white shadow-neon'
-                : 'hover:bg-white/5 hover:text-white text-slate-400'
-            }`}
-          >
-            <span 
-              className={`material-symbols-outlined ${
-                item.active ? 'text-primary' : 'group-hover:text-primary'
-              } transition-colors`}
-              style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-            >
-              {item.icon}
-            </span>
-            <span className="font-medium">{item.label}</span>
-          </motion.button>
-        ))}
-
-        <div className="pt-4 mt-2 border-t border-white/5">
-          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">System</p>
-          <motion.button
-            whileHover={{ x: 3 }}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white text-slate-400 transition-all duration-300 group text-left"
-          >
-            <span 
-              className="material-symbols-outlined group-hover:text-primary transition-colors"
-              style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-            >
-              settings
-            </span>
-            <span className="font-medium">Settings</span>
-          </motion.button>
-        </div>
-      </nav>
-
-      <div className="p-4 border-t border-white/5">
-        <motion.div 
-          whileHover={{ scale: 1.02 }}
-          className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+    <header className="h-20 bg-background-primary border-b border-border-light flex items-center justify-between px-8 shrink-0 z-20">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden p-2 hover:bg-background-secondary rounded-lg transition-colors"
         >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent-purple to-primary flex items-center justify-center text-white font-bold text-sm">
-            AM
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Alex Morgan</p>
-            <p className="text-xs text-slate-400 truncate">Super Admin</p>
-          </div>
-          <span 
-            className="material-symbols-outlined text-slate-400 text-lg"
-            style={{ fontVariationSettings: '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-          >
-            expand_more
-          </span>
-        </motion.div>
+          <Menu size={20} />
+        </button>
+        <div>
+          <h1 className="text-xl font-black tracking-tight uppercase text-text-primary">Promotions</h1>
+          <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Offers & Dynamic Pricing Engine</p>
+        </div>
       </div>
-    </aside>
+
+      <div className="flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-2 border-r border-border-light pr-4">
+          <div className="text-right">
+            <p className="text-[10px] font-black uppercase text-text-muted">Promotion Status</p>
+            <p className="text-xs font-bold text-primary flex items-center gap-1 justify-end">
+              <span className="size-1.5 rounded-full bg-primary animate-pulse"></span>
+              ACTIVE ENGINE
+            </p>
+          </div>
+        </div>
+        <button className="p-2.5 bg-background-secondary hover:bg-border-light rounded-xl transition-all relative group">
+          <Bell size={20} className="text-text-secondary group-hover:text-primary transition-colors" />
+          <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-background-primary"></span>
+        </button>
+      </div>
+    </header>
   )
 }
 
-const ContentArea = ({ 
+const Menu = ({ size }) => <span className="material-symbols-outlined" style={{ fontSize: size }}>menu</span>
+const Bell = ({ size, className }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size }}>notifications</span>
+
+
+import {
+  Plus,
+  Search,
+  Tag,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  BarChart2,
+  PiggyBank,
+  Edit,
+  Trash2,
+  Calendar,
+  AlertCircle,
+  ExternalLink,
+  ChevronRight,
+  Filter as FilterIcon,
+  Zap,
+  Clock,
+  LayoutGrid
+} from 'lucide-react'
+
+const ContentArea = ({
   promotions, loading, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
   typeFilter, setTypeFilter, filteredPromotions, stats, setShowAddModal,
   showAddModal, showEditModal, setShowEditModal, selectedPromo, setSelectedPromo,
@@ -381,196 +354,200 @@ const ContentArea = ({
   handleDeletePromotion, togglePromoStatus, cars
 }) => {
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-        >
-          <div>
-            <h2 className="text-3xl font-black text-white tracking-tight">PRICING & PROMOTIONS</h2>
-            <p className="text-slate-400 mt-1">Manage discount codes and promotional offers</p>
+    <div className="flex-1 overflow-y-auto no-scrollbar p-8 bg-background-secondary">
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        {/* Header Action */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Zap size={20} className="text-primary" />
+            </div>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-text-muted">Dynamic Campaigns</h2>
           </div>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent-purple rounded-lg font-semibold text-black hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
           >
-            <span className="material-symbols-outlined">add</span>
+            <Plus size={18} />
             Create Promotion
           </motion.button>
-        </motion.header>
+        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Stats Matrix */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Total Promos', value: stats.total, icon: 'local_offer', color: 'primary' },
-            { label: 'Active', value: stats.active, icon: 'check_circle', color: 'green-400' },
-            { label: 'Inactive', value: stats.inactive, icon: 'cancel', color: 'red-400' },
-            { label: 'Total Usage', value: stats.totalUsage, icon: 'trending_up', color: 'blue-400' },
-            { label: 'Avg Usage', value: stats.avgDiscountPerPromo, icon: 'analytics', color: 'purple-400' },
-            { label: 'Total Saved', value: `₹${stats.totalDiscountGiven.toLocaleString()}`, icon: 'savings', color: 'orange-400' }
+            { label: 'Total Promos', value: stats.total, icon: Tag, color: 'text-text-primary', bg: 'bg-background-primary' },
+            { label: 'Active', value: stats.active, icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50' },
+            { label: 'Inactive', value: stats.inactive, icon: XCircle, color: 'text-red-500', bg: 'bg-red-50' },
+            { label: 'Total Usage', value: stats.totalUsage, icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50' },
+            { label: 'Avg Usage', value: stats.avgDiscountPerPromo, icon: BarChart2, color: 'text-purple-500', bg: 'bg-purple-50' },
+            { label: 'Total Saved', value: `₹${stats.totalDiscountGiven.toLocaleString()}`, icon: PiggyBank, color: 'text-orange-500', bg: 'bg-orange-50' }
           ].map((stat, index) => (
-            <motion.div 
+            <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="glass-panel rounded-xl p-4"
+              transition={{ delay: index * 0.05 }}
+              className={`p-5 rounded-3xl border border-border-light shadow-sm flex flex-col gap-3 ${stat.bg === 'bg-background-primary' ? 'bg-background-primary' : 'bg-background-primary/50'}`}
             >
-              <div className="flex flex-col gap-1">
-                <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{stat.label}</span>
-                <span className={`text-2xl font-bold text-${stat.color}`}>{stat.value}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">{stat.label}</span>
+                <stat.icon size={16} className={stat.color} />
               </div>
-              <span className={`material-symbols-outlined text-${stat.color} text-3xl mt-2`}>{stat.icon}</span>
+              <span className={`text-xl font-black tracking-tight ${stat.color}`}>{stat.value}</span>
             </motion.div>
           ))}
         </div>
 
-        {/* Filters */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="glass-panel rounded-xl p-4"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
+        {/* Filters Panel */}
+        <div className="bg-background-primary rounded-3xl p-6 border border-border-light shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="relative group">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
-                placeholder="Search promotions..."
+                placeholder="Search promotions, codes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-background-secondary border border-border-light rounded-2xl text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-text-muted"
               />
-              <span className="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400">search</span>
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            >
-              <option value="all">All Types</option>
-              <option value="percentage">Percentage</option>
-              <option value="fixed">Fixed Amount</option>
-            </select>
-          </div>
-        </motion.div>
 
-        {/* Promotions Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
+            <div className="relative group">
+              <FilterIcon size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-background-secondary border border-border-light rounded-2xl text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active Campaigns</option>
+                <option value="inactive">Paused / Expired</option>
+              </select>
+            </div>
+
+            <div className="relative group">
+              <LayoutGrid size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors" />
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-background-secondary border border-border-light rounded-2xl text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+              >
+                <option value="all">All Discount Types</option>
+                <option value="percentage">Percentage (%)</option>
+                <option value="fixed">Fixed Amount (₹)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Promotions Ledger */}
+        <div className="space-y-4">
           {loading ? (
-            <div className="text-center py-12 text-slate-400">Loading promotions...</div>
+            <div className="flex flex-col items-center justify-center py-20 bg-background-primary rounded-3xl border border-border-light">
+              <div className="size-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+              <p className="text-sm font-black text-text-muted uppercase tracking-widest">Hydrating Promotions Ledger...</p>
+            </div>
           ) : filteredPromotions.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">No promotions found</div>
+            <div className="flex flex-col items-center justify-center py-20 bg-background-primary rounded-3xl border border-border-light border-dashed">
+              <Tag size={48} className="text-text-muted/30 mb-4" />
+              <p className="text-lg font-black text-text-secondary">No active promotions match your criteria</p>
+              <p className="text-sm text-text-muted mt-1">Try adjusting your filters or search terms</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPromotions.map((promo, index) => (
                 <motion.div
                   key={promo._id}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`glass-panel rounded-xl p-6 group hover:border-primary/30 transition-all ${
-                    !promo.active ? 'opacity-60' : ''
-                  }`}
+                  className={`bg-background-primary rounded-3xl p-6 border border-border-light shadow-sm group hover:border-primary/30 transition-all ${!promo.active ? 'opacity-70 grayscale-[0.5]' : ''
+                    }`}
                 >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="material-symbols-outlined text-primary text-2xl">local_offer</span>
-                        <h3 className="text-xl font-bold text-white">{promo.name}</h3>
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <div className="flex items-center gap-2">
+                        <Tag size={16} className="text-primary" />
+                        <h3 className="text-lg font-black text-text-primary tracking-tight">{promo.name}</h3>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-mono font-bold border border-primary/30">
+                        <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-lg text-xs font-black tracking-widest">
                           {promo.code}
                         </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          promo.active 
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                        }`}>
-                          {promo.active ? 'Active' : 'Inactive'}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${promo.active
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-red-100 text-red-600'
+                          }`}>
+                          {promo.active ? 'Active' : 'Paused'}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-slate-400 text-sm mb-4">{promo.description}</p>
+                  {/* Card Body */}
+                  <p className="text-sm font-medium text-text-secondary mb-6 line-clamp-2 leading-relaxed text-left">
+                    {promo.description}
+                  </p>
 
-                  {/* Discount Info */}
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 text-sm">Discount</span>
-                      <span className="text-primary font-bold text-2xl">
+                  <div className="bg-background-secondary rounded-2xl p-5 border border-border-light mb-6">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Benefit</span>
+                      <span className="text-2xl font-black text-primary">
                         {promo.type === 'percentage' ? `${promo.value}%` : `₹${promo.value}`}
                       </span>
                     </div>
                     {promo.maxDiscount && (
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-slate-500 text-xs">Max Discount</span>
-                        <span className="text-slate-300 text-sm font-semibold">₹{promo.maxDiscount.toLocaleString()}</span>
+                      <div className="flex items-center justify-between pt-2 border-t border-border-light mt-2">
+                        <span className="text-[10px] font-bold text-text-muted uppercase">Max Cap</span>
+                        <span className="text-sm font-black text-text-primary">₹{promo.maxDiscount.toLocaleString()}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                    <div>
-                      <p className="text-slate-500 text-xs mb-1">Min. Booking</p>
-                      <p className="text-white font-semibold">₹{promo.minBookingAmount.toLocaleString()}</p>
+                  {/* Metrics Grid */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="text-left">
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Threshold</p>
+                      <p className="text-sm font-bold text-text-primary">₹{promo.minBookingAmount.toLocaleString()}</p>
                     </div>
-                    <div>
-                      <p className="text-slate-500 text-xs mb-1">Usage</p>
-                      <p className="text-white font-semibold">{promo.usedCount || 0} / {promo.usageLimit}</p>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Redeemed</p>
+                      <p className="text-sm font-bold text-text-primary">{promo.usedCount || 0} / {promo.usageLimit}</p>
                     </div>
-                    <div className="col-span-2">
-                      <p className="text-slate-500 text-xs mb-1">Valid Period</p>
-                      <p className="text-white text-xs">
-                        {new Date(promo.validFrom).toLocaleDateString('en-IN')} - {new Date(promo.validTo).toLocaleDateString('en-IN')}
-                      </p>
+                    <div className="col-span-2 text-left">
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Availability</p>
+                      <div className="flex items-center gap-2 text-xs font-bold text-text-secondary">
+                        <Calendar size={14} className="text-text-muted" />
+                        <span>{new Date(promo.validFrom).toLocaleDateString('en-IN')}</span>
+                        <ChevronRight size={12} className="text-border-light" />
+                        <span>{new Date(promo.validTo).toLocaleDateString('en-IN')}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-slate-500">Usage Progress</span>
-                      <span className="text-slate-400">{Math.round(((promo.usedCount || 0) / promo.usageLimit) * 100)}%</span>
+                  {/* Progress Matrix */}
+                  <div className="mb-8">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                      <span className="text-text-muted">Utilization Ratio</span>
+                      <span className="text-primary">{Math.round(((promo.usedCount || 0) / promo.usageLimit) * 100)}%</span>
                     </div>
-                    <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div className="w-full bg-background-secondary rounded-full h-1.5 overflow-hidden border border-border-light">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${((promo.usedCount || 0) / promo.usageLimit) * 100}%` }}
-                        transition={{ delay: 0.8 + index * 0.1, duration: 0.5 }}
-                        className="bg-gradient-to-r from-primary to-accent-purple h-2 rounded-full"
+                        transition={{ delay: index * 0.1, duration: 1 }}
+                        className="bg-primary h-full rounded-full"
                       />
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Card Actions */}
                   <div className="flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={() => {
                         setSelectedPromo(promo)
                         setFormData({
@@ -589,365 +566,258 @@ const ContentArea = ({
                         })
                         setShowEditModal(true)
                       }}
-                      className="flex-1 px-4 py-2 bg-primary/20 hover:bg-primary text-primary hover:text-black rounded-lg transition-all font-medium text-sm"
+                      className="flex-1 px-4 py-2.5 bg-background-secondary border border-border-light rounded-xl hover:bg-border-light transition-all font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
                     >
-                      Edit
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      <Edit size={14} /> EDIT
+                    </button>
+                    <button
                       onClick={() => togglePromoStatus(promo._id, promo.active)}
-                      className={`px-4 py-2 rounded-lg transition-all font-medium text-sm ${
-                        promo.active
-                          ? 'bg-yellow-500/20 hover:bg-yellow-500 text-yellow-400 hover:text-black'
-                          : 'bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-black'
-                      }`}
+                      className={`px-4 py-2.5 border rounded-xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 ${promo.active
+                        ? 'bg-yellow-50 border-yellow-100 text-yellow-600 hover:bg-yellow-100'
+                        : 'bg-green-50 border-green-100 text-green-600 hover:bg-green-100'
+                        }`}
                     >
-                      {promo.active ? 'Deactivate' : 'Activate'}
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      {promo.active ? <Clock size={14} /> : <Zap size={14} />}
+                      {promo.active ? 'PAUSE' : 'RESUME'}
+                    </button>
+                    <button
                       onClick={() => handleDeletePromotion(promo._id)}
-                      className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-black rounded-lg transition-all"
+                      className="px-4 py-2.5 bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 rounded-xl transition-all flex items-center justify-center"
                     >
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </motion.button>
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </motion.div>
               ))}
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
 
-      {/* Add Promotion Modal */}
+      {/* Campaign Modulation Modals */}
       <AnimatePresence>
-        {showAddModal && (
-          <motion.div 
+        {(showAddModal || showEditModal) && (
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setShowAddModal(false)}
+            className="fixed inset-0 bg-text-primary/20 backdrop-blur-md flex items-center justify-center z-[100] p-4"
+            onClick={() => {
+              setShowAddModal(false)
+              setShowEditModal(false)
+              setSelectedPromo(null)
+            }}
           >
-            <motion.div 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="glass-panel rounded-2xl border border-white/10 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-background-primary rounded-[40px] border border-border-light w-full max-w-2xl overflow-hidden shadow-2xl"
             >
-              <div className="p-6 border-b border-white/10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-white">Create New Promotion</h3>
-                  <button
-                    onClick={() => setShowAddModal(false)}
-                    className="text-slate-400 hover:text-white transition-colors"
-                  >
-                    <span className="material-symbols-outlined">close</span>
-                  </button>
+              {/* Modal Header */}
+              <div className="px-10 py-8 bg-background-primary border-b border-border-light flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-black text-text-primary uppercase tracking-tight">
+                    {showAddModal ? 'Create Campaign' : 'Edit Campaign'}
+                  </h3>
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mt-1">
+                    {showAddModal ? 'Configure new dynamic promotion' : 'Modify existing promotion logic'}
+                  </p>
                 </div>
+                <button
+                  onClick={() => {
+                    setShowAddModal(false)
+                    setShowEditModal(false)
+                  }}
+                  className="p-3 hover:bg-background-secondary rounded-2xl transition-colors text-text-muted hover:text-primary"
+                >
+                  <XCircle size={24} />
+                </button>
               </div>
-              <form onSubmit={handleAddPromotion} className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Promo Code*</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.code}
-                      onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary uppercase"
-                      placeholder="SUMMER20"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Promotion Name*</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Summer Special"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-slate-400 text-sm mb-2">Description*</label>
-                    <textarea
-                      required
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      rows={2}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Get 20% off on summer bookings"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Discount Type*</label>
-                    <select
-                      required
-                      value={formData.type}
-                      onChange={(e) => setFormData({...formData, type: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="percentage">Percentage</option>
-                      <option value="fixed">Fixed Amount</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">
-                      Discount Value* {formData.type === 'percentage' ? '(%)' : '(₹)'}
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.value}
-                      onChange={(e) => setFormData({...formData, value: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder={formData.type === 'percentage' ? '20' : '500'}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Min. Booking Amount*</label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.minBookingAmount}
-                      onChange={(e) => setFormData({...formData, minBookingAmount: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="5000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Max Discount Amount</label>
-                    <input
-                      type="number"
-                      value={formData.maxDiscount}
-                      onChange={(e) => setFormData({...formData, maxDiscount: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="2000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Valid From*</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.validFrom}
-                      onChange={(e) => setFormData({...formData, validFrom: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Valid To*</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.validTo}
-                      onChange={(e) => setFormData({...formData, validTo: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Usage Limit*</label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.usageLimit}
-                      onChange={(e) => setFormData({...formData, usageLimit: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="100"
-                    />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.active}
-                      onChange={(e) => setFormData({...formData, active: e.target.checked})}
-                      className="w-5 h-5"
-                    />
-                    <label className="text-white">Activate immediately</label>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-3 bg-gradient-to-r from-primary to-accent-purple text-black font-semibold rounded-lg hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
-                  >
-                    Create Promotion
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Edit Promotion Modal - Similar to Add Modal */}
-      <AnimatePresence>
-        {showEditModal && selectedPromo && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setShowEditModal(false)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-              className="glass-panel rounded-2xl border border-white/10 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-            >
-              <div className="p-6 border-b border-white/10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-white">Edit Promotion</h3>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="text-slate-400 hover:text-white transition-colors"
-                  >
-                    <span className="material-symbols-outlined">close</span>
-                  </button>
-                </div>
-              </div>
-              <form onSubmit={handleEditPromotion} className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Promo Code*</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.code}
-                      onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary uppercase"
-                    />
+              {/* Modal Body */}
+              <form
+                onSubmit={showAddModal ? handleAddPromotion : handleEditPromotion}
+                className="p-10 max-h-[70vh] overflow-y-auto no-scrollbar"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Basic Info */}
+                  <div className="md:col-span-2 space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Campaign Title</label>
+                      <div className="relative group">
+                        <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full pl-12 pr-6 py-4 bg-background-secondary border border-border-light rounded-2xl text-sm font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                          placeholder="Summer Bonanza 2024"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Promo Code</label>
+                        <div className="relative group">
+                          <Zap size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                          <input
+                            type="text"
+                            required
+                            value={formData.code}
+                            onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                            className="w-full pl-12 pr-6 py-4 bg-background-secondary border border-border-light rounded-2xl text-sm font-black tracking-widest focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none uppercase"
+                            placeholder="SUMMER20"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Usage Limit</label>
+                        <div className="relative group">
+                          <PiggyBank size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                          <input
+                            type="number"
+                            required
+                            value={formData.usageLimit}
+                            onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
+                            className="w-full pl-12 pr-6 py-4 bg-background-secondary border border-border-light rounded-2xl text-sm font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                            placeholder="500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Description</label>
+                      <textarea
+                        required
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={3}
+                        className="w-full px-6 py-4 bg-background-secondary border border-border-light rounded-2xl text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none resize-none"
+                        placeholder="Detailed explanation of the offer terms..."
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Promotion Name*</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+
+                  {/* Pricing Logic */}
+                  <div className="md:col-span-2 p-6 bg-primary/5 rounded-[32px] border border-primary/10 space-y-6">
+                    <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                      <TrendingUp size={14} /> Pricing & Thresholds
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-text-muted uppercase ml-1">Discount Type</label>
+                        <select
+                          required
+                          value={formData.type}
+                          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                          className="w-full px-6 py-4 bg-background-primary border border-border-light rounded-2xl text-sm font-bold focus:border-primary transition-all outline-none appearance-none"
+                        >
+                          <option value="percentage">Percentage (%)</option>
+                          <option value="fixed">Fixed Amount (₹)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-text-muted uppercase ml-1">
+                          Benefit Value ({formData.type === 'percentage' ? '%' : '₹'})
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          value={formData.value}
+                          onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                          className="w-full px-6 py-4 bg-background-primary border border-border-light rounded-2xl text-sm font-black text-primary focus:border-primary transition-all outline-none"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-text-muted uppercase ml-1">Min. Booking (₹)</label>
+                        <input
+                          type="number"
+                          required
+                          value={formData.minBookingAmount}
+                          onChange={(e) => setFormData({ ...formData, minBookingAmount: e.target.value })}
+                          className="w-full px-6 py-4 bg-background-primary border border-border-light rounded-2xl text-sm font-bold focus:border-primary transition-all outline-none"
+                          placeholder="2000"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-text-muted uppercase ml-1">Max Discount Cap (₹)</label>
+                        <input
+                          type="number"
+                          value={formData.maxDiscount}
+                          onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value })}
+                          className="w-full px-6 py-4 bg-background-primary border border-border-light rounded-2xl text-sm font-bold focus:border-primary transition-all outline-none"
+                          placeholder="5000"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="col-span-2">
-                    <label className="block text-slate-400 text-sm mb-2">Description*</label>
-                    <textarea
-                      required
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      rows={2}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+
+                  {/* Validity */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Starts On</label>
+                    <div className="relative group">
+                      <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                      <input
+                        type="date"
+                        required
+                        value={formData.validFrom}
+                        onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
+                        className="w-full pl-12 pr-6 py-4 bg-background-secondary border border-border-light rounded-2xl text-sm font-bold focus:border-primary transition-all outline-none"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Discount Type*</label>
-                    <select
-                      required
-                      value={formData.type}
-                      onChange={(e) => setFormData({...formData, type: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="percentage">Percentage</option>
-                      <option value="fixed">Fixed Amount</option>
-                    </select>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Expires On</label>
+                    <div className="relative group">
+                      <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                      <input
+                        type="date"
+                        required
+                        value={formData.validTo}
+                        onChange={(e) => setFormData({ ...formData, validTo: e.target.value })}
+                        className="w-full pl-12 pr-6 py-4 bg-background-secondary border border-border-light rounded-2xl text-sm font-bold focus:border-primary transition-all outline-none"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">
-                      Discount Value* {formData.type === 'percentage' ? '(%)' : '(₹)'}
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.value}
-                      onChange={(e) => setFormData({...formData, value: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Min. Booking Amount*</label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.minBookingAmount}
-                      onChange={(e) => setFormData({...formData, minBookingAmount: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Max Discount Amount</label>
-                    <input
-                      type="number"
-                      value={formData.maxDiscount}
-                      onChange={(e) => setFormData({...formData, maxDiscount: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Valid From*</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.validFrom}
-                      onChange={(e) => setFormData({...formData, validFrom: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Valid To*</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.validTo}
-                      onChange={(e) => setFormData({...formData, validTo: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Usage Limit*</label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.usageLimit}
-                      onChange={(e) => setFormData({...formData, usageLimit: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
+
+                  <div className="md:col-span-2 flex items-center gap-3 p-4 bg-background-secondary rounded-2xl border border-border-light cursor-pointer group hover:border-primary/20 transition-all">
                     <input
                       type="checkbox"
+                      id="active-toggle"
                       checked={formData.active}
-                      onChange={(e) => setFormData({...formData, active: e.target.checked})}
-                      className="w-5 h-5"
+                      onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                      className="size-5 rounded-lg border-border-light text-primary focus:ring-primary/20 accent-primary cursor-pointer"
                     />
-                    <label className="text-white">Active</label>
+                    <label htmlFor="active-toggle" className="text-sm font-bold text-text-primary cursor-pointer select-none">
+                      Deploy campaign immediately on save
+                    </label>
                   </div>
                 </div>
-                <div className="flex justify-end gap-4 mt-6">
+
+                {/* Modal Footer */}
+                <div className="mt-10 flex gap-4">
                   <button
                     type="button"
-                    onClick={() => setShowEditModal(false)}
-                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all"
+                    onClick={() => {
+                      setShowAddModal(false)
+                      setShowEditModal(false)
+                    }}
+                    className="flex-1 px-8 py-4 bg-background-secondary hover:bg-border-light text-text-secondary rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
                   >
-                    Cancel
+                    Discard Changes
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-gradient-to-r from-primary to-accent-purple text-black font-semibold rounded-lg hover:shadow-[0_0_20px_rgba(19,200,236,0.5)] transition-all"
+                    className="flex-1 px-8 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    Update Promotion
+                    {showAddModal ? 'Initiate Campaign' : 'Commit Refinement'}
                   </button>
                 </div>
               </form>
