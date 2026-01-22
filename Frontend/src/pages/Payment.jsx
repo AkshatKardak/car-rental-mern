@@ -88,12 +88,12 @@ const Payment = () => {
 
       // 2. Create booking first
       const bookingData = {
-        car: summary.carId,
+        carId: summary.carId,
         startDate: summary.startDate,
         endDate: summary.endDate,
         totalPrice: summary.total,
         discount: summary.promoDiscount,
-        promoCode: summary.promoCode,
+        promotionCode: summary.promoCode,
       };
 
       const bookingResponse = await bookingService.createBooking(bookingData);
@@ -356,8 +356,8 @@ const Payment = () => {
                   onClick={handlePay}
                   disabled={loading}
                   className={`mt-6 w-full py-4 rounded-xl font-black text-lg inline-flex items-center justify-center gap-2 transition-all ${loading
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-primary text-white hover:bg-primary-hover shadow-md'
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary text-white hover:bg-primary-hover shadow-md'
                     }`}
                 >
                   {loading ? 'Processing...' : `Pay ₹${summary.total}`}

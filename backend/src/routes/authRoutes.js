@@ -6,6 +6,7 @@ const { registerRules, loginRules } = require('../utils/validators');
 const router = express.Router();
 
 router.post('/signup', registerRules, signup);
+router.post('/register', registerRules, signup); // Alias for signup
 router.post('/login', loginRules, login);
 router.get('/logout', logout); // or post
 router.post('/logout', logout); // Support both

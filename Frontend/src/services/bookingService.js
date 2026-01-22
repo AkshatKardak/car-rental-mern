@@ -1,39 +1,108 @@
 import api from './api';
 
 export const bookingService = {
-  // Create new booking
-  createBooking: async (bookingData) => {
-    const response = await api.post('/bookings', bookingData);
-    return response.data;
-  },
-
-  // Get all user bookings
+  // Get user's bookings (Protected route)
   getUserBookings: async () => {
-    const response = await api.get('/bookings/user');
-    return response.data;
+    try {
+      const response = await api.get('/bookings/my-bookings');
+
+      return {
+        success: true,
+        data: response.data.data || response.data || []
+      };
+    } catch (error) {
+      console.error('Get user bookings error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch bookings');
+    }
   },
 
-  // Get single booking by ID
-  getBookingById: async (id) => {
-    const response = await api.get(`/bookings/${id}`);
-    return response.data;
+  // Create new booking (Protected route)
+  createBooking: async (bookingData) => {
+    try {
+      const response = await api.post('/bookings', bookingData);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Create booking error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to create booking');
+    }
   },
 
-  // Update booking
-  updateBooking: async (id, updateData) => {
-    const response = await api.put(`/bookings/${id}`, updateData);
-    return response.data;
+  // Get booking by ID (Protected route)
+  getBookingById: async (bookingId) => {
+    try {
+      const response = await api.get(`/bookings/${bookingId}`);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Get booking error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch booking');
+    }
   },
 
-  // Cancel booking
-  cancelBooking: async (id) => {
-    const response = await api.delete(`/bookings/${id}`);
-    return response.data;
+  // Update booking (Admin/Manager only)
+  updateBooking: async (bookingId, bookingData) => {
+    try {
+      const response = await api.put(`/bookings/${bookingId}`, bookingData);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Update booking error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to update booking');
+    }
   },
 
-  // Get booking details with car and user info
-  getBookingDetails: async (id) => {
-    const response = await api.get(`/bookings/${id}/details`);
-    return response.data;
+  // Cancel booking (typically updates status to 'Cancelled')
+  cancelBooking: async (bookingId) => {
+    try {
+      const response = await api.put(`/bookings/${bookingId}`, { status: 'Cancelled' });
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Cancel booking error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to cancel booking');
+    }
   },
+
+  // Delete booking (Admin only)
+  deleteBooking: async (bookingId) => {
+    try {
+      const response = await api.delete(`/bookings/${bookingId}`);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Delete booking error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to delete booking');
+    }
+  },
+
+  // Get all bookings (Admin/Manager only)
+  getAllBookings: async () => {
+    try {
+      const response = await api.get('/bookings');
+
+      return {
+        success: true,
+        data: response.data.data || response.data || []
+      };
+    } catch (error) {
+      console.error('Get all bookings error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch all bookings');
+    }
+  }
 };

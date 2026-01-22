@@ -17,6 +17,33 @@ import {
 import DashboardNavbar from '../components/layout/DashboardNavbar';
 import { carService } from '../services/carService';
 
+// Image mapping for local assets
+const carImageMap = {
+  'porsche': '/src/assets/porsche.png',
+  'lamborghini': '/src/assets/lambo.png',
+  'bugatti': '/src/assets/Bugatti.png',
+  'mercedes': '/src/assets/mercedes.png',
+  'mercedes-benz': '/src/assets/mercedes.png',
+  'kia': '/src/assets/Kia.png',
+  'skoda': '/src/assets/skoda.png',
+  'toyota': '/src/assets/supra.png',
+  'rolls-royce': '/src/assets/rolls royce.png',
+  'audi': '/src/assets/AudiElectric.png',
+  'g63': '/src/assets/mercedes g63 amg.png',
+};
+
+const getCarImage = (car) => {
+  if (car.images?.[0] && !car.images[0].includes('placeholder')) return car.images[0];
+
+  const brand = car.brand?.toLowerCase();
+  const model = car.model?.toLowerCase();
+
+  if (model?.includes('g63')) return carImageMap['g63'];
+  if (carImageMap[brand]) return carImageMap[brand];
+
+  return '/src/assets/herocar.png'; // Default fallback
+};
+
 const BrowseCars = () => {
   const navigate = useNavigate();
 
@@ -29,6 +56,7 @@ const BrowseCars = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedFuelType, setSelectedFuelType] = useState('All');
   const [selectedTransmission, setSelectedTransmission] = useState('All');
   const [priceRange, setPriceRange] = useState([0, 10000]);
@@ -40,6 +68,7 @@ const BrowseCars = () => {
 
   // Available filter options (will be populated from backend data)
   const [brands, setBrands] = useState(['All']);
+  const categories = ['All', 'Luxury', 'Sports', 'SUV', 'Sedan', 'Electric'];
   const fuelTypes = ['All', 'Petrol', 'Diesel', 'Electric', 'Hybrid'];
   const transmissions = ['All', 'Automatic', 'Manual'];
   const seatOptions = ['All', '2', '4', '5', '7', '8'];
@@ -52,15 +81,16 @@ const BrowseCars = () => {
   // Apply filters whenever filter states change
   useEffect(() => {
     applyFilters();
-  }, [cars, searchQuery, selectedBrand, selectedFuelType, selectedTransmission, priceRange, selectedSeats, sortBy]);
+  }, [cars, searchQuery, selectedBrand, selectedCategory, selectedFuelType, selectedTransmission, priceRange, selectedSeats, sortBy]);
 
   const fetchCars = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // We send 'true' as string because URLSearchParams will stringify it anyway
       const response = await carService.getAllCars({
-        status: 'Available', // Only fetch available cars
+        available: 'true',
       });
 
       if (response.success && response.data) {
@@ -73,8 +103,8 @@ const BrowseCars = () => {
 
         // Set initial price range based on data
         const prices = response.data.map(car => car.pricePerDay);
-        const maxPrice = Math.max(...prices, 10000);
-        setPriceRange([0, maxPrice]);
+        const maxP = prices.length > 0 ? Math.max(...prices) : 10000;
+        setPriceRange([0, maxP]);
       } else {
         setError('Failed to load cars');
       }
@@ -105,14 +135,25 @@ const BrowseCars = () => {
       filtered = filtered.filter(car => car.brand === selectedBrand);
     }
 
-    // Fuel type filter
-    if (selectedFuelType !== 'All') {
-      filtered = filtered.filter(car => car.fuelType === selectedFuelType);
+    // Category filter
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(car =>
+        car.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
     }
 
-    // Transmission filter
+    // Fuel type filter (Case-insensitive match with backend)
+    if (selectedFuelType !== 'All') {
+      filtered = filtered.filter(car =>
+        car.fuelType?.toLowerCase() === selectedFuelType.toLowerCase()
+      );
+    }
+
+    // Transmission filter (Case-insensitive match with backend)
     if (selectedTransmission !== 'All') {
-      filtered = filtered.filter(car => car.transmission === selectedTransmission);
+      filtered = filtered.filter(car =>
+        car.transmission?.toLowerCase() === selectedTransmission.toLowerCase()
+      );
     }
 
     // Price range filter
@@ -140,7 +181,6 @@ const BrowseCars = () => {
         filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
       default:
-        // Featured - keep original order
         break;
     }
 
@@ -150,6 +190,7 @@ const BrowseCars = () => {
   const handleClearFilters = () => {
     setSearchQuery('');
     setSelectedBrand('All');
+    setSelectedCategory('All');
     setSelectedFuelType('All');
     setSelectedTransmission('All');
     setSelectedSeats('All');
@@ -237,8 +278,8 @@ const BrowseCars = () => {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl border font-semibold transition-all min-w-[140px] ${showFilters
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white text-primary border-primary hover:bg-background-secondary'
+                ? 'bg-primary text-white border-primary'
+                : 'bg-white text-primary border-primary hover:bg-background-secondary'
                 }`}
             >
               <SlidersHorizontal className="w-5 h-5" />
@@ -247,7 +288,7 @@ const BrowseCars = () => {
           </div>
 
           {/* Active Filters Display */}
-          {(selectedBrand !== 'All' || selectedFuelType !== 'All' || selectedTransmission !== 'All' || selectedSeats !== 'All' || searchQuery) && (
+          {(selectedBrand !== 'All' || selectedCategory !== 'All' || selectedFuelType !== 'All' || selectedTransmission !== 'All' || selectedSeats !== 'All' || searchQuery) && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-text-secondary">Active filters:</span>
               {searchQuery && (
@@ -255,6 +296,9 @@ const BrowseCars = () => {
               )}
               {selectedBrand !== 'All' && (
                 <FilterChip label={`Brand: ${selectedBrand}`} onRemove={() => setSelectedBrand('All')} />
+              )}
+              {selectedCategory !== 'All' && (
+                <FilterChip label={`Category: ${selectedCategory}`} onRemove={() => setSelectedCategory('All')} />
               )}
               {selectedFuelType !== 'All' && (
                 <FilterChip label={`Fuel: ${selectedFuelType}`} onRemove={() => setSelectedFuelType('All')} />
@@ -285,13 +329,21 @@ const BrowseCars = () => {
               className="mb-6 overflow-hidden"
             >
               <div className="rounded-2xl bg-white border border-border-light p-6 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                   {/* Brand Filter */}
                   <FilterSelect
                     label="Brand"
                     value={selectedBrand}
                     onChange={setSelectedBrand}
                     options={brands}
+                  />
+
+                  {/* Category Filter */}
+                  <FilterSelect
+                    label="Category"
+                    value={selectedCategory}
+                    onChange={setSelectedCategory}
+                    options={categories}
                   />
 
                   {/* Fuel Type Filter */}
@@ -467,7 +519,7 @@ const CarCard = ({ car, index, onViewDetails, onBookNow }) => {
       {/* Car Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-background-secondary">
         <img
-          src={imageError ? defaultImage : (car.images?.[0] || defaultImage)}
+          src={imageError ? defaultImage : getCarImage(car)}
           alt={car.name || 'Car'}
           onError={() => setImageError(true)}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

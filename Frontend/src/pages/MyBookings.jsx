@@ -31,7 +31,21 @@ const MyBookings = () => {
     try {
       setLoading(true);
       const response = await bookingService.getUserBookings();
-      setBookings(response.data);
+
+      // Map backend fields to frontend UI expectations
+      const mappedBookings = (response.data || []).map(b => ({
+        id: b._id,
+        carId: b.car?._id || b.car,
+        carName: b.car ? `${b.car.brand} ${b.car.model}` : 'Unknown Car',
+        status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
+        pickup: b.car?.location || 'Store Location',
+        dropoff: 'Store Location',
+        start: new Date(b.startDate).toLocaleDateString() + ' ' + new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        end: new Date(b.endDate).toLocaleDateString() + ' ' + new Date(b.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        total: b.totalPrice
+      }));
+
+      setBookings(mappedBookings);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
       alert('Failed to load bookings. Please try again.');
@@ -91,7 +105,7 @@ const MyBookings = () => {
           </div>
 
           <button
-            onClick={() => navigate("/browse-cars")}
+            onClick={() => navigate("/browsecars")}
             className="hidden sm:inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white font-black hover:bg-primary-hover transition border-2 border-transparent"
           >
             <Car className="w-4 h-4" />
@@ -113,7 +127,7 @@ const MyBookings = () => {
               </p>
 
               <button
-                onClick={() => navigate("/browse-cars")}
+                onClick={() => navigate("/browsecars")}
                 className="mt-6 px-6 py-3 rounded-xl bg-primary text-white font-black hover:bg-primary-hover transition"
               >
                 Browse Cars
@@ -122,9 +136,9 @@ const MyBookings = () => {
           </motion.div>
         ) : (
           <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {bookings.map((b) => (
+            {bookings.map((b, idx) => (
               <motion.div
-                key={b.id}
+                key={b.id || idx}
                 whileHover={{
                   y: -6,
                   scale: 1.01,

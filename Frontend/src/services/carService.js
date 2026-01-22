@@ -1,41 +1,100 @@
 import api from './api';
 
 export const carService = {
-  // Get all cars with filters
+  // Get all cars (Public route)
   getAllCars: async (filters = {}) => {
-    const params = new URLSearchParams();
-    
-    if (filters.brand) params.append('brand', filters.brand);
-    if (filters.fuelType) params.append('fuelType', filters.fuelType);
-    if (filters.transmission) params.append('transmission', filters.transmission);
-    if (filters.minPrice) params.append('minPrice', filters.minPrice);
-    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-    if (filters.seats) params.append('seats', filters.seats);
-    if (filters.search) params.append('search', filters.search);
-    if (filters.sortBy) params.append('sortBy', filters.sortBy);
-    if (filters.order) params.append('order', filters.order);
+    try {
+      // Standardize filter for backend controller
+      const backendFilters = { ...filters };
+      if (backendFilters.status === 'Available') {
+        backendFilters.available = 'true';
+        delete backendFilters.status;
+      }
 
-    const response = await api.get(`/cars?${params.toString()}`);
-    return response.data;
+      const response = await api.get('/cars', { params: backendFilters });
+
+      return {
+        success: true,
+        data: response.data.data || response.data || []
+      };
+    } catch (error) {
+      console.error('Get all cars error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch cars');
+    }
   },
 
-  // Get single car by ID
-  getCarById: async (id) => {
-    const response = await api.get(`/cars/${id}`);
-    return response.data;
+  // Get featured cars (Public route)
+  getFeaturedCars: async () => {
+    try {
+      const response = await api.get('/cars/featured');
+
+      return {
+        success: true,
+        data: response.data.data || response.data || []
+      };
+    } catch (error) {
+      console.error('Get featured cars error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch featured cars');
+    }
   },
 
-  // Search cars
-  searchCars: async (query) => {
-    const response = await api.get(`/cars?search=${query}`);
-    return response.data;
+  // Get single car by ID (Public route)
+  getCarById: async (carId) => {
+    try {
+      const response = await api.get(`/cars/${carId}`);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Get car by ID error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch car details');
+    }
   },
 
-  // Get available cars for date range
-  getAvailableCars: async (startDate, endDate) => {
-    const response = await api.get('/cars', {
-      params: { startDate, endDate, status: 'Available' }
-    });
-    return response.data;
+  // Create car (Admin only)
+  createCar: async (carData) => {
+    try {
+      const response = await api.post('/cars', carData);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Create car error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to create car');
+    }
   },
+
+  // Update car (Admin only)
+  updateCar: async (carId, carData) => {
+    try {
+      const response = await api.put(`/cars/${carId}`, carData);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Update car error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to update car');
+    }
+  },
+
+  // Delete car (Admin only)
+  deleteCar: async (carId) => {
+    try {
+      const response = await api.delete(`/cars/${carId}`);
+
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Delete car error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to delete car');
+    }
+  }
 };
