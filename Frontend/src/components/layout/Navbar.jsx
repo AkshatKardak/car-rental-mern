@@ -23,61 +23,55 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
-<div className="flex items-center">
-  <Link to="/" className="flex items-center space-x-2">
-    <img
-      src={Logo}
-      alt="RentRide Logo"
-      className="w-10 h-10 object-contain"
-    />
-    <span className="text-xl font-bold text-text-primary dark:text-text-dark-primary">
-      RentRide
-    </span>
-  </Link>
-</div>
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center space-x-2">
+              <img
+                src={Logo}
+                alt="RentRide Logo"
+                className="w-10 h-10 object-contain"
+              />
+              <span className="text-xl font-bold text-text-primary dark:text-text-dark-primary">
+                RentRide
+              </span>
+            </Link>
+          </div>
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
             >
               Home
             </Link>
-            <Link 
-              to="/browsecars" 
+            <Link
+              to="/browsecars"
               className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
             >
               Browse Cars
             </Link>
-            <Link 
-              to="/offers" 
+            <Link
+              to="/offers"
               className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
             >
               Offers
             </Link>
-            <Link 
-              to="/aiassistant" 
+            <Link
+              to="/aiassistant"
               className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
             >
               AI Assistant
             </Link>
-            <Link 
-              to="/about" 
-              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
-            >
-              About
-            </Link>
-            
+
             {user ? (
               <>
-                <Link 
-                  to="/mybookings" 
+                <Link
+                  to="/mybookings"
                   className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
                 >
                   My Bookings
                 </Link>
-                <Link 
-                  to="/dashboard" 
+                <Link
+                  to="/dashboard"
                   className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
                 >
                   Dashboard
@@ -174,14 +168,7 @@ export default function Navbar() {
             >
               AI Assistant
             </Link>
-            <Link
-              to="/about"
-              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              About
-            </Link>
-            
+
             {user ? (
               <>
                 <Link
