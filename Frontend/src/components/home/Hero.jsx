@@ -5,6 +5,8 @@ import herocar from '../../assets/herocar1.png'
 import { FadeRight, FadeLeft } from '../../utility/Animation'
 
 export default function Hero() {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+
   return (
     <section className="relative overflow-hidden">
       {/* Background Decor */}
@@ -116,54 +118,56 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* Quick Search Card */}
-        <motion.div
-          variants={FadeRight(0.7)}
-          initial="hidden"
-          animate="visible"
-          className="bg-white rounded-xl shadow-2xl p-6 max-w-4xl mx-auto mt-16"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                <MapPin size={16} className="inline mr-1" />
-                Location
-              </label>
-              <input
-                type="text"
-                placeholder="Enter city"
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary"
-              />
+        {/* Quick Search Card - Only shown after login */}
+        {user && (
+          <motion.div
+            variants={FadeRight(0.7)}
+            initial="hidden"
+            animate="visible"
+            className="bg-white rounded-xl shadow-2xl p-6 max-w-4xl mx-auto mt-16"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <MapPin size={16} className="inline mr-1" />
+                  Location
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter city"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <Calendar size={16} className="inline mr-1" />
+                  Pick-up Date
+                </label>
+                <input
+                  type="date"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <Calendar size={16} className="inline mr-1" />
+                  Return Date
+                </label>
+                <input
+                  type="date"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                <Calendar size={16} className="inline mr-1" />
-                Pick-up Date
-              </label>
-              <input
-                type="date"
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                <Calendar size={16} className="inline mr-1" />
-                Return Date
-              </label>
-              <input
-                type="date"
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary"
-              />
-            </div>
-          </div>
-
-          <button className="w-full mt-4 bg-primary hover:bg-primary-hover text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
-            <Search size={20} />
-            Search Available Cars
-          </button>
-        </motion.div>
+            <button className="w-full mt-4 bg-primary hover:bg-primary-hover text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
+              <Search size={20} />
+              Search Available Cars
+            </button>
+          </motion.div>
+        )}
       </div>
     </section>
   )

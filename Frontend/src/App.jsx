@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/Home";
@@ -15,9 +15,16 @@ import SignUp from "./components/auth/SignUp";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 export default function App() {
+  const location = useLocation();
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+  // Define routes where the global landing Navbar & Footer should appear
+  const landingRoutes = ["/", "/about", "/signin", "/signup"];
+  const isLandingPage = landingRoutes.includes(location.pathname);
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
-      <Navbar />
+      {isLandingPage && <Navbar />}
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -39,7 +46,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
-      <Footer />
+      {isLandingPage && <Footer />}
     </div>
   );
 }
