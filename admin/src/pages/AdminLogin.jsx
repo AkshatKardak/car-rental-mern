@@ -18,12 +18,22 @@ const AdminLogin = () => {
     e.preventDefault()
     setError('')
 
+    // --- 🚨 DUMMY DATA BYPASS ---
+    // This allows login even if backend is offline or failing
+    if (formData.email === 'admin@rentride.com' && formData.password === 'password123') {
+        console.log('Using Dummy Login Bypass');
+        const dummyUser = { name: 'Admin User', email: 'admin@rentride.com', role: 'admin' };
+        localStorage.setItem('adminToken', 'dummy-token-12345'); 
+        localStorage.setItem('adminUser', JSON.stringify(dummyUser));
+        navigate('/admin/dashboard');
+        return; 
+    }
+    // ---------------------------
+
     try {
-      const response = await fetch('http://127.0.0.1:5005/api/auth/login', {
+      const response = await fetch('http://localhost:5005/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password
@@ -33,24 +43,19 @@ const AdminLogin = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Double check if user is admin
         if (data.user?.role !== 'admin' && data.role !== 'admin') {
           setError('Access denied. Admin privileges required.');
           return;
         }
-
-        console.log('Login successful');
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.user || { email: formData.email, role: 'admin' }));
-
-        // Navigate to dashboard
-        navigate('/admin/dashboard')
+        navigate('/admin/dashboard');
       } else {
-        setError(data.message || 'Invalid email or password')
+        setError(data.message || 'Invalid email or password');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Connection to server failed. Please ensure backend is running.');
+      setError('Connection failed. Try "admin@rentride.com" / "password123"');
     }
   }
 
@@ -60,14 +65,12 @@ const AdminLogin = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
-    // Clear error when user types
     if (error) setError('')
   }
 
   return (
     <div className="bg-background-secondary text-text-primary antialiased min-h-screen relative overflow-hidden flex items-center justify-center">
       <BackgroundEffects />
-
       <motion.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
