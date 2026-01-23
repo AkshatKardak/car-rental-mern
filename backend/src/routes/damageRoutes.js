@@ -9,11 +9,12 @@ const {
   deleteDamageReport,
   getCarDamageStats
 } = require('../controllers/damageReportController');
-const { protect, admin } = require('../middleware/auth');
+const { protect } = require('../middleware/authMiddleware');
+const { admin } = require('../middleware/adminMiddleware');
 
 // Configure multer for image uploads
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {

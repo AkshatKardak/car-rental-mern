@@ -43,7 +43,7 @@ const PaymentRevenue = () => {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/bookings')
+      const res = await fetch('http://127.0.0.1:5005/api/bookings')
       const data = await res.json()
       setBookings(data)
     } catch (err) {

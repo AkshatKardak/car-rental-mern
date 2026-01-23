@@ -13,22 +13,32 @@ const offerRoutes = require('./routes/offerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const promotionRoutes = require('./routes/promotionRoutes');
 const damageRoutes = require('./routes/damageRoutes');
-const aiRoutes = require('./routes/aiRoutes');
+// const aiRoutes = require('./routes/aiRoutes');
 
 
 
 const app = express();
 
 // Middleware
+app.use(morgan('dev'));
 app.use(express.json()); // Body parser
 app.use(cookieParser()); // Cookie parser
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: [
+        process.env.CLIENT_URL || 'http://localhost:5173',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'http://localhost:5174',
+        'http://127.0.0.1:5174',
+        'http://localhost:5175',
+        'http://127.0.0.1:5175'
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Set-Cookie']
 };
 app.use(cors(corsOptions));
 
@@ -42,7 +52,7 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/damage-reports', damageRoutes);
-app.use('/api/ai', aiRoutes);
+// app.use('/api/ai', aiRoutes);
 
 // Base route
 app.get('/', (req, res) => {

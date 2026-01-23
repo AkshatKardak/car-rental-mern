@@ -27,10 +27,10 @@ import {
   ChevronRight,
   Menu,
   Bell,
-  CheckCircle,
   AlertTriangle,
   Image as ImageIcon
 } from 'lucide-react'
+import adminApi from '../services/adminApi'
 
 const VehicleManagement = () => {
   const navigate = useNavigate()
@@ -43,12 +43,30 @@ const VehicleManagement = () => {
   const [showModal, setShowModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showAssetPicker, setShowAssetPicker] = useState(false)
   const [formData, setFormData] = useState({
     name: '', brand: '', model: '', year: '', category: 'Sedan',
     price: '', seats: '', transmission: 'Automatic', fuelType: 'Petrol',
     color: '', plateNumber: '', mileage: '', images: '', features: '',
-    description: '', available: true
+    description: '', available: true, location: ''
   })
+
+  const availableAssets = [
+    { name: 'Porsche', path: '/src/assets/porsche.png' },
+    { name: 'Lamborghini', path: '/src/assets/lambo.png' },
+    { name: 'Bugatti', path: '/src/assets/Bugatti.png' },
+    { name: 'Mercedes G63', path: '/src/assets/mercedes g63 amg.png' },
+    { name: 'Mercedes', path: '/src/assets/mercedes.png' },
+    { name: 'Kia', path: '/src/assets/Kia.png' },
+    { name: 'Skoda', path: '/src/assets/skoda.png' },
+    { name: 'Supra', path: '/src/assets/supra.png' },
+    { name: 'Rolls Royce', path: '/src/assets/rolls royce.png' },
+    { name: 'Audi Electric', path: '/src/assets/AudiElectric.png' },
+    { name: 'Luxury White', path: '/src/assets/luxury.png' },
+    { name: 'Black Car', path: '/src/assets/blackcar.png' },
+    { name: 'Blue Car', path: '/src/assets/bluecar.png' },
+    { name: 'Hero Car', path: '/src/assets/herocar.png' },
+  ]
 
   useEffect(() => {
     fetchVehicles()
@@ -56,9 +74,10 @@ const VehicleManagement = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/cars')
-      const data = await response.json()
-      setVehicles(data)
+      const response = await adminApi.get('/cars')
+      const data = response.data
+      // Backend returns { success, count, data: [] }
+      setVehicles(Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []))
       setLoading(false)
     } catch (error) {
       console.error('Error fetching vehicles:', error)
@@ -71,21 +90,23 @@ const VehicleManagement = () => {
     try {
       const vehicleData = {
         ...formData,
-        price: Number(formData.price),
+        pricePerDay: Number(formData.price), // Renamed to match backend
         seats: Number(formData.seats),
         year: Number(formData.year),
         mileage: Number(formData.mileage),
-        images: formData.images.split(',').map(img => img.trim()),
-        features: formData.features.split(',').map(f => f.trim())
+        category: formData.category.toLowerCase(), // Backend expects lowercase
+        fuelType: formData.fuelType.toLowerCase(), // Backend expects lowercase
+        transmission: formData.transmission.toLowerCase(), // Backend expects lowercase
+        images: formData.images.split(',').map(img => img.trim()).filter(img => img),
+        features: formData.features.split(',').map(f => f.trim()).filter(f => f)
       }
 
-      const response = await fetch('http://localhost:5000/api/cars', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(vehicleData)
-      })
+      // Remove the old 'price' field as it's now 'pricePerDay'
+      delete vehicleData.price;
 
-      if (response.ok) {
+      const response = await adminApi.post('/cars', vehicleData)
+
+      if (response.status === 201 || response.status === 200) {
         alert('Vehicle added successfully!')
         setShowAddModal(false)
         fetchVehicles()
@@ -93,43 +114,45 @@ const VehicleManagement = () => {
           name: '', brand: '', model: '', year: '', category: 'Sedan',
           price: '', seats: '', transmission: 'Automatic', fuelType: 'Petrol',
           color: '', plateNumber: '', mileage: '', images: '', features: '',
-          description: '', available: true
+          description: '', available: true, location: ''
         })
       } else {
-        alert('Failed to add vehicle')
+        alert(`Failed to add vehicle: ${response.data.message || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error adding vehicle:', error)
-      alert('Error adding vehicle')
+      alert('Error adding vehicle: ' + error.message)
     }
   }
 
   const handleDeleteVehicle = async (vehicleId) => {
     if (!window.confirm('Are you sure you want to delete this vehicle?')) return
     try {
-      const response = await fetch(`http://localhost:5000/api/cars/${vehicleId}`, { method: 'DELETE' })
-      if (response.ok) {
+      const response = await adminApi.delete(`/cars/${vehicleId}`)
+      if (response.status === 200) {
         alert('Vehicle deleted successfully!')
         fetchVehicles()
+      } else {
+        alert(`Failed to delete: ${response.data.message || 'Unauthorized'}`)
       }
     } catch (error) {
       console.error('Error deleting vehicle:', error)
+      alert('Delete failed: ' + (error.response?.data?.message || error.message))
     }
   }
 
   const toggleAvailability = async (vehicleId, currentStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/cars/${vehicleId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ available: !currentStatus })
-      })
-      if (response.ok) {
+      const response = await adminApi.put(`/cars/${vehicleId}`, { available: !currentStatus })
+      if (response.status === 200) {
         alert('Vehicle availability updated!')
         fetchVehicles()
+      } else {
+        alert(`Update failed: ${response.data.message || 'Unauthorized'}`)
       }
     } catch (error) {
       console.error('Error updating vehicle:', error)
+      alert('Update failed: ' + (error.response?.data?.message || error.message))
     }
   }
 
@@ -165,6 +188,7 @@ const VehicleManagement = () => {
           setShowModal={setShowModal} selectedVehicle={selectedVehicle} showModal={showModal}
           setShowAddModal={setShowAddModal} showAddModal={showAddModal} formData={formData} setFormData={setFormData}
           handleAddVehicle={handleAddVehicle} handleDeleteVehicle={handleDeleteVehicle} toggleAvailability={toggleAvailability}
+          showAssetPicker={showAssetPicker} setShowAssetPicker={setShowAssetPicker} availableAssets={availableAssets}
         />
       </main>
 
@@ -269,7 +293,8 @@ const ContentArea = ({
   filterCategory, setFilterCategory, filteredVehicles, stats,
   setSelectedVehicle, setShowModal, selectedVehicle, showModal,
   setShowAddModal, showAddModal, formData, setFormData, handleAddVehicle,
-  handleDeleteVehicle, toggleAvailability
+  handleDeleteVehicle, toggleAvailability,
+  showAssetPicker, setShowAssetPicker, availableAssets
 }) => {
   const categories = ['all', ...new Set(vehicles.map(v => v.category))]
 
@@ -474,16 +499,72 @@ const ContentArea = ({
                     <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Registry Number</label>
                     <input type="text" required value={formData.plateNumber} onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })} className="w-full h-14 px-6 rounded-2xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all font-mono" placeholder="MH-01-AB-1234" />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Current Mileage (km/l)</label>
+                    <input type="number" required value={formData.mileage} onChange={(e) => setFormData({ ...formData, mileage: e.target.value })} className="w-full h-14 px-6 rounded-2xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all" placeholder="15" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Vehicle Color</label>
+                    <input type="text" required value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} className="w-full h-14 px-6 rounded-2xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all" placeholder="e.g. Midnight Black" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Operational City/Location</label>
+                    <input type="text" required value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full h-14 px-6 rounded-2xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all" placeholder="e.g. Mumbai, Maharashtra" />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Key Features (comma separated)</label>
+                    <input type="text" value={formData.features} onChange={(e) => setFormData({ ...formData, features: e.target.value })} className="w-full h-14 px-6 rounded-2xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all" placeholder="e.g. Sunroof, ADAS, 360 Camera" />
+                  </div>
                   <div className="col-span-2 space-y-2">
                     <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Telemetry Description</label>
                     <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full h-32 p-6 rounded-3xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all resize-none" placeholder="Provide detailed technical briefing..." />
                   </div>
-                  <div className="col-span-2 space-y-2">
-                    <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Image Buffers (HTTPS URLs, comma separated)</label>
+                  <div className="col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-40 ml-1">Vehicle Assets (Manual URL or Local Selection)</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAssetPicker(!showAssetPicker)}
+                        className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
+                      >
+                        {showAssetPicker ? 'Close Picker' : 'Pick from Assets'}
+                      </button>
+                    </div>
+
+                    {showAssetPicker && (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-4 rounded-3xl bg-background-secondary/50 border border-border-light max-h-60 overflow-y-auto no-scrollbar">
+                        {availableAssets.map((asset) => (
+                          <button
+                            key={asset.path}
+                            type="button"
+                            onClick={() => {
+                              const currentImages = formData.images ? formData.images.split(',').map(i => i.trim()).filter(i => i) : [];
+                              if (!currentImages.includes(asset.path)) {
+                                setFormData({ ...formData, images: [...currentImages, asset.path].join(', ') });
+                              }
+                            }}
+                            className="group relative aspect-square rounded-xl overflow-hidden border border-border-light hover:border-primary transition-all bg-white"
+                          >
+                            <img src={asset.path} alt={asset.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="text-[8px] font-black text-white uppercase">{asset.name}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="relative">
                       <ImageIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-text-secondary size-5" />
-                      <input type="text" value={formData.images} onChange={(e) => setFormData({ ...formData, images: e.target.value })} className="w-full h-14 pl-14 pr-6 rounded-2xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all" placeholder="https://..." />
+                      <input
+                        type="text"
+                        value={formData.images}
+                        onChange={(e) => setFormData({ ...formData, images: e.target.value })}
+                        className="w-full h-14 pl-14 pr-6 rounded-2xl bg-background-secondary border border-border-light text-sm font-bold text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                        placeholder="Select from picker or paste https://..."
+                      />
                     </div>
+                    <p className="text-[10px] text-text-secondary/60 font-bold px-2 italic text-center">Tip: Local asset paths start with /src/assets/ and are preferred for standardized models.</p>
                   </div>
                 </div>
                 <div className="mt-12 flex gap-4">

@@ -42,7 +42,7 @@ const BookingManagement = () => {
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/bookings')
+      const response = await fetch('http://127.0.0.1:5005/api/bookings')
       const data = await response.json()
       setBookings(data)
       setLoading(false)
@@ -54,7 +54,7 @@ const BookingManagement = () => {
 
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
-      await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+      await fetch(`http://127.0.0.1:5005/api/bookings/${bookingId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

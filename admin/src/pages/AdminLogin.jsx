@@ -14,24 +14,43 @@ const AdminLogin = () => {
   })
   const [error, setError] = useState('')
 
-  // Admin Credentials
-  const ADMIN_CREDENTIALS = {
-    email: 'admin@rentride.com',
-    password: 'admin123'
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    // Validate credentials
-    if (formData.email === ADMIN_CREDENTIALS.email &&
-      formData.password === ADMIN_CREDENTIALS.password) {
-      console.log('Login successful:', formData)
-      // Navigate to dashboard
-      navigate('/admin/dashboard')
-    } else {
-      setError('Invalid email or password')
+    try {
+      const response = await fetch('http://127.0.0.1:5005/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Double check if user is admin
+        if (data.user?.role !== 'admin' && data.role !== 'admin') {
+          setError('Access denied. Admin privileges required.');
+          return;
+        }
+
+        console.log('Login successful');
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUser', JSON.stringify(data.user || { email: formData.email, role: 'admin' }));
+
+        // Navigate to dashboard
+        navigate('/admin/dashboard')
+      } else {
+        setError(data.message || 'Invalid email or password')
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Connection to server failed. Please ensure backend is running.');
     }
   }
 

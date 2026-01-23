@@ -41,9 +41,9 @@ const PricingPromotions = () => {
   const fetchData = async () => {
     try {
       const [carsRes, usersRes, bookingsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/cars'),
-        fetch('http://localhost:5000/api/users'),
-        fetch('http://localhost:5000/api/bookings')
+        fetch('http://127.0.0.1:5005/api/cars'),
+        fetch('http://127.0.0.1:5005/api/users'),
+        fetch('http://127.0.0.1:5005/api/bookings')
       ])
 
       const carsData = await carsRes.json()
