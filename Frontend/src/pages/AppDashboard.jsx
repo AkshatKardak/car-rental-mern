@@ -18,7 +18,7 @@ import Logo from "../assets/logo.png";
 import DashboardNavbar from "../components/layout/DashboardNavbar";
 import SupraImg from "../assets/supra.png";
 import PorscheImg from "../assets/porsche.png";
-import MercedesImg from "../assets/mercedes g63 amg.png";
+import MercedesImg from "../assets/mercedesg63amg.png";
 
 /* =========================
    DATA

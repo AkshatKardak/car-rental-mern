@@ -20,7 +20,7 @@ import PorscheImg from '../assets/porsche.png';
 import LamboImg from '../assets/lambo.png';
 import BugattiImg from '../assets/Bugatti.png';
 import MercedesImg from '../assets/mercedes.png';
-import G63Img from '../assets/mercedes g63 amg.png';
+import G63Img from '../assets/mercedesg63amg.png';
 import KiaImg from '../assets/Kia.png';
 import SkodaImg from '../assets/skoda.png';
 import SupraImg from '../assets/supra.png';
