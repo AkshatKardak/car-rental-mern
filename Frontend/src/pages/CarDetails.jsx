@@ -27,7 +27,7 @@ import SupraImg from '../assets/supra.png';
 import RollsImg from '../assets/rolls royce.png';
 import AudiImg from '../assets/AudiElectric.png';
 import HeroCarImg from '../assets/herocar.png';
-import MustangImg from '../assets/blackcar.png'; // Fallback for Ford
+import MustangImg from '../assets/blackcar.png'; 
 
 const carImageAssets = {
   'porsche': PorscheImg,

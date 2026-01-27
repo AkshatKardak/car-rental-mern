@@ -18,17 +18,14 @@ const AdminLogin = () => {
     e.preventDefault()
     setError('')
 
-    // --- 🚨 DUMMY DATA BYPASS ---
-    // This allows login even if backend is offline or failing
+    // Dummy admin bypass
     if (formData.email === 'admin@rentride.com' && formData.password === 'password123') {
-        console.log('Using Dummy Login Bypass');
-        const dummyUser = { name: 'Admin User', email: 'admin@rentride.com', role: 'admin' };
-        localStorage.setItem('adminToken', 'dummy-token-12345'); 
-        localStorage.setItem('adminUser', JSON.stringify(dummyUser));
-        navigate('/admin/dashboard');
-        return; 
+      const dummyUser = { name: 'Admin User', email: 'admin@rentride.com', role: 'admin' }
+      localStorage.setItem('adminToken', 'dummy-token-12345')
+      localStorage.setItem('adminUser', JSON.stringify(dummyUser))
+      navigate('/admin/dashboard', { replace: true })
+      return
     }
-    // ---------------------------
 
     try {
       const response = await fetch('http://localhost:5005/api/auth/login', {
@@ -38,24 +35,25 @@ const AdminLogin = () => {
           email: formData.email,
           password: formData.password
         })
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (response.ok) {
         if (data.user?.role !== 'admin' && data.role !== 'admin') {
-          setError('Access denied. Admin privileges required.');
-          return;
+          setError('Access denied. Admin privileges required.')
+          return
         }
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminUser', JSON.stringify(data.user || { email: formData.email, role: 'admin' }));
-        navigate('/admin/dashboard');
+
+        localStorage.setItem('adminToken', data.token)
+        localStorage.setItem('adminUser', JSON.stringify(data.user || { email: formData.email, role: 'admin' }))
+        navigate('/admin/dashboard', { replace: true })
       } else {
-        setError(data.message || 'Invalid email or password');
+        setError(data.message || 'Invalid email or password')
       }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Connection failed. Try "admin@rentride.com" / "password123"');
+      console.error('Login error:', err)
+      setError('Connection failed. Try "admin@rentride.com" / "password123"')
     }
   }
 
@@ -89,4 +87,4 @@ const AdminLogin = () => {
   )
 }
 
-export default AdminLogin;
+export default AdminLogin
