@@ -1,198 +1,238 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, Car, Phone } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
+import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
 
 export default function SignUp() {
-  const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     password: '',
-    confirmPassword: '',
+    confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError('');
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match');
       return;
     }
 
-    // Mock registration - Replace with actual API call
-    localStorage.setItem('token', 'mock-token-123');
-    localStorage.setItem('user', JSON.stringify({
-      name: formData.name,
-      email: formData.email,
-    }));
-    
-    navigate('/dashboard');
+    setLoading(true);
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const theme = {
+    bg: isDarkMode ? '#0f172a' : '#FFFFFF',
+    cardBg: isDarkMode ? '#1e293b' : '#FFFFFF',
+    text: isDarkMode ? '#f1f5f9' : '#1F2937',
+    textSecondary: isDarkMode ? '#cbd5e1' : '#6B7280',
+    border: isDarkMode ? '#334155' : '#E5E7EB',
+    inputBg: isDarkMode ? '#1e293b' : '#F8F9FA',
+    primary: isDarkMode ? '#10b981' : '#10b981',
   };
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <div className="bg-white dark:bg-background-dark-secondary rounded-2xl shadow-2xl p-8 border border-border-light dark:border-border-dark">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-              <Car className="text-white" size={32} />
-            </div>
-          </div>
+    <div 
+      className="min-h-screen flex items-center justify-center px-4 transition-colors duration-300"
+      style={{ backgroundColor: theme.bg }}
+    >
+      {/* Dark Mode Toggle */}
+      <button
+        onClick={toggleTheme}
+        className="fixed top-6 right-6 p-3 rounded-xl transition-all duration-300 hover:scale-110 z-50"
+        style={{
+          backgroundColor: isDarkMode ? '#1e293b' : '#F8F9FA',
+          border: `1px solid ${theme.border}`
+        }}
+      >
+        {isDarkMode ? (
+          <Sun size={20} className="text-yellow-400" />
+        ) : (
+          <Moon size={20} style={{ color: theme.textSecondary }} />
+        )}
+      </button>
 
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-text-primary dark:text-text-dark-primary mb-2">
-              Create Account
-            </h2>
-            <p className="text-text-secondary dark:text-text-dark-secondary">
-              Join RentRide today
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name Field */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-text-dark-secondary" size={20} />
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background-light dark:bg-background-dark text-text-primary dark:text-text-dark-primary transition"
-                  placeholder="John Doe"
-                />
-              </div>
-            </div>
-
-            {/* Email Field */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-text-dark-secondary" size={20} />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background-light dark:bg-background-dark text-text-primary dark:text-text-dark-primary transition"
-                  placeholder="john@example.com"
-                />
-              </div>
-            </div>
-
-            {/* Phone Field */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-2">
-                Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-text-dark-secondary" size={20} />
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background-light dark:bg-background-dark text-text-primary dark:text-text-dark-primary transition"
-                  placeholder="+91 98765 43210"
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-text-dark-secondary" size={20} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-12 py-3 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background-light dark:bg-background-dark text-text-primary dark:text-text-dark-primary transition"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-text-dark-secondary hover:text-primary transition"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-text-dark-secondary" size={20} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background-light dark:bg-background-dark text-text-primary dark:text-text-dark-primary transition"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
-            {/* Terms */}
-            <div className="flex items-start">
-              <input
-                type="checkbox"
-                required
-                className="w-4 h-4 text-primary border-border-light dark:border-border-dark rounded focus:ring-primary mt-1"
-              />
-              <span className="ml-2 text-sm text-text-secondary dark:text-text-dark-secondary">
-                I agree to the{' '}
-                <Link to="/terms" className="text-primary hover:text-primary-hover">
-                  Terms and Conditions
-                </Link>
-              </span>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full bg-primary hover:bg-primary-hover text-white py-3 rounded-lg font-semibold transition transform active:scale-95 shadow-lg hover:shadow-xl"
-            >
-              Create Account
-            </button>
-          </form>
-
-          {/* Sign In Link */}
-          <p className="mt-6 text-center text-text-secondary dark:text-text-dark-secondary">
-            Already have an account?{' '}
-            <Link to="/signin" className="text-primary hover:text-primary-hover font-semibold transition">
-              Sign in
-            </Link>
+      <div 
+        className="max-w-md w-full rounded-2xl shadow-2xl p-8 transition-all duration-300"
+        style={{
+          backgroundColor: theme.cardBg,
+          border: `1px solid ${theme.border}`
+        }}
+      >
+        <div className="text-center mb-8">
+          <h1 
+            className="text-3xl font-bold mb-2"
+            style={{ color: theme.text }}
+          >
+            Create Account
+          </h1>
+          <p style={{ color: theme.textSecondary }}>
+            Join RentRide today
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme.text }}
+            >
+              Full Name
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:ring-2 focus:ring-green-500 outline-none"
+              style={{
+                backgroundColor: theme.inputBg,
+                borderColor: theme.border,
+                color: theme.text
+              }}
+              placeholder="Enter your name"
+              required
+            />
+          </div>
+
+          <div>
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme.text }}
+            >
+              Email Address
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:ring-2 focus:ring-green-500 outline-none"
+              style={{
+                backgroundColor: theme.inputBg,
+                borderColor: theme.border,
+                color: theme.text
+              }}
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+
+          <div>
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme.text }}
+            >
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:ring-2 focus:ring-green-500 outline-none"
+                style={{
+                  backgroundColor: theme.inputBg,
+                  borderColor: theme.border,
+                  color: theme.text
+                }}
+                placeholder="Create a password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                style={{ color: theme.textSecondary }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme.text }}
+            >
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:ring-2 focus:ring-green-500 outline-none"
+              style={{
+                backgroundColor: theme.inputBg,
+                borderColor: theme.border,
+                color: theme.text
+              }}
+              placeholder="Confirm your password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-xl font-bold text-white transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: theme.primary
+            }}
+          >
+            {loading ? 'Creating account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        <p 
+          className="text-center mt-6"
+          style={{ color: theme.textSecondary }}
+        >
+          Already have an account?{' '}
+          <Link 
+            to="/signin" 
+            className="font-semibold hover:underline"
+            style={{ color: theme.primary }}
+          >
+            Sign In
+          </Link>
+        </p>
       </div>
     </div>
   );

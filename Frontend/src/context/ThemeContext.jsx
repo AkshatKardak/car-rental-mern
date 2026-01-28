@@ -17,16 +17,29 @@ export const ThemeProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const html = document.documentElement;
+    
+    // Force remove and add class
+    html.classList.remove('light', 'dark');
+    
     if (isDarkMode) {
-      root.classList.add('dark');
+      html.classList.add('dark');
+      html.setAttribute('data-theme', 'dark');
     } else {
-      root.classList.remove('dark');
+      html.classList.add('light');
+      html.setAttribute('data-theme', 'light');
     }
+    
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+    
+    // Force reflow
+    void html.offsetHeight;
+    
   }, [isDarkMode]);
 
-  const toggleTheme = () => setIsDarkMode(prev => !prev);
+  const toggleTheme = () => {
+    setIsDarkMode(prev => !prev);
+  };
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>

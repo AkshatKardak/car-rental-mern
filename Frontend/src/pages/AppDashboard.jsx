@@ -5,17 +5,12 @@ import {
   Calendar,
   CreditCard,
   Sparkles,
-  Bell,
-  Settings,
   Plus,
   TrendingUp,
-  MapPin,
   Clock,
   ArrowRight
 } from "lucide-react";
 
-import Logo from "../assets/logo.png";
-import DashboardNavbar from "../components/layout/DashboardNavbar";
 import SupraImg from "../assets/supra.png";
 import PorscheImg from "../assets/porsche.png";
 import MercedesImg from "../assets/mercedesg63amg.png";
@@ -57,7 +52,7 @@ const AppDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background-secondary text-text-primary">
-      <DashboardNavbar />
+      {/* ❌ REMOVED: <DashboardNavbar /> */}
 
       <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
 

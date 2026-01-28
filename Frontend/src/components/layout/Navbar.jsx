@@ -1,115 +1,143 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Moon, Sun, User, LogOut, Car } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import Logo from '../../assets/logo.png'
+import Logo from '../../assets/logo.png';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Get user from localStorage (you can use AuthContext instead)
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const scrollToSection = (sectionId) => {
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    setIsOpen(false);
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    navigate('/');
+  const theme = {
+    navbar: {
+      bg: isDarkMode ? '#0f172a' : '#FFFFFF',
+      border: isDarkMode ? '#334155' : '#E5E7EB'
+    },
+    text: {
+      primary: isDarkMode ? '#f1f5f9' : '#1F2937',
+      secondary: isDarkMode ? '#cbd5e1' : '#6B7280',
+      hover: isDarkMode ? '#10b981' : '#10A310'
+    },
+    button: {
+      primary: isDarkMode ? '#10b981' : '#10A310',
+      primaryHover: isDarkMode ? '#059669' : '#0D820D'
+    },
+    toggle: {
+      bg: isDarkMode ? '#1e293b' : '#F8F9FA',
+      border: isDarkMode ? '#334155' : '#E5E7EB'
+    }
   };
 
   return (
-    <nav className="bg-white dark:bg-background-dark-secondary shadow-md sticky top-0 z-50 transition-colors">
+    <nav 
+      className="sticky top-0 z-50 transition-all duration-300 shadow-lg"
+      style={{
+        backgroundColor: theme.navbar.bg,
+        borderBottom: `1px solid ${theme.navbar.border}`
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
-<div className="flex items-center">
-  <Link to="/" className="flex items-center space-x-2">
-    <img
-      src={Logo}
-      alt="RentRide Logo"
-      className="w-10 h-10 object-contain"
-    />
-    <span className="text-xl font-bold text-text-primary dark:text-text-dark-primary">
-      RentRide
-    </span>
-  </Link>
-</div>
+          <div className="flex items-center">
+            <button onClick={() => scrollToSection('hero')} className="flex items-center space-x-2 group">
+              <img
+                src={Logo}
+                alt="RentRide Logo"
+                className="w-10 h-10 object-contain transition-transform group-hover:scale-110"
+              />
+              <span 
+                className="text-xl font-bold transition-colors"
+                style={{ color: theme.text.primary }}
+              >
+                RentRide
+              </span>
+            </button>
+          </div>
+
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link 
-              to="/" 
-              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+          <div className="hidden md:flex items-center space-x-8">
+            {[
+              { id: 'hero', label: 'Home' },
+              { id: 'video', label: 'Experience' },
+              { id: 'inventory', label: 'Cars' },
+              { id: 'about', label: 'About Us' },
+              { id: 'contact', label: 'Contact Us' }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="font-medium relative group transition-all duration-300"
+                style={{ color: theme.text.secondary }}
+                onMouseEnter={(e) => e.target.style.color = theme.text.hover}
+                onMouseLeave={(e) => e.target.style.color = theme.text.secondary}
+              >
+                {item.label}
+                <span 
+                  className="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
+                  style={{ backgroundColor: theme.text.hover }}
+                ></span>
+              </button>
+            ))}
+
+            <Link
+              to="/signin"
+              className="font-medium transition-colors duration-300 hover:opacity-80"
+              style={{ color: theme.text.secondary }}
             >
-              Home
+              Sign In
             </Link>
-            <Link 
-              to="/browsecars" 
-              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
+            
+            <Link
+              to="/signup"
+              className="px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              style={{
+                backgroundColor: theme.button.primary,
+                color: '#FFFFFF'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = theme.button.primaryHover}
+              onMouseLeave={(e) => e.target.style.backgroundColor = theme.button.primary}
             >
-              Browse Cars
+              Sign Up
             </Link>
-            <Link 
-              to="/offers" 
-              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
-            >
-              Offers
-            </Link>
-            <Link 
-              to="/aiassistant" 
-              className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
-            >
-              AI Assistant
-            </Link>
-            {user ? (
-              <>
-                <Link 
-                  to="/mybookings" 
-                  className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
-                >
-                  My Bookings
-                </Link>
-                <Link 
-                  to="/dashboard" 
-                  className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-1 text-text-primary dark:text-text-dark-primary hover:text-primary transition"
-                >
-                  <LogOut size={18} />
-                  <span>Logout</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/signin"
-                  className="text-text-primary dark:text-text-dark-primary hover:text-primary transition"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/signup"
-                  className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-lg transition"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
 
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-background-secondary dark:bg-background-dark hover:bg-border-light dark:hover:bg-border-dark transition"
+              className="p-2.5 rounded-xl transition-all duration-300 relative group overflow-hidden hover:scale-110"
+              style={{
+                backgroundColor: theme.toggle.bg,
+                border: `1px solid ${theme.toggle.border}`
+              }}
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              {isDarkMode ? (
-                <Sun size={20} className="text-yellow-400" />
-              ) : (
-                <Moon size={20} className="text-text-primary" />
-              )}
+              <div className="relative z-10">
+                {isDarkMode ? (
+                  <Sun size={20} className="text-yellow-400 animate-spin-slow" />
+                ) : (
+                  <Moon size={20} style={{ color: theme.text.secondary }} />
+                )}
+              </div>
             </button>
           </div>
 
@@ -117,17 +145,22 @@ export default function Navbar() {
           <div className="md:hidden flex items-center space-x-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-background-secondary dark:bg-background-dark"
+              className="p-2 rounded-lg transition-all duration-300"
+              style={{
+                backgroundColor: theme.toggle.bg,
+                border: `1px solid ${theme.toggle.border}`
+              }}
             >
               {isDarkMode ? (
                 <Sun size={20} className="text-yellow-400" />
               ) : (
-                <Moon size={20} className="text-text-primary" />
+                <Moon size={20} style={{ color: theme.text.secondary }} />
               )}
             </button>
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-text-primary dark:text-text-dark-primary"
+              className="p-2 transition-colors"
+              style={{ color: theme.text.primary }}
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -137,88 +170,51 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white dark:bg-background-dark-secondary border-t border-border-light dark:border-border-dark">
+        <div 
+          className="md:hidden border-t transition-all duration-300"
+          style={{
+            backgroundColor: isDarkMode ? '#1e293b' : '#FFFFFF',
+            borderColor: theme.navbar.border
+          }}
+        >
           <div className="px-4 py-4 space-y-3">
+            {[
+              { id: 'hero', label: 'Home' },
+              { id: 'video', label: 'Experience' },
+              { id: 'inventory', label: 'Cars' },
+              { id: 'about', label: 'About Us' },
+              { id: 'contact', label: 'Contact Us' }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="block w-full text-left py-2 font-medium transition-colors duration-300"
+                style={{ color: theme.text.secondary }}
+              >
+                {item.label}
+              </button>
+            ))}
+            
             <Link
-              to="/"
-              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
+              to="/signin"
+              className="block py-2 font-medium transition-colors duration-300"
+              style={{ color: theme.text.secondary }}
               onClick={() => setIsOpen(false)}
             >
-              Home
-            </Link>
-            <Link
-              to="/browsecars"
-              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              Browse Cars
-            </Link>
-            <Link
-              to="/offers"
-              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              Offers
-            </Link>
-            <Link
-              to="/aiassistant"
-              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              AI Assistant
-            </Link>
-            <Link
-              to="/about"
-              className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              About
+              Sign In
             </Link>
             
-            {user ? (
-              <>
-                <Link
-                  to="/mybookings"
-                  className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  My Bookings
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsOpen(false);
-                  }}
-                  className="block w-full text-left text-text-primary dark:text-text-dark-primary hover:text-primary"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/signin"
-                  className="block text-text-primary dark:text-text-dark-primary hover:text-primary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/signup"
-                  className="block bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-lg text-center"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
+            <Link
+              to="/signup"
+              className="block px-6 py-2.5 rounded-xl text-center mt-2 font-bold transition-all duration-300"
+              style={{
+                backgroundColor: theme.button.primary,
+                color: '#FFFFFF'
+              }}
+              onClick={() => setIsOpen(false)}
+            >
+              Sign Up
+            </Link>
           </div>
         </div>
       )}
