@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 import { Search, Loader2, Users, Fuel, Gauge, AlertCircle, SlidersHorizontal, X } from 'lucide-react';
-import DashboardNavbar from '../components/layout/DashboardNavbar';
 import { carService } from '../services/carService';
 
 // Import all car images from assets
@@ -53,6 +53,8 @@ const getImageForCar = (car) => {
 
 const BrowseCars = () => {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
+  
   const [allCars, setAllCars] = useState([]);
   const [displayCars, setDisplayCars] = useState([]);
 
@@ -74,6 +76,15 @@ const BrowseCars = () => {
   const [categories, setCategories] = useState(['All']);
   const [transmissions, setTransmissions] = useState(['All']);
   const [fuelTypes, setFuelTypes] = useState(['All']);
+
+  const theme = {
+    bg: isDarkMode ? '#0f172a' : '#f8f9fa',
+    cardBg: isDarkMode ? '#1e293b' : '#ffffff',
+    text: isDarkMode ? '#f1f5f9' : '#1F2937',
+    textSecondary: isDarkMode ? '#cbd5e1' : '#6B7280',
+    border: isDarkMode ? '#334155' : '#e5e7eb',
+    inputBg: isDarkMode ? '#0f172a' : '#f8f9fa',
+  };
 
   const priceRanges = [
     { label: 'All', value: 'All' },
@@ -177,33 +188,52 @@ const BrowseCars = () => {
   const activeFiltersCount = [brand, category, transmission, priceRange, fuelType].filter(f => f !== 'All').length;
 
   return (
-    <div className="min-h-screen bg-background-secondary text-text-primary">
-      <DashboardNavbar />
+    <div 
+      className="min-h-screen pt-20 transition-colors duration-300"
+      style={{ backgroundColor: theme.bg }}
+    >
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary mb-2">Browse Cars</h1>
-          <p className="text-text-secondary text-lg">Choose from our exclusive collection of {displayCars.length} vehicles</p>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-green-500 mb-2">
+            Browse Cars
+          </h1>
+          <p className="text-lg" style={{ color: theme.textSecondary }}>
+            Choose from our exclusive collection of {displayCars.length} vehicles
+          </p>
         </div>
 
         {/* Search & Filter Bar */}
         <div className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-2xl shadow-sm border border-border-light">
+          <div 
+            className="flex flex-col md:flex-row gap-4 p-4 rounded-2xl shadow-sm border"
+            style={{
+              backgroundColor: theme.cardBg,
+              borderColor: theme.border
+            }}
+          >
             {/* Search Input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search 
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" 
+                style={{ color: theme.textSecondary, opacity: 0.5 }}
+              />
               <input
                 type="text"
                 placeholder="Search by name, brand, or category..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-primary/20"
+                className="w-full pl-12 pr-4 py-3 rounded-xl border-none focus:ring-2 focus:ring-green-500/20 transition-colors"
+                style={{
+                  backgroundColor: theme.inputBg,
+                  color: theme.text
+                }}
               />
             </div>
 
             {/* Filter Toggle Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all shadow-lg hover:shadow-primary/30 flex items-center gap-2 relative"
+              className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/30 flex items-center gap-2 relative"
             >
               <SlidersHorizontal size={20} />
               Filters
@@ -231,16 +261,27 @@ const BrowseCars = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-border-light mt-4"
+              className="p-6 rounded-2xl shadow-sm border mt-4"
+              style={{
+                backgroundColor: theme.cardBg,
+                borderColor: theme.border
+              }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                 {/* Brand Filter */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Brand</label>
+                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                    Brand
+                  </label>
                   <select
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   >
                     {brands.map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
@@ -248,11 +289,18 @@ const BrowseCars = () => {
 
                 {/* Category Filter */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                    Category
+                  </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   >
                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -260,11 +308,18 @@ const BrowseCars = () => {
 
                 {/* Transmission Filter */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Transmission</label>
+                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                    Transmission
+                  </label>
                   <select
                     value={transmission}
                     onChange={(e) => setTransmission(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   >
                     {transmissions.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -272,11 +327,18 @@ const BrowseCars = () => {
 
                 {/* Fuel Type Filter */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Fuel Type</label>
+                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                    Fuel Type
+                  </label>
                   <select
                     value={fuelType}
                     onChange={(e) => setFuelType(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   >
                     {fuelTypes.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
@@ -284,11 +346,18 @@ const BrowseCars = () => {
 
                 {/* Price Range Filter */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Price Range</label>
+                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                    Price Range
+                  </label>
                   <select
                     value={priceRange}
                     onChange={(e) => setPriceRange(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   >
                     {priceRanges.map(pr => <option key={pr.value} value={pr.value}>{pr.label}</option>)}
                   </select>
@@ -298,13 +367,18 @@ const BrowseCars = () => {
               <div className="flex gap-4 mt-6">
                 <button
                   onClick={handleApplyFilters}
-                  className="flex-1 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all shadow-lg hover:shadow-primary/30"
+                  className="flex-1 px-8 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/30"
                 >
                   Apply Filters
                 </button>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="px-8 py-3 border border-gray-300 font-bold rounded-xl bg-white hover:bg-gray-50 transition"
+                  className="px-8 py-3 border font-bold rounded-xl hover:bg-opacity-50 transition"
+                  style={{
+                    backgroundColor: theme.cardBg,
+                    borderColor: theme.border,
+                    color: theme.text
+                  }}
                 >
                   Close
                 </button>
@@ -339,17 +413,21 @@ const BrowseCars = () => {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
           </div>
         ) : error ? (
           <div className="text-center py-20 text-red-500 font-bold">{error}</div>
         ) : displayCars.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-xl font-bold text-gray-600 mb-2">No cars found</p>
-            <p className="text-gray-500 mb-4">Try adjusting your filters</p>
+            <p className="text-xl font-bold mb-2" style={{ color: theme.text }}>
+              No cars found
+            </p>
+            <p className="mb-4" style={{ color: theme.textSecondary }}>
+              Try adjusting your filters
+            </p>
             <button
               onClick={handleClearAll}
-              className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition"
+              className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition"
             >
               Clear All Filters
             </button>
@@ -361,6 +439,7 @@ const BrowseCars = () => {
                 key={car._id || index}
                 car={car}
                 index={index}
+                theme={theme}
                 onBook={() => navigate('/payment', { state: { carId: car._id, pricePerDay: car.pricePerDay } })}
                 onDetails={() => navigate(`/car/${car._id}`)}
               />
@@ -374,18 +453,18 @@ const BrowseCars = () => {
 
 // Filter Tag Component
 const FilterTag = ({ label, onRemove }) => (
-  <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium">
+  <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-500 rounded-full text-sm font-medium">
     <span>{label}</span>
     <button
       onClick={onRemove}
-      className="hover:bg-primary/20 rounded-full p-0.5 transition"
+      className="hover:bg-green-500/20 rounded-full p-0.5 transition"
     >
       <X size={14} />
     </button>
   </div>
 );
 
-const CarCard = ({ car, index, onBook, onDetails }) => {
+const CarCard = ({ car, index, theme, onBook, onDetails }) => {
   const imageSrc = getImageForCar(car);
 
   return (
@@ -396,15 +475,21 @@ const CarCard = ({ car, index, onBook, onDetails }) => {
       className="group h-full"
       whileHover={{ y: -10 }}
     >
-      <div className="relative h-full border-2 border-primary/30 rounded-xl flex flex-col gap-3 items-center justify-between py-10 px-6 bg-white dark:bg-background-dark-secondary backdrop-blur-sm group-hover:border-primary group-hover:bg-primary/5 transition-all duration-500 shadow-xl group-hover:shadow-primary/50 overflow-hidden">
+      <div 
+        className="relative h-full border-2 rounded-xl flex flex-col gap-3 items-center justify-between py-10 px-6 backdrop-blur-sm group-hover:border-green-500 transition-all duration-500 shadow-xl group-hover:shadow-green-500/50 overflow-hidden"
+        style={{
+          backgroundColor: theme.cardBg,
+          borderColor: theme.border
+        }}
+      >
         {!car.available && (
           <div className="absolute top-4 right-4 bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-20">
             <AlertCircle size={12} /> Booked
           </div>
         )}
 
-        <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
         <div className="relative w-full flex justify-center mb-4">
           <motion.img
@@ -414,28 +499,31 @@ const CarCard = ({ car, index, onBook, onDetails }) => {
             whileHover={{ scale: 1.1, rotate: 2 }}
             transition={{ duration: 0.4 }}
           />
-          <div className="absolute inset-0 bg-primary rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-300 animate-pulse" />
+          <div className="absolute inset-0 bg-green-500 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-300 animate-pulse" />
         </div>
 
         <div className="text-center space-y-2 w-full">
-          <h3 className="font-bold text-xl text-primary group-hover:text-text-primary transition-colors duration-300">
+          <h3 className="font-bold text-xl text-green-500 transition-colors duration-300">
             {car.brand} {car.model}
           </h3>
 
-          <p className="text-sm text-gray-500 px-2 line-clamp-2">
+          <p className="text-sm px-2 line-clamp-2" style={{ color: theme.textSecondary }}>
             {car.description || 'Experience premium comfort and performance.'}
           </p>
 
-          <div className="flex justify-center gap-4 text-xs text-gray-500 pt-2">
+          <div className="flex justify-center gap-4 text-xs pt-2" style={{ color: theme.textSecondary }}>
             <span className="flex items-center gap-1"><Users size={12} /> {car.seats}</span>
             <span className="flex items-center gap-1"><Fuel size={12} /> {car.fuelType}</span>
             <span className="flex items-center gap-1"><Gauge size={12} /> {car.transmission}</span>
           </div>
         </div>
 
-        <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden my-2">
+        <div 
+          className="w-full h-1 rounded-full overflow-hidden my-2"
+          style={{ backgroundColor: theme.inputBg }}
+        >
           <motion.div
-            className="h-full bg-primary"
+            className="h-full bg-green-500"
             initial={{ width: 0 }}
             whileInView={{ width: '80%' }}
             transition={{ duration: 1, delay: 0.2 }}
@@ -443,14 +531,14 @@ const CarCard = ({ car, index, onBook, onDetails }) => {
         </div>
 
         <div className="flex justify-between items-center gap-4 pt-2 w-full mt-auto">
-          <p className="font-bold text-primary text-lg group-hover:text-text-primary transition-colors">
+          <p className="font-bold text-green-500 text-lg transition-colors">
             ₹{car.pricePerDay}/day
           </p>
 
           <div className="flex gap-2">
             <button
               onClick={onDetails}
-              className="px-3 py-2 text-sm border border-primary text-primary rounded-lg font-bold hover:bg-primary hover:text-white transition-all duration-300"
+              className="px-3 py-2 text-sm border border-green-500 text-green-500 rounded-lg font-bold hover:bg-green-500 hover:text-white transition-all duration-300"
             >
               Details
             </button>
@@ -460,7 +548,7 @@ const CarCard = ({ car, index, onBook, onDetails }) => {
               disabled={!car.available}
               className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all duration-300 text-sm ${
                 car.available
-                  ? 'bg-primary hover:bg-primary-hover text-white hover:shadow-primary/50'
+                  ? 'bg-green-500 hover:bg-green-600 text-white hover:shadow-green-500/50'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >

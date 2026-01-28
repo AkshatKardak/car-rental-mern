@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api'; // Use centralized API
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -25,25 +25,48 @@ export default function SignUp() {
     e.preventDefault();
     setError('');
 
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      console.log('Attempting registration with:', { 
+        name: formData.name, 
+        email: formData.email 
+      });
+
+      const response = await api.post('/auth/register', {
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
 
+      console.log('Registration successful:', response.data);
+
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      console.error('Registration error:', err);
+      
+      if (err.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Please make sure the backend is running on port 5005.');
+      } else if (err.response?.status === 400) {
+        setError(err.response?.data?.message || 'Invalid registration data');
+      } else if (err.response?.status === 409) {
+        setError('Email already exists. Please use a different email or sign in.');
+      } else {
+        setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -100,8 +123,8 @@ export default function SignUp() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
-            {error}
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+            <strong>Error:</strong> {error}
           </div>
         )}
 
@@ -126,6 +149,7 @@ export default function SignUp() {
               }}
               placeholder="Enter your name"
               required
+              minLength={2}
             />
           </div>
 
@@ -171,8 +195,9 @@ export default function SignUp() {
                   borderColor: theme.border,
                   color: theme.text
                 }}
-                placeholder="Create a password"
+                placeholder="Create a password (min 6 characters)"
                 required
+                minLength={6}
               />
               <button
                 type="button"
@@ -205,6 +230,7 @@ export default function SignUp() {
               }}
               placeholder="Confirm your password"
               required
+              minLength={6}
             />
           </div>
 

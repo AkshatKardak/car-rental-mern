@@ -1,9 +1,9 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import DashboardNavbar from "../components/layout/DashboardNavbar";
+import { useTheme } from "../context/ThemeContext";
 import {
   Sparkles, Send, Trash2, Bot, User, Car,
-  Camera, Upload, Shield, AlertTriangle, Image as ImageIcon
+  Camera, Upload, Shield, AlertTriangle, Image as ImageIcon, X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { aiService } from "../services/aiService";
@@ -11,6 +11,16 @@ import { aiService } from "../services/aiService";
 const AIAssistant = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const { isDarkMode } = useTheme();
+
+  const theme = {
+    bg: isDarkMode ? '#0f172a' : '#f8f9fa',
+    cardBg: isDarkMode ? '#1e293b' : '#ffffff',
+    text: isDarkMode ? '#f1f5f9' : '#1F2937',
+    textSecondary: isDarkMode ? '#cbd5e1' : '#6B7280',
+    border: isDarkMode ? '#334155' : '#e5e7eb',
+    inputBg: isDarkMode ? '#0f172a' : '#f8f9fa',
+  };
 
   const [messages, setMessages] = useState([
     {
@@ -24,7 +34,6 @@ const AIAssistant = () => {
   const [loading, setLoading] = useState(false);
   const [activeFeature, setActiveFeature] = useState(null);
 
-  // Feature-specific states
   const [uploadedImage, setUploadedImage] = useState(null);
   const [insuranceDetails, setInsuranceDetails] = useState({
     tripType: '',
@@ -34,7 +43,6 @@ const AIAssistant = () => {
     destination: ''
   });
 
-  // Feature buttons
   const features = [
     { id: 'search', icon: Car, label: 'Find Car', color: 'primary' },
     { id: 'insurance', icon: Shield, label: 'Insurance Help', color: 'blue' },
@@ -42,7 +50,6 @@ const AIAssistant = () => {
     { id: 'damage', icon: AlertTriangle, label: 'Report Damage', color: 'orange' },
   ];
 
-  // Send regular message
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -187,9 +194,10 @@ const AIAssistant = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-secondary text-text-primary">
-      <DashboardNavbar />
-
+    <div 
+      className="min-h-screen pt-20 transition-colors duration-300"
+      style={{ backgroundColor: theme.bg }}
+    >
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -198,14 +206,14 @@ const AIAssistant = () => {
           className="flex items-end justify-between gap-4 mb-8"
         >
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm">
-              <Sparkles className="w-7 h-7 text-primary" />
+            <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center shadow-sm">
+              <Sparkles className="w-7 h-7 text-green-500" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: theme.text }}>
                 AI Assistant
               </h1>
-              <p className="text-text-secondary text-sm mt-1">
+              <p className="text-sm mt-1" style={{ color: theme.textSecondary }}>
                 Smart car recommendations & instant help
               </p>
             </div>
@@ -214,7 +222,12 @@ const AIAssistant = () => {
           <div className="flex gap-2">
             <button
               onClick={clearChat}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border-light text-text-primary font-bold hover:bg-gray-50 transition shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold hover:bg-opacity-50 transition shadow-sm"
+              style={{
+                backgroundColor: theme.cardBg,
+                borderColor: theme.border,
+                color: theme.text
+              }}
             >
               <Trash2 className="w-4 h-4" />
               Clear
@@ -226,10 +239,20 @@ const AIAssistant = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="rounded-3xl border border-border-light bg-white shadow-xl overflow-hidden flex flex-col h-[750px]"
+          className="rounded-3xl border shadow-xl overflow-hidden flex flex-col h-[750px]"
+          style={{
+            backgroundColor: theme.cardBg,
+            borderColor: theme.border
+          }}
         >
           {/* Feature Tabs */}
-          <div className="px-6 py-4 bg-background-secondary border-b border-border-light flex flex-wrap gap-2">
+          <div 
+            className="px-6 py-4 border-b flex flex-wrap gap-2"
+            style={{
+              backgroundColor: theme.inputBg,
+              borderColor: theme.border
+            }}
+          >
             {features.map((feature) => (
               <button
                 key={feature.id}
@@ -239,10 +262,20 @@ const AIAssistant = () => {
                     fileInputRef.current?.click();
                   }
                 }}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border shadow-sm ${activeFeature === feature.id
-                    ? 'bg-primary text-white border-primary shadow-primary/20'
-                    : 'bg-white border-border-light text-text-secondary hover:text-text-primary hover:border-primary/30'
-                  }`}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border shadow-sm ${
+                  activeFeature === feature.id
+                    ? 'bg-green-500 text-white border-green-500 shadow-green-500/20'
+                    : 'hover:border-green-500/30'
+                }`}
+                style={
+                  activeFeature !== feature.id
+                    ? {
+                        backgroundColor: theme.cardBg,
+                        borderColor: theme.border,
+                        color: theme.textSecondary,
+                      }
+                    : {}
+                }
               >
                 <feature.icon className="w-4 h-4" />
                 {feature.label}
@@ -259,19 +292,27 @@ const AIAssistant = () => {
                   key={idx}
                   className={`flex items-start gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${isUser ? "bg-primary text-white" : "bg-white border border-border-light text-primary"
-                    }`}>
+                  <div 
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${
+                      isUser ? "bg-green-500 text-white" : "border text-green-500"
+                    }`}
+                    style={!isUser ? { backgroundColor: theme.cardBg, borderColor: theme.border } : {}}
+                  >
                     {isUser ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                   </div>
 
                   <div className={`max-w-[80%] ${isUser ? "text-right" : "text-left"}`}>
-                    <p className="text-[11px] text-text-secondary mb-1.5 font-bold uppercase tracking-wider">{m.role} • {m.time}</p>
+                    <p className="text-[11px] mb-1.5 font-bold uppercase tracking-wider" style={{ color: theme.textSecondary }}>
+                      {m.role} • {m.time}
+                    </p>
 
                     <div
-                      className={`px-5 py-4 rounded-2xl shadow-sm border ${isUser
-                          ? "rounded-tr-none bg-primary text-white border-primary"
-                          : "rounded-tl-none bg-background-secondary text-text-primary border-border-light"
-                        }`}
+                      className={`px-5 py-4 rounded-2xl shadow-sm border ${
+                        isUser
+                          ? "rounded-tr-none bg-green-500 text-white border-green-500"
+                          : "rounded-tl-none"
+                      }`}
+                      style={!isUser ? { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border } : {}}
                     >
                       {m.image && (
                         <div className="rounded-xl overflow-hidden mb-3 border border-white/20 shadow-lg max-w-sm">
@@ -284,15 +325,29 @@ const AIAssistant = () => {
                       {m.recommendations && m.recommendations.length > 0 && (
                         <div className="mt-5 space-y-3">
                           {m.recommendations.slice(0, 3).map((rec, i) => (
-                            <div key={i} className="bg-white rounded-xl p-4 border border-border-light shadow-sm hover:border-primary/50 transition-colors">
+                            <div 
+                              key={i} 
+                              className="rounded-xl p-4 border shadow-sm hover:border-green-500/50 transition-colors"
+                              style={{ backgroundColor: theme.cardBg, borderColor: theme.border }}
+                            >
                               <div className="flex justify-between items-start mb-2">
-                                <p className="font-black text-primary text-lg">{rec.carName}</p>
-                                <p className="text-text-primary font-black bg-primary/10 px-2 py-1 rounded text-sm">{rec.price}</p>
+                                <p className="font-black text-green-500 text-lg">{rec.carName}</p>
+                                <p className="font-black bg-green-500/10 px-2 py-1 rounded text-sm" style={{ color: theme.text }}>
+                                  {rec.price}
+                                </p>
                               </div>
-                              <p className="text-sm text-text-secondary mb-3">{rec.reason}</p>
+                              <p className="text-sm mb-3" style={{ color: theme.textSecondary }}>{rec.reason}</p>
                               <div className="flex flex-wrap gap-1.5">
                                 {rec.highlights?.slice(0, 3).map((h, j) => (
-                                  <span key={j} className="text-[10px] px-2 py-1 rounded-lg bg-background-secondary border border-border-light font-bold text-text-secondary">
+                                  <span 
+                                    key={j} 
+                                    className="text-[10px] px-2 py-1 rounded-lg border font-bold"
+                                    style={{
+                                      backgroundColor: theme.inputBg,
+                                      borderColor: theme.border,
+                                      color: theme.textSecondary
+                                    }}
+                                  >
                                     {h}
                                   </span>
                                 ))}
@@ -305,30 +360,35 @@ const AIAssistant = () => {
                       {/* Insurance Logic */}
                       {m.insuranceAdvice && (
                         <div className="mt-5 space-y-3">
-                          <p className="font-black text-text-primary text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-primary" />
+                          <p className="font-black text-sm uppercase tracking-widest mb-2 flex items-center gap-2" style={{ color: theme.text }}>
+                            <Shield className="w-4 h-4 text-green-500" />
                             Recommended Coverage
                           </p>
                           {m.insuranceAdvice.recommended?.slice(0, 3).map((item, i) => (
-                            <div key={i} className="bg-white rounded-xl p-4 border border-border-light shadow-sm">
+                            <div 
+                              key={i} 
+                              className="rounded-xl p-4 border shadow-sm"
+                              style={{ backgroundColor: theme.cardBg, borderColor: theme.border }}
+                            >
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <p className="font-bold text-text-primary">{item.item}</p>
-                                  <p className="text-xs text-text-secondary mt-1">{item.reason}</p>
+                                  <p className="font-bold" style={{ color: theme.text }}>{item.item}</p>
+                                  <p className="text-xs mt-1" style={{ color: theme.textSecondary }}>{item.reason}</p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-black text-primary">{item.price}</p>
-                                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${item.priority === 'Must Have' ? 'bg-red-50 text-red-600 border border-red-100' :
-                                      item.priority === 'Good to Have' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                                        'bg-green-50 text-green-600 border border-green-100'
-                                    }`}>
+                                  <p className="font-black text-green-500">{item.price}</p>
+                                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${
+                                    item.priority === 'Must Have' ? 'bg-red-50 text-red-600 border border-red-100' :
+                                    item.priority === 'Good to Have' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                    'bg-green-50 text-green-600 border border-green-100'
+                                  }`}>
                                     {item.priority}
                                   </span>
                                 </div>
                               </div>
                             </div>
                           ))}
-                          <div className="bg-primary rounded-xl p-4 text-white shadow-lg shadow-primary/20 mt-4 flex justify-between items-center">
+                          <div className="bg-green-500 rounded-xl p-4 text-white shadow-lg shadow-green-500/20 mt-4 flex justify-between items-center">
                             <p className="font-bold">Total Annual Estimate</p>
                             <p className="text-xl font-black">{m.insuranceAdvice.totalEstimate}</p>
                           </div>
@@ -342,14 +402,20 @@ const AIAssistant = () => {
 
             {loading && (
               <div className="flex items-center gap-4 justify-start">
-                <div className="w-10 h-10 rounded-full bg-white border border-border-light flex items-center justify-center shadow-md">
-                  <Bot className="w-5 h-5 text-primary animate-pulse" />
+                <div 
+                  className="w-10 h-10 rounded-full border flex items-center justify-center shadow-md"
+                  style={{ backgroundColor: theme.cardBg, borderColor: theme.border }}
+                >
+                  <Bot className="w-5 h-5 text-green-500 animate-pulse" />
                 </div>
-                <div className="px-5 py-3 rounded-2xl rounded-tl-none bg-background-secondary border border-border-light">
+                <div 
+                  className="px-5 py-3 rounded-2xl rounded-tl-none border"
+                  style={{ backgroundColor: theme.inputBg, borderColor: theme.border }}
+                >
                   <div className="flex gap-1.5">
-                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    <div className="w-2 h-2 bg-green-500/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-green-500/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
                 </div>
               </div>
@@ -363,14 +429,22 @@ const AIAssistant = () => {
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 100, opacity: 0 }}
-                className="px-8 pb-6 border-t border-border-light pt-6 bg-white"
+                className="px-8 pb-6 border-t pt-6"
+                style={{
+                  backgroundColor: theme.cardBg,
+                  borderColor: theme.border
+                }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-black text-text-primary uppercase tracking-widest flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-primary" />
+                  <p className="text-sm font-black uppercase tracking-widest flex items-center gap-2" style={{ color: theme.text }}>
+                    <Shield className="w-5 h-5 text-green-500" />
                     Insurance Advisor Form
                   </p>
-                  <button onClick={() => setActiveFeature(null)} className="text-text-secondary hover:text-text-primary transition-colors">
+                  <button 
+                    onClick={() => setActiveFeature(null)} 
+                    className="hover:opacity-70 transition-colors"
+                    style={{ color: theme.textSecondary }}
+                  >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -378,7 +452,12 @@ const AIAssistant = () => {
                   <select
                     value={insuranceDetails.tripType}
                     onChange={(e) => setInsuranceDetails({ ...insuranceDetails, tripType: e.target.value })}
-                    className="bg-background-secondary border border-border-light rounded-xl px-4 py-3 text-sm text-text-primary font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="border rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-green-500/20 outline-none transition-all"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   >
                     <option value="">Trip Type</option>
                     <option value="City driving">City Driving</option>
@@ -391,19 +470,29 @@ const AIAssistant = () => {
                     placeholder="Duration (Days)"
                     value={insuranceDetails.days}
                     onChange={(e) => setInsuranceDetails({ ...insuranceDetails, days: parseInt(e.target.value) || 1 })}
-                    className="bg-background-secondary border border-border-light rounded-xl px-4 py-3 text-sm text-text-primary font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="border rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-green-500/20 outline-none transition-all"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   />
                   <input
                     type="text"
                     placeholder="Car Model (optional)"
                     value={insuranceDetails.carType}
                     onChange={(e) => setInsuranceDetails({ ...insuranceDetails, carType: e.target.value })}
-                    className="bg-background-secondary border border-border-light rounded-xl px-4 py-3 text-sm text-text-primary font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="border rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-green-500/20 outline-none transition-all"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
                   />
                   <button
                     onClick={getInsuranceAdvice}
                     disabled={loading}
-                    className="bg-primary text-white font-black py-3 rounded-xl hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all disabled:opacity-50"
+                    className="bg-green-500 text-white font-black py-3 rounded-xl hover:bg-green-600 shadow-lg shadow-green-500/20 transition-all disabled:opacity-50"
                   >
                     Get Advice
                   </button>
@@ -413,7 +502,13 @@ const AIAssistant = () => {
           </AnimatePresence>
 
           {/* Input Area */}
-          <div className="px-8 py-6 border-t border-border-light bg-white">
+          <div 
+            className="px-8 py-6 border-t"
+            style={{
+              backgroundColor: theme.cardBg,
+              borderColor: theme.border
+            }}
+          >
             <div className="flex items-center gap-4">
               <div className="flex-1 relative">
                 <input
@@ -424,11 +519,16 @@ const AIAssistant = () => {
                   }}
                   placeholder={
                     activeFeature === 'search' ? "Describe your perfect car (e.g. SUV for family trip to hills)..." :
-                      activeFeature === 'damage' ? "Describe the car damage..." :
-                        "Ask me anything about RentRide..."
+                    activeFeature === 'damage' ? "Describe the car damage..." :
+                    "Ask me anything about RentRide..."
                   }
                   disabled={loading}
-                  className="w-full bg-background-secondary border border-border-light rounded-2xl px-6 py-4 text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all disabled:opacity-50 font-medium"
+                  className="w-full border rounded-2xl px-6 py-4 focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-500/5 transition-all disabled:opacity-50 font-medium"
+                  style={{
+                    backgroundColor: theme.inputBg,
+                    borderColor: theme.border,
+                    color: theme.text
+                  }}
                 />
               </div>
 
@@ -445,22 +545,22 @@ const AIAssistant = () => {
                 whileTap={{ scale: loading ? 1 : 0.95 }}
                 onClick={sendMessage}
                 disabled={loading}
-                className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all disabled:opacity-50"
+                className="h-14 w-14 rounded-2xl bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all disabled:opacity-50"
               >
                 <Send className="w-6 h-6" />
               </motion.button>
             </div>
 
-            <div className="mt-3 flex items-center gap-4 text-[11px] text-text-secondary font-bold uppercase tracking-widest pl-2">
+            <div className="mt-3 flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest pl-2" style={{ color: theme.textSecondary }}>
               <span className="flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-primary" />
+                <Shield className="w-3.5 h-3.5 text-green-500" />
                 Secure Chat
               </span>
-              <span className="w-1 h-1 bg-border-light rounded-full"></span>
+              <span className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.border }}></span>
               <span>
                 {activeFeature === 'search' ? '🔍 Recommendation Mode' :
-                  activeFeature === 'recognize' ? '📸 Visual Identification Mode' :
-                    'AI Powered Assistant'}
+                 activeFeature === 'recognize' ? '📸 Visual Identification Mode' :
+                 'AI Powered Assistant'}
               </span>
             </div>
           </div>

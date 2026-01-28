@@ -130,7 +130,11 @@ const DashboardNavbar = () => {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.35 }}
-      className="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-border-light dark:border-border-dark shadow-sm dark:shadow-dark transition-all duration-300"
+      style={{
+        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+        borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+      }}
+      className="sticky top-0 z-50 backdrop-blur-md border-b shadow-sm transition-all duration-300"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Left: logo */}
@@ -143,22 +147,33 @@ const DashboardNavbar = () => {
         </button>
 
         {/* Center: tabs (desktop) */}
-        <nav className="hidden md:flex items-center gap-2 bg-background-secondary dark:bg-background-dark-secondary border border-border-light dark:border-border-dark rounded-full px-2 py-1 transition-colors">
+        <nav 
+          className="hidden md:flex items-center gap-2 border rounded-full px-2 py-1 transition-colors"
+          style={{
+            backgroundColor: isDarkMode ? '#1e293b' : '#f8f9fa',
+            borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+          }}
+        >
           {tabs.map((t) => (
             <button
               key={t.path}
               onClick={() => navigate(t.path)}
               type="button"
-              className={`relative px-4 py-2 rounded-full text-sm font-semibold transition ${
-                isActive(t.path) 
-                  ? "text-primary dark:text-primary-dark" 
-                  : "text-text-secondary dark:text-text-dark-secondary hover:text-text-primary dark:hover:text-text-dark-primary"
-              }`}
+              className="relative px-4 py-2 rounded-full text-sm font-semibold transition"
+              style={{
+                color: isActive(t.path) 
+                  ? '#10b981' 
+                  : isDarkMode ? '#cbd5e1' : '#6B7280'
+              }}
             >
               {isActive(t.path) && (
                 <motion.span
                   layoutId="activeTab"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-background-dark-tertiary border border-border-light dark:border-border-dark shadow-sm"
+                  className="absolute inset-0 rounded-full border shadow-sm"
+                  style={{
+                    backgroundColor: isDarkMode ? '#0f172a' : '#ffffff',
+                    borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+                  }}
                   transition={{ type: "spring", stiffness: 220, damping: 22 }}
                 />
               )}
@@ -172,14 +187,18 @@ const DashboardNavbar = () => {
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-10 h-10 rounded-full bg-white dark:bg-background-dark-secondary border border-border-light dark:border-border-dark flex items-center justify-center hover:bg-background-secondary dark:hover:bg-background-dark-tertiary transition-all shadow-sm relative group"
+            className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-opacity-50 transition-all shadow-sm relative group"
+            style={{
+              backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+              borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+            }}
             type="button"
             title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {isDarkMode ? (
-              <Sun size={20} className="text-yellow-400 animate-spin-slow" />
+              <Sun size={20} className="text-yellow-400" />
             ) : (
-              <Moon size={20} className="text-text-secondary dark:text-text-dark-secondary" />
+              <Moon size={20} className="text-gray-500" />
             )}
           </button>
 
@@ -191,12 +210,19 @@ const DashboardNavbar = () => {
                 setShowSettings(false);
                 setShowUserMenu(false);
               }}
-              className="w-10 h-10 rounded-full bg-white dark:bg-background-dark-secondary border border-border-light dark:border-border-dark flex items-center justify-center hover:bg-background-secondary dark:hover:bg-background-dark-tertiary transition-all shadow-sm relative"
+              className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-opacity-50 transition-all shadow-sm relative"
+              style={{
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+              }}
               type="button"
             >
-              <Bell className="w-5 h-5 text-text-secondary dark:text-text-dark-secondary" />
+              <Bell className="w-5 h-5" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+                <span 
+                  className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2"
+                  style={{ borderColor: isDarkMode ? '#0f172a' : '#ffffff' }}
+                ></span>
               )}
             </button>
 
@@ -206,14 +232,23 @@ const DashboardNavbar = () => {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-80 bg-white dark:bg-background-dark-secondary rounded-2xl shadow-xl dark:shadow-dark border border-border-light dark:border-border-dark overflow-hidden"
+                  className="absolute right-0 mt-2 w-80 rounded-2xl shadow-xl border overflow-hidden"
+                  style={{
+                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                    borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+                  }}
                 >
-                  <div className="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center">
-                    <h3 className="font-bold text-text-primary dark:text-text-dark-primary">Notifications</h3>
+                  <div 
+                    className="p-4 border-b flex justify-between items-center"
+                    style={{ borderColor: isDarkMode ? '#334155' : '#e5e7eb' }}
+                  >
+                    <h3 className="font-bold" style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}>
+                      Notifications
+                    </h3>
                     {notifications.length > 0 && (
                       <button
                         onClick={clearAllNotifications}
-                        className="text-xs text-primary dark:text-primary-dark font-semibold hover:underline"
+                        className="text-xs text-green-500 font-semibold hover:underline"
                       >
                         Clear all
                       </button>
@@ -221,7 +256,7 @@ const DashboardNavbar = () => {
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-text-secondary dark:text-text-dark-secondary text-sm">
+                      <div className="p-8 text-center text-sm" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }}>
                         No notifications
                       </div>
                     ) : (
@@ -229,20 +264,30 @@ const DashboardNavbar = () => {
                         <button
                           key={notif.id}
                           onClick={() => markAsRead(notif.id)}
-                          className={`w-full p-4 border-b border-border-light dark:border-border-dark hover:bg-background-secondary dark:hover:bg-background-dark-tertiary transition text-left ${
-                            !notif.read ? 'bg-primary/5 dark:bg-primary-dark/5' : ''
-                          }`}
+                          className="w-full p-4 border-b hover:bg-opacity-50 transition text-left"
+                          style={{
+                            backgroundColor: !notif.read 
+                              ? (isDarkMode ? 'rgba(16, 185, 129, 0.05)' : 'rgba(16, 185, 129, 0.05)') 
+                              : 'transparent',
+                            borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+                          }}
                         >
                           <div className="flex gap-3">
                             <div className={`mt-1 ${notif.type === 'success' ? 'text-green-500' : notif.type === 'warning' ? 'text-yellow-500' : 'text-blue-500'}`}>
                               {notif.icon}
                             </div>
                             <div className="flex-1">
-                              <p className="font-semibold text-sm text-text-primary dark:text-text-dark-primary">{notif.title}</p>
-                              <p className="text-xs text-text-secondary dark:text-text-dark-secondary mt-1">{notif.message}</p>
-                              <p className="text-xs text-text-tertiary dark:text-text-dark-tertiary mt-1">{notif.time}</p>
+                              <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}>
+                                {notif.title}
+                              </p>
+                              <p className="text-xs mt-1" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }}>
+                                {notif.message}
+                              </p>
+                              <p className="text-xs mt-1" style={{ color: isDarkMode ? '#94a3b8' : '#9CA3AF' }}>
+                                {notif.time}
+                              </p>
                             </div>
-                            {!notif.read && <div className="w-2 h-2 bg-primary dark:bg-primary-dark rounded-full mt-2"></div>}
+                            {!notif.read && <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>}
                           </div>
                         </button>
                       ))
@@ -261,10 +306,14 @@ const DashboardNavbar = () => {
                 setShowNotifications(false);
                 setShowUserMenu(false);
               }}
-              className="w-10 h-10 rounded-full bg-white dark:bg-background-dark-secondary border border-border-light dark:border-border-dark flex items-center justify-center hover:bg-background-secondary dark:hover:bg-background-dark-tertiary transition-all shadow-sm"
+              className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-opacity-50 transition-all shadow-sm"
+              style={{
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+              }}
               type="button"
             >
-              <Settings className="w-5 h-5 text-text-secondary dark:text-text-dark-secondary" />
+              <Settings className="w-5 h-5" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }} />
             </button>
 
             <AnimatePresence>
@@ -273,16 +322,29 @@ const DashboardNavbar = () => {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-56 bg-white dark:bg-background-dark-secondary rounded-2xl shadow-xl dark:shadow-dark border border-border-light dark:border-border-dark overflow-hidden"
+                  className="absolute right-0 mt-2 w-56 rounded-2xl shadow-xl border overflow-hidden"
+                  style={{
+                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                    borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+                  }}
                 >
                   <div className="p-2">
-                    <button className="w-full px-4 py-2.5 text-left text-sm text-text-primary dark:text-text-dark-primary hover:bg-background-secondary dark:hover:bg-background-dark-tertiary rounded-xl transition">
+                    <button 
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
+                      style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
+                    >
                       Account Settings
                     </button>
-                    <button className="w-full px-4 py-2.5 text-left text-sm text-text-primary dark:text-text-dark-primary hover:bg-background-secondary dark:hover:bg-background-dark-tertiary rounded-xl transition">
+                    <button 
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
+                      style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
+                    >
                       Preferences
                     </button>
-                    <button className="w-full px-4 py-2.5 text-left text-sm text-text-primary dark:text-text-dark-primary hover:bg-background-secondary dark:hover:bg-background-dark-tertiary rounded-xl transition">
+                    <button 
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
+                      style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
+                    >
                       Help & Support
                     </button>
                   </div>
@@ -299,13 +361,17 @@ const DashboardNavbar = () => {
                 setShowNotifications(false);
                 setShowSettings(false);
               }}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-white dark:bg-background-dark-secondary border border-border-light dark:border-border-dark hover:bg-background-secondary dark:hover:bg-background-dark-tertiary transition-all shadow-sm"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border hover:bg-opacity-50 transition-all shadow-sm"
+              style={{
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+              }}
               type="button"
             >
-              <div className="w-8 h-8 rounded-full bg-primary dark:bg-primary-dark text-white flex items-center justify-center text-xs font-bold">
+              <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">
                 {avatarText}
               </div>
-              <ChevronDown size={16} className="text-text-secondary dark:text-text-dark-secondary" />
+              <ChevronDown size={16} style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }} />
             </button>
 
             <AnimatePresence>
@@ -314,20 +380,34 @@ const DashboardNavbar = () => {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-56 bg-white dark:bg-background-dark-secondary rounded-2xl shadow-xl dark:shadow-dark border border-border-light dark:border-border-dark overflow-hidden"
+                  className="absolute right-0 mt-2 w-56 rounded-2xl shadow-xl border overflow-hidden"
+                  style={{
+                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                    borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+                  }}
                 >
-                  <div className="p-4 border-b border-border-light dark:border-border-dark">
-                    <p className="font-semibold text-text-primary dark:text-text-dark-primary">{user?.name || "User"}</p>
-                    <p className="text-xs text-text-secondary dark:text-text-dark-secondary mt-1">{user?.email || "user@example.com"}</p>
+                  <div 
+                    className="p-4 border-b"
+                    style={{ borderColor: isDarkMode ? '#334155' : '#e5e7eb' }}
+                  >
+                    <p className="font-semibold" style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}>
+                      {user?.name || "User"}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }}>
+                      {user?.email || "user@example.com"}
+                    </p>
                   </div>
                   <div className="p-2">
-                    <button className="w-full px-4 py-2.5 text-left text-sm text-text-primary dark:text-text-dark-primary hover:bg-background-secondary dark:hover:bg-background-dark-tertiary rounded-xl transition flex items-center gap-2">
+                    <button 
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition flex items-center gap-2"
+                      style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
+                    >
                       <User size={16} />
                       Profile
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition flex items-center gap-2"
+                      className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 rounded-xl transition flex items-center gap-2"
                     >
                       <LogOut size={16} />
                       Logout
@@ -341,7 +421,12 @@ const DashboardNavbar = () => {
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden w-10 h-10 rounded-full bg-white dark:bg-background-dark-secondary border border-border-light dark:border-border-dark flex items-center justify-center hover:bg-background-secondary dark:hover:bg-background-dark-tertiary transition-all"
+            className="md:hidden w-10 h-10 rounded-full border flex items-center justify-center hover:bg-opacity-50 transition-all"
+            style={{
+              backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+              borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+              color: isDarkMode ? '#cbd5e1' : '#1F2937'
+            }}
             type="button"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -356,7 +441,11 @@ const DashboardNavbar = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden border-t border-border-light dark:border-border-dark bg-white dark:bg-background-dark-secondary overflow-hidden"
+            className="md:hidden border-t overflow-hidden"
+            style={{
+              backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+              borderColor: isDarkMode ? '#334155' : '#e5e7eb'
+            }}
           >
             <div className="px-4 py-4 space-y-2">
               {tabs.map((t) => (
@@ -366,18 +455,23 @@ const DashboardNavbar = () => {
                     navigate(t.path);
                     setMobileOpen(false);
                   }}
-                  className={`w-full px-4 py-2.5 text-left text-sm rounded-xl transition ${
-                    isActive(t.path)
-                      ? "bg-primary/10 dark:bg-primary-dark/10 text-primary dark:text-primary-dark font-semibold"
-                      : "text-text-primary dark:text-text-dark-primary hover:bg-background-secondary dark:hover:bg-background-dark-tertiary"
-                  }`}
+                  className="w-full px-4 py-2.5 text-left text-sm rounded-xl transition"
+                  style={{
+                    backgroundColor: isActive(t.path)
+                      ? (isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.1)')
+                      : 'transparent',
+                    color: isActive(t.path)
+                      ? '#10b981'
+                      : isDarkMode ? '#f1f5f9' : '#1F2937',
+                    fontWeight: isActive(t.path) ? '600' : '400'
+                  }}
                 >
                   {t.label}
                 </button>
               ))}
               <button
                 onClick={handleLogout}
-                className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition"
+                className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 rounded-xl transition"
               >
                 Logout
               </button>
