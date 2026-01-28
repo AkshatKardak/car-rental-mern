@@ -3,7 +3,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan'); // If installed, otherwise skip or use a simple logger
 const { errorHandler } = require('./middleware/errorHandler');
-
 // Route files
 const authRoutes = require('./routes/authRoutes');
 const carRoutes = require('./routes/carRoutes');

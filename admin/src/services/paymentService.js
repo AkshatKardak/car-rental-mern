@@ -1,33 +1,71 @@
-import adminApi from './adminApi';
+// Payment Event Service for Real-time Updates
+class PaymentEventService {
+  constructor() {
+    this.listeners = new Set()
+  }
 
-export const paymentService = {
-  // Get all payments
-  getAllPayments: async (filters = {}) => {
-    const response = await adminApi.get('/payments', { params: filters });
-    return response.data;
-  },
+  // Subscribe to payment events
+  subscribe(callback) {
+    this.listeners.add(callback)
+    console.log('📡 New subscriber added. Total listeners:', this.listeners.size)
+    return () => {
+      this.listeners.delete(callback)
+      console.log('📡 Subscriber removed. Total listeners:', this.listeners.size)
+    }
+  }
 
-  // Get payment by ID
-  getPaymentById: async (id) => {
-    const response = await adminApi.get(`/payments/${id}`);
-    return response.data;
-  },
+  // Notify all subscribers when payment occurs
+  notifyPaymentReceived(paymentData) {
+    console.log('💰 Payment Event Triggered:', paymentData)
+    this.listeners.forEach(callback => {
+      try {
+        callback({
+          type: 'PAYMENT_RECEIVED',
+          data: paymentData,
+          timestamp: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error notifying subscriber:', error)
+      }
+    })
+  }
 
-  // Process refund
-  processRefund: async (paymentId, amount, reason) => {
-    const response = await adminApi.post('/payments/refund', {
-      paymentId,
-      amount,
-      reason,
-    });
-    return response.data;
-  },
+  // Notify settlement update
+  notifySettlementUpdate(settlementData) {
+    console.log('🔄 Settlement Update Triggered:', settlementData)
+    this.listeners.forEach(callback => {
+      try {
+        callback({
+          type: 'SETTLEMENT_UPDATE',
+          data: settlementData,
+          timestamp: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error notifying subscriber:', error)
+      }
+    })
+  }
 
-  // Get revenue report
-  getRevenueReport: async (startDate, endDate) => {
-    const response = await adminApi.get('/payments/revenue-report', {
-      params: { startDate, endDate },
-    });
-    return response.data;
-  },
-};
+  // Notify booking status change
+  notifyBookingUpdate(bookingData) {
+    console.log('📋 Booking Update Triggered:', bookingData)
+    this.listeners.forEach(callback => {
+      try {
+        callback({
+          type: 'BOOKING_UPDATE',
+          data: bookingData,
+          timestamp: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error notifying subscriber:', error)
+      }
+    })
+  }
+}
+
+export const paymentEventService = new PaymentEventService()
+
+// For testing in console
+if (typeof window !== 'undefined') {
+  window.paymentEventService = paymentEventService
+}

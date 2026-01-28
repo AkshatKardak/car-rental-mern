@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, Loader2, Users, Fuel, Gauge, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Users, Fuel, Gauge, AlertCircle, SlidersHorizontal, X } from 'lucide-react';
 import DashboardNavbar from '../components/layout/DashboardNavbar';
 import { carService } from '../services/carService';
 
-// Existing assets only (from repo)
+// Import all car images from assets
 import heroCarImg from '../assets/herocar.png';
 import porscheImg from '../assets/porsche.png';
-import mercedesImg from '../assets/mercedesg63amg.png'; // use this for G63 too (avoid cyan image)
+import mercedesImg from '../assets/mercedesg63amg.png';
 import kiaImg from '../assets/Kia.png';
 import skodaImg from '../assets/skoda.png';
 import audiImg from '../assets/AudiElectric.png';
@@ -16,32 +16,16 @@ import supraImg from '../assets/supra.png';
 import lamboImg from '../assets/lambo.png';
 import bugattiImg from '../assets/Bugatti.png';
 import rollsImg from '../assets/rolls royce.png';
-
-
-const CHEAP_CAR = {
-  _id: 'cheap-tata-nano',
-  name: 'Tata Nano',
-  brand: 'Tata',
-  model: 'Nano',
-  year: 2021,
-  pricePerDay: 799,
-  category: 'Hatchback',
-  fuelType: 'Petrol',
-  transmission: 'Manual',
-  seats: 4,
-  available: true,
-  description: 'Ultra-budget city car for daily commute.',
-  images: [],
-};
+import nanoImg from '../assets/Nano.png';
 
 const getImageForCar = (car) => {
   if (!car) return heroCarImg;
 
-  // Try db images tags first
   if (car.images && car.images.length > 0) {
     const tag = String(car.images[0]).toLowerCase();
+    if (tag.includes('nano') || tag.includes('tata')) return nanoImg;
     if (tag.includes('porsche')) return porscheImg;
-    if (tag.includes('mercedes')) return mercedesImg; // always mercedes.png
+    if (tag.includes('mercedes')) return mercedesImg;
     if (tag.includes('kia')) return kiaImg;
     if (tag.includes('skoda')) return skodaImg;
     if (tag.includes('audi')) return audiImg;
@@ -51,14 +35,11 @@ const getImageForCar = (car) => {
     if (tag.includes('rolls')) return rollsImg;
   }
 
-  // Name matching
   const text = `${car.brand || ''} ${car.model || ''}`.toLowerCase();
 
+  if (text.includes('nano') || (text.includes('tata') && text.includes('nano'))) return nanoImg;
   if (text.includes('porsche') || text.includes('911')) return porscheImg;
-
-  // IMPORTANT: Use mercedes.png for any Mercedes incl G63/AMG (avoid cyan image)
   if (text.includes('mercedes') || text.includes('g63') || text.includes('g-wagon') || text.includes('amg')) return mercedesImg;
-
   if (text.includes('kia') || text.includes('carens')) return kiaImg;
   if (text.includes('skoda') || text.includes('kylaq')) return skodaImg;
   if (text.includes('audi') || text.includes('e-tron')) return audiImg;
@@ -78,9 +59,30 @@ const BrowseCars = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Filter states
   const [search, setSearch] = useState('');
   const [brand, setBrand] = useState('All');
+  const [category, setCategory] = useState('All');
+  const [transmission, setTransmission] = useState('All');
+  const [priceRange, setPriceRange] = useState('All');
+  const [fuelType, setFuelType] = useState('All');
+  
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Dynamic filter options
   const [brands, setBrands] = useState(['All']);
+  const [categories, setCategories] = useState(['All']);
+  const [transmissions, setTransmissions] = useState(['All']);
+  const [fuelTypes, setFuelTypes] = useState(['All']);
+
+  const priceRanges = [
+    { label: 'All', value: 'All' },
+    { label: 'Under ₹1000', value: '0-1000' },
+    { label: '₹1000 - ₹3000', value: '1000-3000' },
+    { label: '₹3000 - ₹5000', value: '3000-5000' },
+    { label: '₹5000 - ₹10000', value: '5000-10000' },
+    { label: 'Above ₹10000', value: '10000-999999' }
+  ];
 
   useEffect(() => {
     loadCars();
@@ -93,7 +95,12 @@ const BrowseCars = () => {
 
       if (response.success && Array.isArray(response.data)) {
         setAllCars(response.data);
+        
+        // Extract unique filter options
         setBrands(['All', ...new Set(response.data.map(c => c.brand).filter(Boolean))]);
+        setCategories(['All', ...new Set(response.data.map(c => c.category).filter(Boolean))]);
+        setTransmissions(['All', ...new Set(response.data.map(c => c.transmission).filter(Boolean))]);
+        setFuelTypes(['All', ...new Set(response.data.map(c => c.fuelType).filter(Boolean))]);
       } else {
         setError('Failed to load cars');
       }
@@ -105,37 +112,48 @@ const BrowseCars = () => {
     }
   };
 
-  const ensureSixCarsWithCheap = (cars) => {
-    let list = [...cars];
-
-    // insert cheap car only if Tata Nano not already in backend
-    const hasNano = list.some(
-      c => (c.brand || '').toLowerCase() === 'tata' && (c.model || '').toLowerCase().includes('nano')
-    );
-
-    if (!hasNano) list = [CHEAP_CAR, ...list];
-
-    return list.slice(0, 6);
-  };
-
   const filteredCars = useMemo(() => {
     let result = [...allCars];
 
+    // Search filter
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(c =>
         (c.name || '').toLowerCase().includes(q) ||
         (c.brand || '').toLowerCase().includes(q) ||
-        (c.model || '').toLowerCase().includes(q)
+        (c.model || '').toLowerCase().includes(q) ||
+        (c.category || '').toLowerCase().includes(q)
       );
     }
 
+    // Brand filter
     if (brand !== 'All') {
       result = result.filter(c => c.brand === brand);
     }
 
-    return ensureSixCarsWithCheap(result);
-  }, [allCars, search, brand]);
+    // Category filter
+    if (category !== 'All') {
+      result = result.filter(c => c.category === category);
+    }
+
+    // Transmission filter
+    if (transmission !== 'All') {
+      result = result.filter(c => c.transmission === transmission);
+    }
+
+    // Fuel Type filter
+    if (fuelType !== 'All') {
+      result = result.filter(c => c.fuelType === fuelType);
+    }
+
+    // Price Range filter
+    if (priceRange !== 'All') {
+      const [min, max] = priceRange.split('-').map(Number);
+      result = result.filter(c => c.pricePerDay >= min && c.pricePerDay <= max);
+    }
+
+    return result;
+  }, [allCars, search, brand, category, transmission, fuelType, priceRange]);
 
   useEffect(() => {
     setDisplayCars(filteredCars);
@@ -144,12 +162,19 @@ const BrowseCars = () => {
   const handleApplyFilters = (e) => {
     if (e) e.preventDefault();
     setDisplayCars(filteredCars);
+    setShowFilters(false);
   };
 
-  const handleClear = () => {
+  const handleClearAll = () => {
     setSearch('');
     setBrand('All');
+    setCategory('All');
+    setTransmission('All');
+    setPriceRange('All');
+    setFuelType('All');
   };
+
+  const activeFiltersCount = [brand, category, transmission, priceRange, fuelType].filter(f => f !== 'All').length;
 
   return (
     <div className="min-h-screen bg-background-secondary text-text-primary">
@@ -157,47 +182,159 @@ const BrowseCars = () => {
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary mb-2">Browse Cars</h1>
-          <p className="text-text-secondary text-lg">Choose from our exclusive collection</p>
+          <p className="text-text-secondary text-lg">Choose from our exclusive collection of {displayCars.length} vehicles</p>
         </div>
 
+        {/* Search & Filter Bar */}
         <div className="mb-8">
-          <form onSubmit={handleApplyFilters} className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-2xl shadow-sm border border-border-light">
+          <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-2xl shadow-sm border border-border-light">
+            {/* Search Input */}
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search cars..."
+                placeholder="Search by name, brand, or category..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
-            <div className="w-full md:w-48">
-              <select
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            {/* Filter Toggle Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all shadow-lg hover:shadow-primary/30 flex items-center gap-2 relative"
+            >
+              <SlidersHorizontal size={20} />
+              Filters
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="px-6 py-3 border-2 border-red-500 text-red-500 font-bold rounded-xl hover:bg-red-50 transition flex items-center gap-2"
               >
-                {brands.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
+                <X size={20} />
+                Clear All
+              </button>
+            )}
+          </div>
+
+          {/* Expandable Filters Panel */}
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-white p-6 rounded-2xl shadow-sm border border-border-light mt-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {/* Brand Filter */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Brand</label>
+                  <select
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                {/* Transmission Filter */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Transmission</label>
+                  <select
+                    value={transmission}
+                    onChange={(e) => setTransmission(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    {transmissions.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+
+                {/* Fuel Type Filter */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Fuel Type</label>
+                  <select
+                    value={fuelType}
+                    onChange={(e) => setFuelType(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    {fuelTypes.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+
+                {/* Price Range Filter */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Price Range</label>
+                  <select
+                    value={priceRange}
+                    onChange={(e) => setPriceRange(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    {priceRanges.map(pr => <option key={pr.value} value={pr.value}>{pr.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={handleApplyFilters}
+                  className="flex-1 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all shadow-lg hover:shadow-primary/30"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="px-8 py-3 border border-gray-300 font-bold rounded-xl bg-white hover:bg-gray-50 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Active Filters Tags */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {brand !== 'All' && (
+                <FilterTag label={`Brand: ${brand}`} onRemove={() => setBrand('All')} />
+              )}
+              {category !== 'All' && (
+                <FilterTag label={`Category: ${category}`} onRemove={() => setCategory('All')} />
+              )}
+              {transmission !== 'All' && (
+                <FilterTag label={`Transmission: ${transmission}`} onRemove={() => setTransmission('All')} />
+              )}
+              {fuelType !== 'All' && (
+                <FilterTag label={`Fuel: ${fuelType}`} onRemove={() => setFuelType('All')} />
+              )}
+              {priceRange !== 'All' && (
+                <FilterTag 
+                  label={`Price: ${priceRanges.find(pr => pr.value === priceRange)?.label}`} 
+                  onRemove={() => setPriceRange('All')} 
+                />
+              )}
             </div>
-
-            <button
-              type="submit"
-              className="px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all shadow-lg hover:shadow-primary/30"
-            >
-              Search
-            </button>
-
-            <button
-              type="button"
-              onClick={handleClear}
-              className="px-6 py-3 border border-border-light font-bold rounded-xl bg-white hover:bg-gray-50 transition"
-            >
-              Clear
-            </button>
-          </form>
+          )}
         </div>
 
         {loading ? (
@@ -206,6 +343,17 @@ const BrowseCars = () => {
           </div>
         ) : error ? (
           <div className="text-center py-20 text-red-500 font-bold">{error}</div>
+        ) : displayCars.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-xl font-bold text-gray-600 mb-2">No cars found</p>
+            <p className="text-gray-500 mb-4">Try adjusting your filters</p>
+            <button
+              onClick={handleClearAll}
+              className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition"
+            >
+              Clear All Filters
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
             {displayCars.map((car, index) => (
@@ -223,6 +371,19 @@ const BrowseCars = () => {
     </div>
   );
 };
+
+// Filter Tag Component
+const FilterTag = ({ label, onRemove }) => (
+  <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium">
+    <span>{label}</span>
+    <button
+      onClick={onRemove}
+      className="hover:bg-primary/20 rounded-full p-0.5 transition"
+    >
+      <X size={14} />
+    </button>
+  </div>
+);
 
 const CarCard = ({ car, index, onBook, onDetails }) => {
   const imageSrc = getImageForCar(car);

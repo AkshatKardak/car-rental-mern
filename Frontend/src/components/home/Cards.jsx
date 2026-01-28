@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { ZoomIn } from '../../utility/Animation'
+import { ZoomIn } from '../../utils/Animation'
 
 const Cards = ({item}) => {
     return (

@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FadeUp } from '../utility/Animation'
+import { FadeUp } from '../utils/Animation'
 import supercar from '../assets/Supercar-PNG-Photo-Image.png'
 import maintenance from '../assets/maintenance.png'
 import steering from '../assets/steering.png'

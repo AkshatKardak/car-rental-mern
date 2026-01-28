@@ -46,7 +46,11 @@ const AdminLogin = () => {
         }
 
         localStorage.setItem('adminToken', data.token)
-        localStorage.setItem('adminUser', JSON.stringify(data.user || { email: formData.email, role: 'admin' }))
+        localStorage.setItem(
+          'adminUser',
+          JSON.stringify(data.user || { email: formData.email, role: 'admin' })
+        )
+
         navigate('/admin/dashboard', { replace: true })
       } else {
         setError(data.message || 'Invalid email or password')

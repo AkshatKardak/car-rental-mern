@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Search, Calendar, MapPin, Zap, Shield, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import herocar from '../../assets/herocar1.png'
-import { FadeRight, FadeLeft } from '../../utility/Animation'
+import { FadeRight, FadeLeft } from '../../utils/Animation'
 
 export default function Hero() {
   const user = JSON.parse(localStorage.getItem('user') || 'null');

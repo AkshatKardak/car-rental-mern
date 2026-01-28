@@ -27,7 +27,8 @@ import SupraImg from '../assets/supra.png';
 import RollsImg from '../assets/rolls royce.png';
 import AudiImg from '../assets/AudiElectric.png';
 import HeroCarImg from '../assets/herocar.png';
-import MustangImg from '../assets/blackcar.png'; 
+import MustangImg from '../assets/blackcar.png';
+import NanoImg from '../assets/Nano.png';
 
 const carImageAssets = {
   'porsche': PorscheImg,
@@ -42,6 +43,8 @@ const carImageAssets = {
   'ford': MustangImg,
   'rolls-royce': RollsImg,
   'audi': AudiImg,
+  'tata': NanoImg,
+  'nano': NanoImg,
 };
 
 const getCarImage = (car) => {
@@ -50,6 +53,8 @@ const getCarImage = (car) => {
   const brand = (car.brand || '').toLowerCase();
   const model = (car.model || '').toLowerCase();
   
+  if (brand === 'tata' && model.includes('nano')) return NanoImg;
+  if (model.includes('nano')) return NanoImg;
   if (model.includes('g63')) return G63Img;
   if (model.includes('supra')) return SupraImg;
   
@@ -173,7 +178,7 @@ const CarDetails = () => {
               </div>
             </div>
 
-            {/* Specs Grid (The Requested Details) */}
+            {/* Specs Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">
                <SpecBox icon={<Gauge size={20} />} label="Transmission" value={car.transmission} />
                <SpecBox icon={<Fuel size={20} />} label="Fuel Type" value={car.fuelType} />
