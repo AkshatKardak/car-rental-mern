@@ -7,30 +7,34 @@ import AudiImg from '../assets/AudiElectric.png';
 import SkodaImg from '../assets/skoda.png';
 import MercedesNormalImg from '../assets/mercedes.png'; // use this (avoid cyan g63 image)
 import KiaImg from '../assets/Kia.png';
-import DefaultImg from '../assets/herocar.png';
+import Supra from '../assets/supra.png';
+import Nano from '../assets/Nano.png';
+import HondaImg from '../assets/Honda.png';
 
 const carImages = {
   audi: AudiImg,
   skoda: SkodaImg,
-  mercedes: MercedesNormalImg, // force mercedes.png
+  mercedes: MercedesNormalImg, 
+  honda:HondaImg,
   kia: KiaImg,
-  default: DefaultImg,
+  supra:Supra,
+  nano:Nano,
 };
 
 const INITIAL_CARS = [
   { _id: '1', name: 'Audi e-tron', brand: 'Audi', model: 'GT RS', year: 2024, pricePerDay: 12000, imageKey: 'audi', category: 'Electric', fuelType: 'Electric', transmission: 'Automatic', seats: 5, available: true },
   { _id: '2', name: 'Skoda Kylaq', brand: 'Skoda', model: 'Style 1.0', year: 2024, pricePerDay: 2500, imageKey: 'skoda', category: 'SUV', fuelType: 'Petrol', transmission: 'Manual', seats: 5, available: true },
 
-  // Mercedes uses mercedes.png (not mercedes g63 amg.png)
+
   { _id: '3', name: 'Mercedes-Benz G63', brand: 'Mercedes', model: 'AMG', year: 2023, pricePerDay: 25000, imageKey: 'mercedes', category: 'Luxury', fuelType: 'Petrol', transmission: 'Automatic', seats: 5, available: false },
 
   { _id: '4', name: 'Kia Carens', brand: 'Kia', model: 'Luxury Plus', year: 2023, pricePerDay: 3000, imageKey: 'kia', category: 'MUV', fuelType: 'Diesel', transmission: 'Automatic', seats: 7, available: true },
 
-  // Existing Supra image exists, but VehicleManagement uses imageKey mapping; use default image here
-  { _id: '5', name: 'Toyota Supra', brand: 'Toyota', model: 'Supra', year: 2022, pricePerDay: 9000, imageKey: 'default', category: 'Sports', fuelType: 'Petrol', transmission: 'Automatic', seats: 2, available: true },
 
-  // Cheap unique car using default image (existing)
-  { _id: '6', name: 'Tata Nano', brand: 'Tata', model: 'Nano', year: 2021, pricePerDay: 799, imageKey: 'default', category: 'Hatchback', fuelType: 'Petrol', transmission: 'Manual', seats: 4, available: true },
+  { _id: '5', name: 'Toyota Supra', brand: 'Toyota', model: 'Supra', year: 2022, pricePerDay: 9000, imageKey: 'supra', category: 'Sports', fuelType: 'Petrol', transmission: 'Automatic', seats: 2, available: true },
+
+ 
+  { _id: '6', name: 'Tata Nano', brand: 'Tata', model: 'Nano', year: 2021, pricePerDay: 799, imageKey: 'nano', category: 'Hatchback', fuelType: 'Petrol', transmission: 'Manual', seats: 4, available: true },
 ];
 
 const VehicleManagement = () => {

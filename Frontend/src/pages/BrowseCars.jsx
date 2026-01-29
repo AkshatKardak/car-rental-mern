@@ -17,6 +17,7 @@ import lamboImg from '../assets/lambo.png';
 import bugattiImg from '../assets/Bugatti.png';
 import rollsImg from '../assets/rolls royce.png';
 import nanoImg from '../assets/Nano.png';
+import HondaImg from '../assets/Honda.png';
 
 const getImageForCar = (car) => {
   if (!car) return heroCarImg;
@@ -29,6 +30,7 @@ const getImageForCar = (car) => {
     if (tag.includes('kia')) return kiaImg;
     if (tag.includes('skoda')) return skodaImg;
     if (tag.includes('audi')) return audiImg;
+    if (tag.includes('honda')) return HondaImg;
     if (tag.includes('supra') || tag.includes('toyota')) return supraImg;
     if (tag.includes('lambo')) return lamboImg;
     if (tag.includes('bugatti')) return bugattiImg;
@@ -44,6 +46,7 @@ const getImageForCar = (car) => {
   if (text.includes('skoda') || text.includes('kylaq')) return skodaImg;
   if (text.includes('audi') || text.includes('e-tron')) return audiImg;
   if (text.includes('supra') || text.includes('toyota')) return supraImg;
+  if (text.includes('honda') || text.includes('zxcvt')) return HondaImg;
   if (text.includes('lambo')) return lamboImg;
   if (text.includes('bugatti')) return bugattiImg;
   if (text.includes('rolls')) return rollsImg;
@@ -105,13 +108,30 @@ const BrowseCars = () => {
       const response = await carService.getAllCars();
 
       if (response.success && Array.isArray(response.data)) {
-        setAllCars(response.data);
+        const nanoCar = {
+          _id: '11', 
+          name: 'Tata Nano', 
+          brand: 'Tata', 
+          model: 'Nano', 
+          year: 2023, 
+          pricePerDay: 800, 
+          images: ['nano'], 
+          category: 'Compact', 
+          fuelType: 'Petrol', 
+          transmission: 'Manual', 
+          seats: 4, 
+          available: true,
+          description: 'India\'s most affordable city car, perfect for daily commutes and city navigation'
+        };
+
+        const allCarsData = [...response.data, nanoCar];
+        setAllCars(allCarsData);
         
         // Extract unique filter options
-        setBrands(['All', ...new Set(response.data.map(c => c.brand).filter(Boolean))]);
-        setCategories(['All', ...new Set(response.data.map(c => c.category).filter(Boolean))]);
-        setTransmissions(['All', ...new Set(response.data.map(c => c.transmission).filter(Boolean))]);
-        setFuelTypes(['All', ...new Set(response.data.map(c => c.fuelType).filter(Boolean))]);
+        setBrands(['All', ...new Set(allCarsData.map(c => c.brand).filter(Boolean))]);
+        setCategories(['All', ...new Set(allCarsData.map(c => c.category).filter(Boolean))]);
+        setTransmissions(['All', ...new Set(allCarsData.map(c => c.transmission).filter(Boolean))]);
+        setFuelTypes(['All', ...new Set(allCarsData.map(c => c.fuelType).filter(Boolean))]);
       } else {
         setError('Failed to load cars');
       }
@@ -192,7 +212,7 @@ const BrowseCars = () => {
       className="min-h-screen pt-20 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-400 mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-green-500 mb-2">
             Browse Cars

@@ -143,7 +143,7 @@ const DashboardNavbar = () => {
           className="flex items-center gap-3 hover:opacity-90 transition"
           type="button"
         >
-          <img src={Logo} alt="RentRide" className="h-9 w-auto object-contain" />
+          <img src={Logo} alt="RentRide" className="h-50 w-auto object-contain" />
         </button>
 
         {/* Center: tabs (desktop) */}

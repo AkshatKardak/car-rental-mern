@@ -42,7 +42,7 @@ const Sidebar = () => {
     <aside className="hidden md:flex flex-col w-72 bg-white border-r border-gray-200 z-30 h-full shadow-lg">
       {/* Logo Section */}
       <div className="p-8 pb-6 flex items-center justify-center border-b border-gray-200">
-        <img src={logo} alt="RentRide Logo" className="h-10 w-auto object-contain brightness-110" />
+        <img src={logo} alt="RentRide Logo" className="h-60 w-60 object-contain brightness-110" />
       </div>
 
       {/* Navigation Section */}

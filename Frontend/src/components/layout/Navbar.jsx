@@ -64,14 +64,8 @@ export default function Navbar() {
               <img
                 src={Logo}
                 alt="RentRide Logo"
-                className="w-10 h-10 object-contain transition-transform group-hover:scale-110"
+                className="w-60 h-60 object-contain transition-transform group-hover:scale-110"
               />
-              <span 
-                className="text-xl font-bold transition-colors"
-                style={{ color: theme.text.primary }}
-              >
-                RentRide
-              </span>
             </button>
           </div>
 
