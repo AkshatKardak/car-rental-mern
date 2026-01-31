@@ -9,7 +9,8 @@ import {
   Plus,
   TrendingUp,
   Clock,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle  // ← Added for Damage Reports icon
 } from "lucide-react";
 
 import SupraImg from "../assets/supra.png";
@@ -18,7 +19,7 @@ import MercedesImg from "../assets/mercedesg63amg.png";
 
 /* =========================
    DATA
- ========================= */
+========================= */
 
 const RECOMMENDED_CARS = [
   {
@@ -46,7 +47,7 @@ const RECOMMENDED_CARS = [
 
 /* =========================
    MAIN COMPONENT
- ========================= */
+========================= */
 
 const AppDashboard = () => {
   const navigate = useNavigate();
@@ -122,10 +123,31 @@ const AppDashboard = () => {
             ⚡ Quick Access
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <QuickAction icon={<Car />} label="Browse Cars" onClick={() => navigate("/browsecars")} theme={theme} />
-            <QuickAction icon={<Calendar />} label="My Bookings" onClick={() => navigate("/mybookings")} theme={theme} />
-            <QuickAction icon={<Sparkles />} label="AI Assistant" onClick={() => navigate("/aiassistant")} theme={theme} />
-            <QuickAction icon={<CreditCard />} label="Payments" onClick={() => navigate("/payment")} theme={theme} />
+            <QuickAction 
+              icon={<Car />} 
+              label="Browse Cars" 
+              onClick={() => navigate("/browsecars")} 
+              theme={theme} 
+            />
+            <QuickAction 
+              icon={<Calendar />} 
+              label="My Bookings" 
+              onClick={() => navigate("/mybookings")} 
+              theme={theme} 
+            />
+            <QuickAction 
+              icon={<AlertTriangle />} 
+              label="Damage Reports" 
+              onClick={() => navigate("/mybookings")} 
+              theme={theme}
+              highlight={true}  // ← Add visual highlight
+            />
+            <QuickAction 
+              icon={<CreditCard />} 
+              label="Payments" 
+              onClick={() => navigate("/payment")} 
+              theme={theme} 
+            />
           </div>
         </div>
 
@@ -195,7 +217,7 @@ const AppDashboard = () => {
         </div>
       </main>
 
-      {/* FLOAT ACTION */}
+      {/* FLOAT ACTION - Keep AI Assistant button */}
       <button
         type="button"
         onClick={() => navigate("/aiassistant")}
@@ -216,7 +238,7 @@ const AppDashboard = () => {
 
 /* =========================
    SUB COMPONENTS
- ========================= */
+========================= */
 
 const StatCard = ({ title, value, sub, icon, theme }) => (
   <div 
@@ -246,20 +268,26 @@ const StatCard = ({ title, value, sub, icon, theme }) => (
   </div>
 );
 
-const QuickAction = ({ icon, label, onClick, theme }) => (
+const QuickAction = ({ icon, label, onClick, theme, highlight }) => (
   <button
     onClick={onClick}
-    className="rounded-3xl p-8 flex flex-col items-center gap-4 border shadow-xl hover:translate-y-[-8px] hover:border-green-500 transition-all group"
+    className={`rounded-3xl p-8 flex flex-col items-center gap-4 border shadow-xl hover:translate-y-[-8px] transition-all group ${
+      highlight ? 'hover:border-orange-500' : 'hover:border-green-500'
+    }`}
     style={{
       backgroundColor: theme.cardBg,
-      borderColor: theme.border
+      borderColor: highlight ? 'rgba(249, 115, 22, 0.3)' : theme.border
     }}
   >
     <div 
-      className="w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-all shadow-inner"
+      className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all shadow-inner ${
+        highlight 
+          ? 'group-hover:bg-orange-500 group-hover:text-white' 
+          : 'group-hover:bg-green-500 group-hover:text-white'
+      }`}
       style={{
-        backgroundColor: theme.inputBg,
-        color: theme.textSecondary
+        backgroundColor: highlight ? 'rgba(249, 115, 22, 0.1)' : theme.inputBg,
+        color: highlight ? '#f97316' : theme.textSecondary
       }}
     >
       {React.cloneElement(icon, { size: 28 })}

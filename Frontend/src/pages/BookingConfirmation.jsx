@@ -13,7 +13,55 @@ import {
   Loader,
   ArrowLeft
 } from 'lucide-react';
-import DashboardNavbar from '../components/layout/DashboardNavbar';
+
+// Import all car images from assets
+import heroCarImg from '../assets/herocar.png';
+import porscheImg from '../assets/porsche.png';
+import mercedesImg from '../assets/mercedesg63amg.png';
+import kiaImg from '../assets/Kia.png';
+import skodaImg from '../assets/skoda.png';
+import audiImg from '../assets/AudiElectric.png';
+import supraImg from '../assets/supra.png';
+import lamboImg from '../assets/lambo.png';
+import bugattiImg from '../assets/Bugatti.png';
+import rollsImg from '../assets/rolls royce.png';
+import nanoImg from '../assets/Nano.png';
+import HondaImg from '../assets/Honda.png';
+
+const getImageForCar = (car) => {
+  if (!car) return heroCarImg;
+
+  if (car.images && car.images.length > 0) {
+    const tag = String(car.images[0]).toLowerCase();
+    if (tag.includes('nano') || tag.includes('tata')) return nanoImg;
+    if (tag.includes('porsche')) return porscheImg;
+    if (tag.includes('mercedes')) return mercedesImg;
+    if (tag.includes('kia')) return kiaImg;
+    if (tag.includes('skoda')) return skodaImg;
+    if (tag.includes('audi')) return audiImg;
+    if (tag.includes('honda')) return HondaImg;
+    if (tag.includes('supra') || tag.includes('toyota')) return supraImg;
+    if (tag.includes('lambo')) return lamboImg;
+    if (tag.includes('bugatti')) return bugattiImg;
+    if (tag.includes('rolls')) return rollsImg;
+  }
+
+  const text = `${car.brand || ''} ${car.model || ''}`.toLowerCase();
+
+  if (text.includes('nano') || (text.includes('tata') && text.includes('nano'))) return nanoImg;
+  if (text.includes('porsche') || text.includes('911')) return porscheImg;
+  if (text.includes('mercedes') || text.includes('g63') || text.includes('g-wagon') || text.includes('amg')) return mercedesImg;
+  if (text.includes('kia') || text.includes('carens')) return kiaImg;
+  if (text.includes('skoda') || text.includes('kylaq')) return skodaImg;
+  if (text.includes('audi') || text.includes('e-tron')) return audiImg;
+  if (text.includes('supra') || text.includes('toyota')) return supraImg;
+  if (text.includes('honda') || text.includes('zxcvt')) return HondaImg;
+  if (text.includes('lambo')) return lamboImg;
+  if (text.includes('bugatti')) return bugattiImg;
+  if (text.includes('rolls')) return rollsImg;
+
+  return heroCarImg;
+};
 
 const BookingConfirmation = () => {
   const location = useLocation();
@@ -41,7 +89,12 @@ const BookingConfirmation = () => {
     try {
       setLoading(true);
 
-      // Navigate to payment page with booking details
+      // Calculate proper fees
+      const baseFare = bookingDetails.totalPrice;
+      const taxesFees = Math.round(baseFare * 0.12); // 12% tax
+      const deposit = 500;
+
+      // Navigate to payment page with complete booking details
       navigate('/payment', {
         state: {
           bookingId: null, // Will be created during payment
@@ -52,9 +105,9 @@ const BookingConfirmation = () => {
           endDate: bookingDetails.endDate,
           days: bookingDetails.days,
           pricePerDay: car.pricePerDay,
-          baseFare: bookingDetails.totalPrice,
-          taxesFees: Math.round(bookingDetails.totalPrice * 0.12),
-          deposit: 500,
+          baseFare: baseFare,
+          taxesFees: taxesFees,
+          deposit: deposit,
           pickupLocation: bookingDetails.pickupLocation,
           dropoffLocation: bookingDetails.dropoffLocation,
         }
@@ -72,14 +125,21 @@ const BookingConfirmation = () => {
     show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
   };
 
+  // Calculate totals
+  const baseFare = bookingDetails.totalPrice;
+  const taxesFees = Math.round(baseFare * 0.12);
+  const deposit = 500;
+  const totalAmount = baseFare + taxesFees + deposit;
+
+  // Get the proper car image
+  const carImageSrc = getImageForCar(car);
+
   return (
     <div 
-      className="min-h-screen pb-12 transition-colors duration-300"
+      className="min-h-screen pt-20 pb-12 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      <DashboardNavbar />
-      
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button 
           onClick={() => navigate(-1)} 
@@ -125,13 +185,11 @@ const BookingConfirmation = () => {
               </h2>
               
               <div className="flex gap-4">
-                {car.images?.[0] && (
-                  <img 
-                    src={car.images[0]}
-                    alt={car.name}
-                    className="w-32 h-24 object-cover rounded-lg"
-                  />
-                )}
+                <img 
+                  src={carImageSrc}
+                  alt={car.name || `${car.brand} ${car.model}`}
+                  className="w-32 h-24 object-contain rounded-lg"
+                />
                 <div>
                   <h3 className="font-bold text-lg" style={{ color: theme.text }}>
                     {car.name || `${car.brand} ${car.model}`}
@@ -267,14 +325,14 @@ const BookingConfirmation = () => {
                     ₹{car.pricePerDay?.toLocaleString()} × {bookingDetails.days} {bookingDetails.days === 1 ? 'day' : 'days'}
                   </span>
                   <span className="font-semibold" style={{ color: theme.text }}>
-                    ₹{bookingDetails.totalPrice?.toLocaleString()}
+                    ₹{baseFare.toLocaleString()}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm">
                   <span style={{ color: theme.textSecondary }}>Taxes & Fees (12%)</span>
                   <span className="font-semibold" style={{ color: theme.text }}>
-                    ₹{Math.round(bookingDetails.totalPrice * 0.12).toLocaleString()}
+                    ₹{taxesFees.toLocaleString()}
                   </span>
                 </div>
 
@@ -283,7 +341,7 @@ const BookingConfirmation = () => {
                     Security Deposit <span className="text-xs opacity-60">(Refundable)</span>
                   </span>
                   <span className="font-semibold" style={{ color: theme.text }}>
-                    ₹500
+                    ₹{deposit}
                   </span>
                 </div>
 
@@ -299,7 +357,7 @@ const BookingConfirmation = () => {
                     </p>
                   </div>
                   <p className="text-2xl font-black text-green-500">
-                    ₹{(bookingDetails.totalPrice + Math.round(bookingDetails.totalPrice * 0.12) + 500).toLocaleString()}
+                    ₹{totalAmount.toLocaleString()}
                   </p>
                 </div>
               </div>

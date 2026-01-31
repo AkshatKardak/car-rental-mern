@@ -108,19 +108,21 @@ const BrowseCars = () => {
       const response = await carService.getAllCars();
 
       if (response.success && Array.isArray(response.data)) {
+        // Add Nano car with CORRECT price around ₹800
         const nanoCar = {
-          _id: '11', 
+          _id: 'nano-2023', 
           name: 'Tata Nano', 
           brand: 'Tata', 
           model: 'Nano', 
           year: 2023, 
-          pricePerDay: 800, 
+          pricePerDay: 800,  // ✅ CORRECT price - around ₹800-2000
           images: ['nano'], 
           category: 'Compact', 
           fuelType: 'Petrol', 
           transmission: 'Manual', 
           seats: 4, 
           available: true,
+          location: 'Delhi',
           description: 'India\'s most affordable city car, perfect for daily commutes and city navigation'
         };
 
@@ -206,6 +208,40 @@ const BrowseCars = () => {
   };
 
   const activeFiltersCount = [brand, category, transmission, priceRange, fuelType].filter(f => f !== 'All').length;
+
+  const handleBookCar = (car) => {
+  const days = 2; // Default 2 days
+  const baseFare = car.pricePerDay * days; // Calculate base fare
+  
+  navigate('/booking-confirmation', {
+    state: {
+      car: car,
+      bookingDetails: {
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
+        days: days,
+        pickupLocation: car.location || 'Pune',
+        dropoffLocation: car.location || 'Pune',
+        totalPrice: baseFare // This should be pricePerDay × days
+      }
+    }
+  });
+};
+
+
+ const handleViewDetails = (carId) => {
+  // Only navigate to details for real cars from backend
+  if (carId !== 'nano-2023') {
+    navigate(`/car/${carId}`);
+  } else {
+    // For Nano, directly book since there's no backend data
+    const nanoCar = allCars.find(c => c._id === 'nano-2023');
+    if (nanoCar) {
+      handleBookCar(nanoCar);
+    }
+  }
+};
+
 
   return (
     <div 
@@ -460,8 +496,8 @@ const BrowseCars = () => {
                 car={car}
                 index={index}
                 theme={theme}
-                onBook={() => navigate('/payment', { state: { carId: car._id, pricePerDay: car.pricePerDay } })}
-                onDetails={() => navigate(`/car/${car._id}`)}
+                onBook={() => handleBookCar(car)}
+                onDetails={() => handleViewDetails(car._id)}
               />
             ))}
           </div>
@@ -552,7 +588,7 @@ const CarCard = ({ car, index, theme, onBook, onDetails }) => {
 
         <div className="flex justify-between items-center gap-4 pt-2 w-full mt-auto">
           <p className="font-bold text-green-500 text-lg transition-colors">
-            ₹{car.pricePerDay}/day
+            ₹{car.pricePerDay?.toLocaleString() || 0}/day
           </p>
 
           <div className="flex gap-2">
@@ -582,3 +618,4 @@ const CarCard = ({ car, index, theme, onBook, onDetails }) => {
 };
 
 export default BrowseCars;
+  

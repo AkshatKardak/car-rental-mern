@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-import { CalendarDays, Clock, MapPin, Car, CreditCard } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Car, CreditCard, AlertTriangle } from "lucide-react";
 import { bookingService } from '../services/bookingService';
 
 const container = {
@@ -247,35 +247,49 @@ const MyBookings = () => {
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => navigate(`/car/${b.carId || "porsche"}`)}
-                      className="px-4 py-2 rounded-xl border font-bold hover:bg-opacity-50 transition text-sm"
-                      style={{
-                        backgroundColor: theme.cardBg,
-                        borderColor: theme.border,
-                        color: theme.text
-                      }}
-                    >
-                      View
-                    </button>
-                    {(b.status === 'Pending' || b.status === 'Confirmed') && (
-                      <button
-                        onClick={() => handleCancelBooking(b.id)}
-                        className="px-4 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition text-sm border border-red-200"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                    {b.status === 'Pending' && (
-                      <button
-                        onClick={() => navigate("/payment")}
-                        className="px-4 py-2 rounded-xl bg-green-500 text-white font-black hover:bg-green-600 transition text-sm"
-                      >
-                        Pay
-                      </button>
-                    )}
-                  </div>
+                 <div className="flex gap-2 flex-wrap">
+  <button
+    onClick={() => navigate(`/car/${b.carId || "porsche"}`)}
+    className="px-4 py-2 rounded-xl border font-bold hover:bg-opacity-50 transition text-sm"
+    style={{
+      backgroundColor: theme.cardBg,
+      borderColor: theme.border,
+      color: theme.text
+    }}
+  >
+    View
+  </button>
+  
+  {/* Report Damage Button - Show for Active/Completed bookings */}
+  {(b.status === 'Confirmed' || b.status === 'Completed') && (
+    <button
+      onClick={() => navigate(`/report-damage/${b.id}`)}
+      className="px-4 py-2 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-600 font-bold hover:bg-orange-500/20 transition text-sm flex items-center gap-2"
+    >
+      <AlertTriangle className="w-4 h-4" />
+      Report Damage
+    </button>
+  )}
+  
+  {(b.status === 'Pending' || b.status === 'Confirmed') && (
+    <button
+      onClick={() => handleCancelBooking(b.id)}
+      className="px-4 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition text-sm border border-red-200"
+    >
+      Cancel
+    </button>
+  )}
+  
+  {b.status === 'Pending' && (
+    <button
+      onClick={() => navigate("/payment")}
+      className="px-4 py-2 rounded-xl bg-green-500 text-white font-black hover:bg-green-600 transition text-sm"
+    >
+      Pay
+    </button>
+  )}
+</div>
+
                 </div>
               </motion.div>
             ))}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
@@ -14,6 +14,8 @@ import {
   ScanLine,
   Loader,
   CheckCircle,
+  AlertCircle,
+  Car
 } from "lucide-react";
 import { paymentService } from "../services/paymentService";
 import { bookingService } from "../services/bookingService";
@@ -33,14 +35,21 @@ const Payment = () => {
 
   const incoming = location.state || {};
 
+  // Check if payment data exists
+  const hasPaymentData = incoming.carId && incoming.carName && incoming.startDate && incoming.endDate;
+
   const summary = useMemo(() => {
+    if (!hasPaymentData) {
+      return null;
+    }
+
     const carName = incoming.carName || "Selected Car";
     const carId = incoming.carId;
     const days = incoming.days || 2;
 
-    const baseFare = incoming.baseFare ?? (incoming.pricePerDay ? incoming.pricePerDay * days : 1200);
-    const taxesFees = incoming.taxesFees ?? 150;
-    const deposit = incoming.deposit ?? 300;
+    const baseFare = incoming.baseFare ?? (incoming.pricePerDay ? incoming.pricePerDay * days : 0);
+    const taxesFees = incoming.taxesFees ?? 0;
+    const deposit = incoming.deposit ?? 0;
     const promoCode = incoming.promoCode ?? "";
     const promoDiscount = incoming.promoDiscount ?? 0;
 
@@ -59,7 +68,7 @@ const Payment = () => {
       startDate: incoming.startDate,
       endDate: incoming.endDate,
     };
-  }, [incoming]);
+  }, [incoming, hasPaymentData]);
 
   const [method, setMethod] = useState("card");
   const [saveCard, setSaveCard] = useState(true);
@@ -70,11 +79,10 @@ const Payment = () => {
   const [cvv, setCvv] = useState("");
   const [holder, setHolder] = useState("");
 
-const [promoCode, setPromoCode] = useState(incoming.promoCode || '');
-const [loadingCoupon, setLoadingCoupon] = useState(false);
-const [couponError, setCouponError] = useState('');
-const [appliedCoupon, setAppliedCoupon] = useState(incoming.promoCode ? true : false);
-
+  const [promoCode, setPromoCode] = useState(incoming.promoCode || '');
+  const [loadingCoupon, setLoadingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(incoming.promoCode ? true : false);
 
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#f8f9fa',
@@ -85,6 +93,75 @@ const [appliedCoupon, setAppliedCoupon] = useState(incoming.promoCode ? true : f
     inputBg: isDarkMode ? '#0f172a' : '#f8f9fa',
   };
 
+  // Show empty state if no payment data
+  if (!hasPaymentData) {
+    return (
+      <div 
+        className="min-h-screen transition-colors duration-300 pt-20"
+        style={{ backgroundColor: theme.bg }}
+      >
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-3xl border p-12 text-center shadow-xl"
+            style={{
+              backgroundColor: theme.cardBg,
+              borderColor: theme.border
+            }}
+          >
+            <div 
+              className="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-6"
+            >
+              <AlertCircle className="w-10 h-10 text-orange-500" />
+            </div>
+            
+            <h1 className="text-3xl font-black mb-3" style={{ color: theme.text }}>
+              No Payment Details Found
+            </h1>
+            
+            <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: theme.textSecondary }}>
+              You need to select a car and complete the booking form before proceeding to payment.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => navigate('/browsecars')}
+                className="px-8 py-4 rounded-2xl bg-green-500 text-white font-black hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-2"
+              >
+                <Car className="w-5 h-5" />
+                Browse Cars
+              </button>
+              
+              <button
+                onClick={() => navigate('/mybookings')}
+                className="px-8 py-4 rounded-2xl border font-black hover:bg-opacity-50 transition-all flex items-center justify-center gap-2"
+                style={{
+                  backgroundColor: theme.cardBg,
+                  borderColor: theme.border,
+                  color: theme.text
+                }}
+              >
+                My Bookings
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div 
+              className="mt-8 pt-8 border-t flex items-center justify-center gap-4"
+              style={{ borderColor: theme.border }}
+            >
+              <Lock className="w-4 h-4 text-green-500" />
+              <p className="text-sm font-bold" style={{ color: theme.textSecondary }}>
+                All payments are secured with 256-bit SSL encryption
+              </p>
+            </div>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
   const tabClass = (active) =>
     `flex items-center gap-2 px-5 py-4 rounded-xl transition border font-bold text-sm whitespace-nowrap
      ${active
@@ -92,73 +169,68 @@ const [appliedCoupon, setAppliedCoupon] = useState(incoming.promoCode ? true : f
       : `border-transparent hover:${isDarkMode ? 'bg-slate-700' : 'bg-gray-100'}`
     }`;
 
+  const handleApplyCoupon = async () => {
+    if (!promoCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
 
-const handleApplyCoupon = async () => {
-  if (!promoCode.trim()) {
-    setCouponError('Please enter a coupon code');
-    return;
-  }
+    try {
+      setLoadingCoupon(true);
+      setCouponError('');
 
-  try {
-    setLoadingCoupon(true);
-    setCouponError('');
-
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/promotions/validate`,
-      { 
-        code: promoCode,
-        bookingAmount: summary.baseFare,  
-        vehicleId: summary.carId          
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/promotions/validate`,
+        { 
+          code: promoCode,
+          bookingAmount: summary.baseFare,  
+          vehicleId: summary.carId          
         },
-        withCredentials: true
-      }
-    );
-
-    if (response.data.success) {
-      // Backend returns: { discount, finalAmount, promotion: {...} }
-      const discountAmount = Math.round(response.data.data.discount);
-
-      // Update location state with discount
-      navigate('/payment', {
-        replace: true,
-        state: {
-          ...incoming,
-          promoCode: promoCode,
-          promoDiscount: discountAmount
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          },
+          withCredentials: true
         }
-      });
+      );
 
-      setAppliedCoupon(true);
+      if (response.data.success) {
+        const discountAmount = Math.round(response.data.data.discount);
+
+        navigate('/payment', {
+          replace: true,
+          state: {
+            ...incoming,
+            promoCode: promoCode,
+            promoDiscount: discountAmount
+          }
+        });
+
+        setAppliedCoupon(true);
+      }
+    } catch (error) {
+      console.error('Error applying coupon:', error);
+      setCouponError(
+        error.response?.data?.message || 'Invalid or expired coupon code'
+      );
+    } finally {
+      setLoadingCoupon(false);
     }
-  } catch (error) {
-    console.error('Error applying coupon:', error);
-    setCouponError(
-      error.response?.data?.message || 'Invalid or expired coupon code'
-    );
-  } finally {
-    setLoadingCoupon(false);
-  }
-};
+  };
 
-
-const handleRemoveCoupon = () => {
-  navigate('/payment', {
-    replace: true,
-    state: {
-      ...incoming,
-      promoCode: '',
-      promoDiscount: 0
-    }
-  });
-  setPromoCode('');
-  setAppliedCoupon(false);
-  setCouponError('');
-};
-
+  const handleRemoveCoupon = () => {
+    navigate('/payment', {
+      replace: true,
+      state: {
+        ...incoming,
+        promoCode: '',
+        promoDiscount: 0
+      }
+    });
+    setPromoCode('');
+    setAppliedCoupon(false);
+    setCouponError('');
+  };
 
   const handlePay = async () => {
     if (loading) return;
@@ -264,93 +336,92 @@ const handleRemoveCoupon = () => {
           </div>
         </motion.div>
 
-
-{/* Coupon Code Section */}
-<motion.section
-  variants={fadeUp}
-  initial="hidden"
-  animate="show"
-  className="lg:col-span-8 mb-6"
->
-  <div 
-    className="rounded-2xl border p-6 shadow-sm"
-    style={{
-      backgroundColor: theme.cardBg,
-      borderColor: theme.border
-    }}
-  >
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-2">
-        <Tag className="w-5 h-5 text-green-500" />
-        <h2 className="font-bold text-lg" style={{ color: theme.text }}>
-          Have a Coupon Code?
-        </h2>
-      </div>
-    </div>
-
-    {!appliedCoupon ? (
-      <>
-        <div className="flex gap-3">
-          <input
-            type="text"
-            value={promoCode}
-            onChange={(e) => {
-              setPromoCode(e.target.value.toUpperCase());
-              setCouponError('');
-            }}
-            placeholder="Enter coupon code"
-            className="flex-1 rounded-xl border px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-colors uppercase font-mono"
+        {/* Coupon Code Section */}
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          className="lg:col-span-8 mb-6"
+        >
+          <div 
+            className="rounded-2xl border p-6 shadow-sm"
             style={{
-              backgroundColor: theme.inputBg,
-              borderColor: theme.border,
-              color: theme.text
+              backgroundColor: theme.cardBg,
+              borderColor: theme.border
             }}
-          />
-          <button
-            onClick={handleApplyCoupon}
-            disabled={!promoCode.trim() || loadingCoupon}
-            className="px-6 py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
           >
-            {loadingCoupon ? (
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Tag className="w-5 h-5 text-green-500" />
+                <h2 className="font-bold text-lg" style={{ color: theme.text }}>
+                  Have a Coupon Code?
+                </h2>
+              </div>
+            </div>
+
+            {!appliedCoupon ? (
               <>
-                <Loader className="w-4 h-4 animate-spin" />
-                Applying...
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => {
+                      setPromoCode(e.target.value.toUpperCase());
+                      setCouponError('');
+                    }}
+                    placeholder="Enter coupon code"
+                    className="flex-1 rounded-xl border px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-colors uppercase font-mono"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={!promoCode.trim() || loadingCoupon}
+                    className="px-6 py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                  >
+                    {loadingCoupon ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Applying...
+                      </>
+                    ) : (
+                      'Apply'
+                    )}
+                  </button>
+                </div>
+
+                {couponError && (
+                  <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
+                    <span>⚠️</span> {couponError}
+                  </p>
+                )}
               </>
             ) : (
-              'Apply'
+              <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <div>
+                    <p className="text-sm font-bold text-green-600">
+                      Coupon "{summary.promoCode}" applied successfully!
+                    </p>
+                    <p className="text-xs" style={{ color: theme.textSecondary }}>
+                      You saved ₹{summary.promoDiscount}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoveCoupon}
+                  className="text-sm text-red-500 hover:text-red-600 font-bold underline"
+                >
+                  Remove
+                </button>
+              </div>
             )}
-          </button>
-        </div>
-
-        {couponError && (
-          <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
-            <span>⚠️</span> {couponError}
-          </p>
-        )}
-      </>
-    ) : (
-      <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-green-500" />
-          <div>
-            <p className="text-sm font-bold text-green-600">
-              Coupon "{summary.promoCode}" applied successfully!
-            </p>
-            <p className="text-xs" style={{ color: theme.textSecondary }}>
-              You saved ₹{summary.promoDiscount}
-            </p>
           </div>
-        </div>
-        <button
-          onClick={handleRemoveCoupon}
-          className="text-sm text-red-500 hover:text-red-600 font-bold underline"
-        >
-          Remove
-        </button>
-      </div>
-    )}
-  </div>
-</motion.section>
+        </motion.section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left: Methods + Form */}
