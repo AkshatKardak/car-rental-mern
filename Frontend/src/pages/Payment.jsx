@@ -12,6 +12,8 @@ import {
   ArrowRight,
   Tag,
   ScanLine,
+  Loader,
+  CheckCircle,
 } from "lucide-react";
 import { paymentService } from "../services/paymentService";
 import { bookingService } from "../services/bookingService";
@@ -103,7 +105,11 @@ const handleApplyCoupon = async () => {
 
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/promotions/validate`,
-      { code: promoCode },
+      { 
+        code: promoCode,
+        bookingAmount: summary.baseFare,  
+        vehicleId: summary.carId          
+      },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -113,8 +119,8 @@ const handleApplyCoupon = async () => {
     );
 
     if (response.data.success) {
-      const discount = response.data.data.discountPercentage;
-      const discountAmount = Math.round((summary.baseFare * discount) / 100);
+      // Backend returns: { discount, finalAmount, promotion: {...} }
+      const discountAmount = Math.round(response.data.data.discount);
 
       // Update location state with discount
       navigate('/payment', {
@@ -137,6 +143,7 @@ const handleApplyCoupon = async () => {
     setLoadingCoupon(false);
   }
 };
+
 
 const handleRemoveCoupon = () => {
   navigate('/payment', {

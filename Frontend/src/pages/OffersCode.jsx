@@ -32,53 +32,55 @@ const Offers = () => {
     inputBg: isDarkMode ? '#0f172a' : '#f8f9fa',
   };
 
-  // Dummy offers data as fallback
-  const dummyOffers = [
-    {
-      id: 1,
-      title: 'Weekend Special',
-      description: 'Save on weekend rentals for your next getaway',
-      discount: '25%',
-      code: 'WEEKEND25',
-      category: 'weekend',
-      badge: 'Hot',
-      badgeColor: 'primary',
-      image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80'
-    },
-    {
-      id: 2,
-      title: 'Long-term Discount',
-      description: 'Book for 7+ days and save big',
-      discount: '30%',
-      code: 'LONGTERM30',
-      category: 'longterm',
-      badge: 'Best Value',
-      badgeColor: 'blue',
-      image: 'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=800&q=80'
-    },
-    {
-      id: 3,
-      title: 'Luxury Experience',
-      description: 'Exclusive discount for premium car models',
-      discount: '₹500',
-      code: 'LUXURY500',
-      category: 'luxury',
-      badge: null,
-      badgeColor: null,
-      image: 'https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&q=80'
-    },
-    {
-      id: 4,
-      title: 'Flash Sale',
-      description: 'Limited time offer, book before it expires',
-      discount: '40%',
-      code: 'FLASH40',
-      category: 'flash',
-      badge: 'Ending Soon',
-      badgeColor: 'red',
-      image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'
-    },
-  ];
+  // Category mapping helper
+  const getCategoryFromPromo = (promo) => {
+    const code = promo.code?.toUpperCase() || '';
+    const name = promo.name?.toLowerCase() || '';
+    const desc = promo.description?.toLowerCase() || '';
+
+    // Check code patterns
+    if (code.includes('WEEKEND')) return 'weekend';
+    if (code.includes('LONG')) return 'longterm';
+    if (code.includes('LUXURY')) return 'luxury';
+    if (code.includes('FLASH')) return 'flash';
+    if (code.includes('FIRST') || code.includes('NEW')) return 'weekend';
+
+    // Check name patterns
+    if (name.includes('weekend')) return 'weekend';
+    if (name.includes('long') || name.includes('term')) return 'longterm';
+    if (name.includes('luxury') || name.includes('premium')) return 'luxury';
+    if (name.includes('flash') || name.includes('sale')) return 'flash';
+
+    // Check description patterns
+    if (desc.includes('weekend')) return 'weekend';
+    if (desc.includes('7+ days') || desc.includes('long')) return 'longterm';
+    if (desc.includes('luxury') || desc.includes('premium')) return 'luxury';
+    if (desc.includes('limited') || desc.includes('flash')) return 'flash';
+
+    return 'all';
+  };
+
+  // Get badge info based on category and discount
+  const getBadgeInfo = (promo, category) => {
+    const discountValue = promo.type === 'percentage' ? promo.value : 0;
+    
+    if (category === 'flash') return { badge: 'Ending Soon', color: 'red' };
+    if (category === 'luxury') return { badge: 'Premium', color: 'purple' };
+    if (discountValue >= 30) return { badge: 'Hot Deal', color: 'primary' };
+    if (category === 'longterm') return { badge: 'Best Value', color: 'blue' };
+    if (category === 'weekend') return { badge: 'Weekend Only', color: 'green' };
+    
+    return { badge: null, color: null };
+  };
+
+  // Category images
+  const categoryImages = {
+    weekend: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80',
+    longterm: 'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=800&q=80',
+    luxury: 'https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&q=80',
+    flash: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80',
+    all: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80'
+  };
 
   // Fetch promotions on mount
   useEffect(() => {
@@ -91,31 +93,37 @@ const Offers = () => {
       setError(null);
       const response = await promotionService.getAllPromotions();
 
-      if (response.success && response.data) {
-        const mappedPromotions = response.data.map((promo) => ({
-          id: promo._id,
-          title: promo.name || 'Special Offer',
-          description: promo.description || 'Limited time discount',
-          discount: promo.discountType === 'percentage'
-            ? `${promo.discountValue}%`
-            : `₹${promo.discountValue}`,
-          code: promo.code,
-          category: promo.category || 'all',
-          badge: promo.featured ? 'Featured' : null,
-          badgeColor: 'primary',
-          image: promo.imageUrl || 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80',
-          validUntil: promo.validUntil,
-          minBookingAmount: promo.minBookingAmount,
-        }));
+      if (response.success && response.data && response.data.length > 0) {
+        const mappedPromotions = response.data.map((promo) => {
+          const category = getCategoryFromPromo(promo);
+          const badgeInfo = getBadgeInfo(promo, category);
+          
+          return {
+            id: promo._id,
+            title: promo.name || 'Special Offer',
+            description: promo.description || 'Limited time discount',
+            discount: promo.type === 'percentage'
+              ? `${promo.value}%`
+              : `₹${promo.value}`,
+            code: promo.code,
+            category: category,
+            badge: badgeInfo.badge,
+            badgeColor: badgeInfo.color,
+            image: categoryImages[category] || categoryImages.all,
+            validTo: promo.validTo,
+            minBookingAmount: promo.minBookingAmount || 0,
+            discountType: promo.type,
+            discountValue: promo.value
+          };
+        });
 
         setPromotions(mappedPromotions);
       } else {
-        setPromotions(dummyOffers);
+        setError('No promotions available');
       }
     } catch (err) {
       console.error('Failed to fetch promotions:', err);
       setError(err.message || 'Failed to load promotions');
-      setPromotions(dummyOffers);
     } finally {
       setLoading(false);
     }
@@ -123,6 +131,7 @@ const Offers = () => {
 
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);
+    setPromoCode(code);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -135,38 +144,17 @@ const Offers = () => {
 
     const code = promoCode.trim().toUpperCase();
 
-    if (selectedCarId && bookingAmount) {
-      try {
-        const response = await promotionService.validatePromoCode(
-          code,
-          selectedCarId,
-          bookingAmount
-        );
-
-        if (response.success) {
-          alert(`Promo applied! You saved ₹${response.data.discount}`);
-          navigate('/payment', {
-            state: {
-              promoCode: code,
-              promoDiscount: response.data.discount,
-            },
-          });
-        }
-      } catch (error) {
-        console.error('Promo validation error:', error);
-        alert(error.response?.data?.message || 'Invalid or expired promo code');
+    // Navigate to browse cars with promo code
+    navigate('/cars', {
+      state: {
+        promoCode: code
       }
-    } else {
-      alert(`Promo code "${code}" will be applied at checkout!`);
-      setPromoCode('');
-    }
+    });
   };
 
-  const offers = promotions.length > 0 ? promotions : dummyOffers;
-
   const filteredOffers = selectedFilter === 'all'
-    ? offers
-    : offers.filter(offer => offer.category === selectedFilter);
+    ? promotions
+    : promotions.filter(offer => offer.category === selectedFilter);
 
   return (
     <div 
@@ -258,24 +246,30 @@ const Offers = () => {
         </motion.div>
 
         {/* Filters */}
-        {!loading && (
+        {!loading && promotions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="flex gap-3 mb-10 overflow-x-auto pb-4 no-scrollbar"
           >
-            {['all', 'weekend', 'longterm', 'luxury', 'flash'].map((filter) => (
+            {[
+              { key: 'all', label: 'All Offers', count: promotions.length },
+              { key: 'weekend', label: 'Weekend', count: promotions.filter(p => p.category === 'weekend').length },
+              { key: 'longterm', label: 'Long-Term', count: promotions.filter(p => p.category === 'longterm').length },
+              { key: 'luxury', label: 'Luxury', count: promotions.filter(p => p.category === 'luxury').length },
+              { key: 'flash', label: 'Flash Sale', count: promotions.filter(p => p.category === 'flash').length },
+            ].map((filter) => (
               <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`px-8 py-3 rounded-2xl font-black text-sm whitespace-nowrap transition-all border shadow-sm ${
-                  selectedFilter === filter
+                key={filter.key}
+                onClick={() => setSelectedFilter(filter.key)}
+                className={`px-8 py-3 rounded-2xl font-black text-sm whitespace-nowrap transition-all border shadow-sm relative ${
+                  selectedFilter === filter.key
                     ? 'bg-green-500 text-white border-green-500 shadow-green-500/20 scale-105'
                     : 'border-opacity-50 hover:border-green-500/30 hover:bg-opacity-50'
                 }`}
                 style={
-                  selectedFilter !== filter
+                  selectedFilter !== filter.key
                     ? {
                         backgroundColor: theme.cardBg,
                         borderColor: theme.border,
@@ -284,7 +278,16 @@ const Offers = () => {
                     : {}
                 }
               >
-                {filter.charAt(0).toUpperCase() + filter.slice(1).replace('term', '-Term')}
+                {filter.label}
+                {filter.count > 0 && (
+                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                    selectedFilter === filter.key
+                      ? 'bg-white/20'
+                      : 'bg-green-500/10 text-green-500'
+                  }`}>
+                    {filter.count}
+                  </span>
+                )}
               </button>
             ))}
           </motion.div>
@@ -325,8 +328,33 @@ const Offers = () => {
           </div>
         )}
 
+        {/* Empty State for filtered results */}
+        {!loading && !error && filteredOffers.length === 0 && (
+          <div 
+            className="rounded-3xl p-12 text-center border shadow-sm"
+            style={{
+              backgroundColor: theme.cardBg,
+              borderColor: theme.border
+            }}
+          >
+            <Tag className="w-12 h-12 mx-auto mb-4 opacity-30" style={{ color: theme.textSecondary }} />
+            <p className="font-black text-xl mb-2" style={{ color: theme.text }}>
+              No offers in this category
+            </p>
+            <p className="text-sm mb-8" style={{ color: theme.textSecondary }}>
+              Try selecting a different filter or check back later for new deals.
+            </p>
+            <button
+              onClick={() => setSelectedFilter('all')}
+              className="px-10 py-3 rounded-2xl bg-green-500 text-white font-black hover:bg-green-600 transition-all shadow-lg shadow-green-500/20"
+            >
+              View All Offers
+            </button>
+          </div>
+        )}
+
         {/* Offer Cards Grid */}
-        {!loading && (
+        {!loading && filteredOffers.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <AnimatePresence mode="popLayout">
               {filteredOffers.map((offer, index) => (
@@ -362,7 +390,7 @@ const Offers = () => {
 
                     <div className="absolute bottom-4 right-6 z-20 text-right">
                       <p className="text-4xl font-black text-green-500 drop-shadow-sm">{offer.discount}</p>
-                      <p className="text-[10px] font-black opacity-60 uppercase tracking-widest" style={{ color: theme.text }}>
+                      <p className="text-[10px] font-black opacity-60 uppercase tracking-widest text-white drop-shadow">
                         Off Total Bill
                       </p>
                     </div>
@@ -382,6 +410,13 @@ const Offers = () => {
                         <div className="flex items-center gap-2 text-xs font-bold" style={{ color: theme.textSecondary, opacity: 0.6 }}>
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Min. booking of ₹{offer.minBookingAmount}
+                        </div>
+                      )}
+
+                      {offer.validTo && (
+                        <div className="flex items-center gap-2 text-xs font-bold" style={{ color: theme.textSecondary, opacity: 0.6 }}>
+                          <Clock className="w-3.5 h-3.5" />
+                          Valid until {new Date(offer.validTo).toLocaleDateString('en-IN')}
                         </div>
                       )}
 
@@ -432,7 +467,7 @@ const Offers = () => {
               <History className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-sm font-bold italic" style={{ color: theme.textSecondary }}>
-              Corporate Reward Program 2024
+              Corporate Reward Program 2026
             </p>
           </div>
           <div className="flex gap-8 text-sm font-black uppercase tracking-widest" style={{ color: theme.textSecondary }}>
@@ -453,11 +488,11 @@ const Offers = () => {
             className="fixed bottom-10 inset-x-0 flex justify-center z-[100] px-4"
           >
             <div 
-              className="rounded-2xl px-8 py-4 flex items-center gap-4 shadow-2xl"
-              style={{ backgroundColor: theme.text, color: 'white' }}
+              className="rounded-2xl px-8 py-4 flex items-center gap-4 shadow-2xl border"
+              style={{ backgroundColor: theme.cardBg, borderColor: theme.border }}
             >
               <CheckCircle2 className="w-6 h-6 text-green-500" />
-              <p className="font-bold">Promo code successfully copied!</p>
+              <p className="font-bold" style={{ color: theme.text }}>Promo code copied! Use it at checkout.</p>
             </div>
           </motion.div>
         )}
