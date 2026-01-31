@@ -7,7 +7,8 @@ const {
   createDamageReport,
   updateDamageReport,
   deleteDamageReport,
-  getCarDamageStats
+  getCarDamageStats,
+  analyzeDamageWithAI
 } = require('../controllers/damageReportController');
 const { protect } = require('../middleware/authMiddleware');
 const { admin } = require('../middleware/adminMiddleware');
@@ -28,6 +29,9 @@ const upload = multer({
 
 // All routes require authentication
 router.use(protect);
+
+// AI Analysis route (before other routes)
+router.post('/analyze-ai', upload.array('images', 5), analyzeDamageWithAI);
 
 router.get('/', getAllDamageReports);
 router.post('/', upload.array('images', 5), createDamageReport);

@@ -84,20 +84,24 @@ const CarDetails = () => {
     fetchCarDetails();
   }, [id]);
 
-  const handleBookNow = () => {
-    if (!car) return;
-    navigate('/payment', {
-      state: {
-        carId: car._id,
-        carName: `${car.brand} ${car.model}`,
-        pricePerDay: car.pricePerDay,
-        baseFare: car.pricePerDay * 2,
-        days: 2,
+ const handleBookNow = () => {
+  if (!car) return;
+
+  navigate('/booking-confirmation', {
+    state: {
+      car: car,
+      bookingDetails: {
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+        days: 2,
+        pickupLocation: car.location || 'Mumbai Hub',
+        dropoffLocation: car.location || 'Mumbai Hub',
+        totalPrice: car.pricePerDay * 2
       }
-    });
-  };
+    }
+  });
+};
+
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

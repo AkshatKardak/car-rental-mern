@@ -1,4 +1,5 @@
 const express = require('express');
+const router = express.Router();
 const {
     getAllOffers,
     validateOffer,
@@ -10,13 +11,14 @@ const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/adminMiddleware');
 const { offerRules } = require('../utils/validators');
 
-const router = express.Router();
-
+// Public route
 router.get('/', getAllOffers);
+
+// Protected route
 router.post('/validate', protect, validateOffer);
 
-// Admin routes
-router.post('/', protect, authorize('admin'), offerRules, createOffer);
+// Admin routes (spread the array with ...)
+router.post('/', protect, authorize('admin'), ...offerRules, createOffer);
 router.put('/:id', protect, authorize('admin'), updateOffer);
 router.delete('/:id', protect, authorize('admin'), deleteOffer);
 

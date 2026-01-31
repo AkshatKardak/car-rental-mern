@@ -11,10 +11,13 @@ import {
   Headphones,
   ArrowRight,
   Tag,
+  ScanLine,
 } from "lucide-react";
 import { paymentService } from "../services/paymentService";
 import { bookingService } from "../services/bookingService";
 import { loadRazorpayScript, initRazorpayPayment } from "../utils/razorpay";
+import axios from 'axios';
+import QRScanner from "../components/QRScanner";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -65,6 +68,12 @@ const Payment = () => {
   const [cvv, setCvv] = useState("");
   const [holder, setHolder] = useState("");
 
+const [promoCode, setPromoCode] = useState(incoming.promoCode || '');
+const [loadingCoupon, setLoadingCoupon] = useState(false);
+const [couponError, setCouponError] = useState('');
+const [appliedCoupon, setAppliedCoupon] = useState(incoming.promoCode ? true : false);
+
+
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#f8f9fa',
     cardBg: isDarkMode ? '#1e293b' : '#ffffff',
@@ -80,6 +89,69 @@ const Payment = () => {
       ? "bg-green-500/10 border-green-500/30 text-green-500 shadow-sm"
       : `border-transparent hover:${isDarkMode ? 'bg-slate-700' : 'bg-gray-100'}`
     }`;
+
+
+const handleApplyCoupon = async () => {
+  if (!promoCode.trim()) {
+    setCouponError('Please enter a coupon code');
+    return;
+  }
+
+  try {
+    setLoadingCoupon(true);
+    setCouponError('');
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/promotions/validate`,
+      { code: promoCode },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        withCredentials: true
+      }
+    );
+
+    if (response.data.success) {
+      const discount = response.data.data.discountPercentage;
+      const discountAmount = Math.round((summary.baseFare * discount) / 100);
+
+      // Update location state with discount
+      navigate('/payment', {
+        replace: true,
+        state: {
+          ...incoming,
+          promoCode: promoCode,
+          promoDiscount: discountAmount
+        }
+      });
+
+      setAppliedCoupon(true);
+    }
+  } catch (error) {
+    console.error('Error applying coupon:', error);
+    setCouponError(
+      error.response?.data?.message || 'Invalid or expired coupon code'
+    );
+  } finally {
+    setLoadingCoupon(false);
+  }
+};
+
+const handleRemoveCoupon = () => {
+  navigate('/payment', {
+    replace: true,
+    state: {
+      ...incoming,
+      promoCode: '',
+      promoDiscount: 0
+    }
+  });
+  setPromoCode('');
+  setAppliedCoupon(false);
+  setCouponError('');
+};
+
 
   const handlePay = async () => {
     if (loading) return;
@@ -185,6 +257,94 @@ const Payment = () => {
           </div>
         </motion.div>
 
+
+{/* Coupon Code Section */}
+<motion.section
+  variants={fadeUp}
+  initial="hidden"
+  animate="show"
+  className="lg:col-span-8 mb-6"
+>
+  <div 
+    className="rounded-2xl border p-6 shadow-sm"
+    style={{
+      backgroundColor: theme.cardBg,
+      borderColor: theme.border
+    }}
+  >
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <Tag className="w-5 h-5 text-green-500" />
+        <h2 className="font-bold text-lg" style={{ color: theme.text }}>
+          Have a Coupon Code?
+        </h2>
+      </div>
+    </div>
+
+    {!appliedCoupon ? (
+      <>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={promoCode}
+            onChange={(e) => {
+              setPromoCode(e.target.value.toUpperCase());
+              setCouponError('');
+            }}
+            placeholder="Enter coupon code"
+            className="flex-1 rounded-xl border px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-colors uppercase font-mono"
+            style={{
+              backgroundColor: theme.inputBg,
+              borderColor: theme.border,
+              color: theme.text
+            }}
+          />
+          <button
+            onClick={handleApplyCoupon}
+            disabled={!promoCode.trim() || loadingCoupon}
+            className="px-6 py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+          >
+            {loadingCoupon ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                Applying...
+              </>
+            ) : (
+              'Apply'
+            )}
+          </button>
+        </div>
+
+        {couponError && (
+          <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
+            <span>⚠️</span> {couponError}
+          </p>
+        )}
+      </>
+    ) : (
+      <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-green-500" />
+          <div>
+            <p className="text-sm font-bold text-green-600">
+              Coupon "{summary.promoCode}" applied successfully!
+            </p>
+            <p className="text-xs" style={{ color: theme.textSecondary }}>
+              You saved ₹{summary.promoDiscount}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleRemoveCoupon}
+          className="text-sm text-red-500 hover:text-red-600 font-bold underline"
+        >
+          Remove
+        </button>
+      </div>
+    )}
+  </div>
+</motion.section>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left: Methods + Form */}
           <motion.section
@@ -225,6 +385,14 @@ const Payment = () => {
                 >
                   <Building2 className="w-4 h-4" />
                   Netbanking
+                </button>
+                <button 
+                  className={tabClass(method === "qrcode")} 
+                  onClick={() => setMethod("qrcode")}
+                  style={{ color: method === "qrcode" ? '#10b981' : theme.textSecondary }}
+                >
+                  <ScanLine className="w-4 h-4" />
+                  Scan QR
                 </button>
               </div>
             </div>
@@ -355,6 +523,14 @@ const Payment = () => {
                   </select>
                 </div>
               )}
+
+              {method === "qrcode" && (
+                <QRScanner 
+                  theme={theme}
+                  amount={summary.total}
+                  bookingId={summary.carId}
+                />
+              )}
             </div>
 
             {/* Trust row */}
@@ -373,6 +549,7 @@ const Payment = () => {
                 <BadgeMini theme={theme}>VISA</BadgeMini>
                 <BadgeMini theme={theme}>MC</BadgeMini>
                 <BadgeMini theme={theme}>AMEX</BadgeMini>
+                <BadgeMini theme={theme}>UPI</BadgeMini>
               </div>
             </div>
           </motion.section>

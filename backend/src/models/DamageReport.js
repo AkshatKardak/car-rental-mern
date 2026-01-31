@@ -6,59 +6,42 @@ const damageReportSchema = new mongoose.Schema({
     ref: 'Booking',
     required: true
   },
-  car: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Car',
-    required: true
-  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  damageType: {
-    type: String,
-    required: true,
-    enum: ['Scratch', 'Dent', 'Paint Damage', 'Glass Damage', 'Tire Damage', 'Interior Damage', 'Other']
-  },
-  severity: {
-    type: String,
-    required: true,
-    enum: ['Minor', 'Moderate', 'Severe']
+  car: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Car',
+    required: true
   },
   description: {
     type: String,
-    required: true
-  },
-  location: {
-    type: String,
-    required: true
-  },
-  estimatedCost: {
-    type: Number,
-    required: true
-  },
-  actualCost: {
-    type: Number,
-    default: null
+    required: [true, 'Please provide damage description']
   },
   images: [{
     type: String
   }],
+  aiAnalysis: {
+    damageType: String,
+    severity: String,
+    estimatedCost: Number,
+    description: String
+  },
+  estimatedCost: {
+    type: Number,
+    default: 0
+  },
+  actualCost: {
+    type: Number
+  },
   status: {
     type: String,
-    enum: ['Reported', 'Under Review', 'Approved', 'Repaired'],
-    default: 'Reported'
+    enum: ['pending', 'under_review', 'approved', 'rejected', 'resolved'],
+    default: 'pending'
   },
-  reportedDate: {
-    type: Date,
-    default: Date.now
-  },
-  repairedDate: {
-    type: Date,
-    default: null
-  },
-  notes: {
+  adminNotes: {
     type: String
   }
 }, {

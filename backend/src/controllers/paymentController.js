@@ -1,6 +1,6 @@
 const Payment = require('../models/Payment');
 const Booking = require('../models/Booking');
-const { createOrder, verifySignature } = require('../services/paymentService');
+const { createOrder, verifySignature, createPaymentLink } = require('../services/paymentService');
 const { ErrorResponse } = require('../middleware/errorHandler');
 
 // @desc    Initiate payment (Create Order)
@@ -83,7 +83,6 @@ exports.verifyPayment = async (req, res, next) => {
     }
 };
 
-
 // @desc    Get payment history
 // @route   GET /api/payments/history
 // @access  Private
@@ -98,5 +97,48 @@ exports.getPaymentHistory = async (req, res, next) => {
         });
     } catch (err) {
         next(err);
+    }
+};
+
+// @desc    Create QR Payment Link
+// @route   POST /api/payments/create-qr-payment
+// @access  Private
+exports.createQRPayment = async (req, res, next) => {
+    try {
+        const { amount, bookingId, currency = 'INR' } = req.body;
+
+        // Get user details (since this route is protected)
+        const customerName = req.user?.name || 'Customer';
+        const customerEmail = req.user?.email || 'customer@rentride.com';
+        
+        // Use user's phone if available, otherwise use your personal number
+        const customerContact = req.user?.phone || '+917208669121'; 
+
+        // Create Razorpay Payment Link
+        const paymentLink = await createPaymentLink(amount, {
+            description: `RentRide - Booking Payment`,
+            customerName: customerName,
+            customerEmail: customerEmail,
+            customerContact: customerContact,
+            notes: {
+                bookingId: bookingId,
+                payment_type: 'qr_code',
+                user_id: req.user?.id || 'guest'
+            },
+            callback_url: `${process.env.CLIENT_URL}/payment-success`
+        });
+
+        res.json({
+            success: true,
+            paymentLink: paymentLink,
+            qrData: paymentLink.short_url,
+            amount: amount,
+            reference_id: paymentLink.reference_id,
+            id: paymentLink.id
+        });
+
+    } catch (error) {
+        console.error('Error creating QR payment:', error);
+        next(new ErrorResponse('Failed to create payment QR code', 500));
     }
 };

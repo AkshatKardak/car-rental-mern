@@ -14,6 +14,8 @@ import Aboutx from "./pages/Aboutx";
 import SignIn from "./components/auth/SignIn";
 import SignUp from "./components/auth/SignUp";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import BookingConfirmation from "./pages/BookingConfirmation";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 export default function App() {
   const location = useLocation();
@@ -24,7 +26,16 @@ export default function App() {
   const isLandingPage = landingRoutes.includes(location.pathname);
 
   // Dashboard routes: Show DashboardNavbar (for logged-in users)
-  const dashboardRoutes = ["/dashboard", "/browsecars", "/mybookings", "/payment", "/offers", "/aiassistant"];
+  const dashboardRoutes = [
+    "/dashboard", 
+    "/browsecars", 
+    "/mybookings", 
+    "/payment", 
+    "/offers", 
+    "/aiassistant",
+    "/booking-confirmation",
+    "/payment-success"
+  ];
   const isDashboardPage = dashboardRoutes.some(route => location.pathname.startsWith(route));
 
   return (
@@ -57,10 +68,14 @@ export default function App() {
           <Route path="/offers" element={<Offers />} />
           <Route path="/aiassistant" element={<AIAssistant />} />
 
+          {/* Payment Success - accessible to all (callback from Razorpay) */}
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/mybookings" element={<MyBookings />} />
+            <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/payment" element={<Payment />} />
           </Route>
 
