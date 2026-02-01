@@ -603,12 +603,45 @@ const Payment = () => {
               )}
 
               {method === "qrcode" && (
-                <QRScanner 
-                  theme={theme}
-                  amount={summary.total}
-                  bookingId={summary.carId}
-                />
-              )}
+  <QRScanner 
+    theme={theme}
+    amount={summary.total}
+    bookingId={summary.carId}
+    onSuccess={async (paymentData) => {
+      console.log('✅ Payment successful:', paymentData);
+      
+      // Create booking
+      try {
+        const bookingData = {
+          carId: summary.carId,
+          startDate: summary.startDate,
+          endDate: summary.endDate,
+          totalPrice: summary.total,
+          discount: summary.promoDiscount,
+          promotionCode: summary.promoCode,
+          paymentMethod: 'upi',
+          paymentId: paymentData.upiTransactionId || paymentData.transactionRef
+        };
+
+        await bookingService.createBooking(bookingData);
+        
+        // Navigate to success page
+        navigate('/payment-success', {
+          state: {
+            bookingId: paymentData.transactionRef,
+            amount: paymentData.amount || summary.total,
+            paymentId: paymentData.upiTransactionId,
+            carName: summary.carName
+          }
+        });
+      } catch (error) {
+        console.error('❌ Error creating booking:', error);
+        alert('Payment received but booking failed. Please contact support.');
+      }
+    }}
+  />
+)}
+
             </div>
 
             {/* Trust row */}

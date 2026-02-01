@@ -1,14 +1,12 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005/api';
 
-// Get token from localStorage
 const getAuthToken = () => {
   const token = localStorage.getItem('token');
   return token;
 };
 
-// Configure axios with auth token
 const getAxiosConfig = () => {
   const token = getAuthToken();
   return {
@@ -55,7 +53,7 @@ const verifyPayment = async (paymentData) => {
 };
 
 /**
- * Create QR Payment Order
+ * Create UPI QR Payment
  */
 const createQRPayment = async (data) => {
   try {
@@ -67,6 +65,39 @@ const createQRPayment = async (data) => {
     return response.data;
   } catch (error) {
     console.error('Error creating QR payment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Confirm UPI Payment
+ */
+const confirmUPIPayment = async (data) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/payments/confirm-upi`,
+      data,
+      getAxiosConfig()
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error confirming UPI payment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Check UPI Payment Status
+ */
+const checkUPIStatus = async (transactionRef) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/payments/check-upi/${transactionRef}`,
+      getAxiosConfig()
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error checking UPI status:', error);
     throw error;
   }
 };
@@ -91,6 +122,8 @@ export const paymentService = {
   createOrder,
   verifyPayment,
   createQRPayment,
+  confirmUPIPayment,
+  checkUPIStatus,
   getPaymentHistory
 };
 

@@ -8,14 +8,11 @@ const razorpay = new Razorpay({
 
 /**
  * Create Razorpay Order
- * @param {Number} amount - Amount in rupees
- * @param {Object} additionalOptions - Additional order options
- * @returns {Object} Razorpay order object
  */
 exports.createOrder = async (amount, additionalOptions = {}) => {
     try {
         const options = {
-            amount: amount * 100, // amount in paise
+            amount: amount * 100,
             currency: additionalOptions.currency || 'INR',
             receipt: additionalOptions.receipt || `receipt_${Date.now()}`,
             notes: additionalOptions.notes || {}
@@ -30,53 +27,70 @@ exports.createOrder = async (amount, additionalOptions = {}) => {
 };
 
 /**
- * Create Razorpay Payment Link (for QR Code)
- * @param {Number} amount - Amount in rupees
- * @param {Object} options - Payment link options
- * @returns {Object} Payment link object
+ * Create UPI QR Code (Test Mode Compatible)
  */
-exports.createPaymentLink = async (amount, options = {}) => {
+exports.createUPIQRCode = (amount, options = {}) => {
     try {
-        // Validate phone number - ensure it doesn't have repeating digits
-        let validContact = options.customerContact;
-        if (!validContact || validContact === '+919999999999') {
-            validContact = '+919876543210'; // Valid dummy number with no repeating digits
-        }
-
-        const paymentLinkOptions = {
-            amount: amount * 100, // amount in paise
-            currency: 'INR',
-            accept_partial: false,
-            description: options.description || 'Car Rental Booking Payment',
-            customer: {
-                name: options.customerName || 'Customer',
-                email: options.customerEmail || 'customer@rentride.com',
-                contact: validContact
-            },
-            notify: {
-                sms: false,  // Don't send SMS
-                email: false // Don't send email
-            },
-            reminder_enable: false,
-            notes: options.notes || {},
-            callback_url: options.callback_url || process.env.CLIENT_URL,
-            callback_method: 'get'
+        // Test mode UPI ID
+        const upiId = process.env.RAZORPAY_UPI_ID || 'rentride.test@paytm';
+        
+        const transactionRef = options.transactionRef || `TEST${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+        
+        // Create UPI URL
+        const upiUrl = `upi://pay?pa=${upiId}&pn=RentRide&am=${amount}&cu=INR&tn=${encodeURIComponent(options.description || 'Car Rental Payment')}&tr=${transactionRef}`;
+        
+        console.log('✅ UPI QR Created:', {
+            transactionRef,
+            amount,
+            upiId,
+            testMode: true
+        });
+        
+        return {
+            id: transactionRef,
+            upiUrl: upiUrl,
+            upiId: upiId,
+            amount: amount,
+            description: options.description || 'Car Rental Payment',
+            transactionRef: transactionRef,
+            createdAt: new Date(),
+            testMode: true
         };
-
-        const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
-        return paymentLink;
     } catch (error) {
-        console.error('Error creating Razorpay payment link:', error);
+        console.error('❌ Error creating UPI QR:', error);
+        throw error;
+    }
+};
+
+/**
+ * Verify UPI Payment (Test Mode - Auto Success)
+ */
+exports.verifyUPIPayment = async (transactionRef) => {
+    try {
+        console.log('🧪 Test Mode: Simulating payment verification for', transactionRef);
+        
+        // In test mode, always return success
+        return { 
+            success: true, 
+            payment: {
+                id: `pay_test_${Date.now()}`,
+                amount: 100000,
+                status: 'captured',
+                method: 'upi',
+                upi: {
+                    vpa: 'test@paytm'
+                },
+                created_at: Math.floor(Date.now() / 1000)
+            }
+        };
+    } catch (error) {
+        console.error('❌ Error verifying UPI payment:', error);
         throw error;
     }
 };
 
 /**
  * Verify Razorpay Payment Signature
- * @param {String} orderId - Razorpay order ID
- * @param {String} paymentId - Razorpay payment ID
- * @param {String} signature - Razorpay signature
- * @returns {Boolean} Whether signature is valid
  */
 exports.verifySignature = (orderId, paymentId, signature) => {
     try {
@@ -93,7 +107,7 @@ exports.verifySignature = (orderId, paymentId, signature) => {
 };
 
 /**
- * Get Razorpay instance (for additional operations)
+ * Get Razorpay instance
  */
 exports.getRazorpayInstance = () => {
     return razorpay;
