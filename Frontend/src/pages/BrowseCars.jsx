@@ -108,25 +108,8 @@ const BrowseCars = () => {
       const response = await carService.getAllCars();
 
       if (response.success && Array.isArray(response.data)) {
-        // Add Nano car with CORRECT price around ₹800
-        const nanoCar = {
-          _id: 'nano-2023', 
-          name: 'Tata Nano', 
-          brand: 'Tata', 
-          model: 'Nano', 
-          year: 2023, 
-          pricePerDay: 800,  // ✅ CORRECT price - around ₹800-2000
-          images: ['nano'], 
-          category: 'Compact', 
-          fuelType: 'Petrol', 
-          transmission: 'Manual', 
-          seats: 4, 
-          available: true,
-          location: 'Delhi',
-          description: 'India\'s most affordable city car, perfect for daily commutes and city navigation'
-        };
-
-        const allCarsData = [...response.data, nanoCar];
+        // ✅ NO HARDCODED NANO - all cars come from database
+        const allCarsData = response.data;
         setAllCars(allCarsData);
         
         // Extract unique filter options
@@ -134,12 +117,14 @@ const BrowseCars = () => {
         setCategories(['All', ...new Set(allCarsData.map(c => c.category).filter(Boolean))]);
         setTransmissions(['All', ...new Set(allCarsData.map(c => c.transmission).filter(Boolean))]);
         setFuelTypes(['All', ...new Set(allCarsData.map(c => c.fuelType).filter(Boolean))]);
+        
+        console.log(`✅ Loaded ${allCarsData.length} cars from database`);
       } else {
         setError('Failed to load cars');
       }
     } catch (err) {
-      console.error(err);
-      setError('Failed to load cars');
+      console.error('Error loading cars:', err);
+      setError('Failed to load cars. Please check if backend is running.');
     } finally {
       setLoading(false);
     }
@@ -210,45 +195,34 @@ const BrowseCars = () => {
   const activeFiltersCount = [brand, category, transmission, priceRange, fuelType].filter(f => f !== 'All').length;
 
   const handleBookCar = (car) => {
-  const days = 2; // Default 2 days
-  const baseFare = car.pricePerDay * days; // Calculate base fare
-  
-  navigate('/booking-confirmation', {
-    state: {
-      car: car,
-      bookingDetails: {
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
-        days: days,
-        pickupLocation: car.location || 'Pune',
-        dropoffLocation: car.location || 'Pune',
-        totalPrice: baseFare // This should be pricePerDay × days
+    const days = 2;
+    const baseFare = car.pricePerDay * days;
+    
+    navigate('/booking-confirmation', {
+      state: {
+        car: car,
+        bookingDetails: {
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
+          days: days,
+          pickupLocation: car.location || 'Pune',
+          dropoffLocation: car.location || 'Pune',
+          totalPrice: baseFare
+        }
       }
-    }
-  });
-};
+    });
+  };
 
-
- const handleViewDetails = (carId) => {
-  // Only navigate to details for real cars from backend
-  if (carId !== 'nano-2023') {
+  const handleViewDetails = (carId) => {
     navigate(`/car/${carId}`);
-  } else {
-    // For Nano, directly book since there's no backend data
-    const nanoCar = allCars.find(c => c._id === 'nano-2023');
-    if (nanoCar) {
-      handleBookCar(nanoCar);
-    }
-  }
-};
-
+  };
 
   return (
     <div 
       className="min-h-screen pt-20 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      <main className="max-w-400 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-green-500 mb-2">
             Browse Cars
@@ -472,7 +446,15 @@ const BrowseCars = () => {
             <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
           </div>
         ) : error ? (
-          <div className="text-center py-20 text-red-500 font-bold">{error}</div>
+          <div className="text-center py-20">
+            <p className="text-xl font-bold mb-4 text-red-500">{error}</p>
+            <button
+              onClick={loadCars}
+              className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition"
+            >
+              Retry
+            </button>
+          </div>
         ) : displayCars.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-xl font-bold mb-2" style={{ color: theme.text }}>
@@ -618,4 +600,3 @@ const CarCard = ({ car, index, theme, onBook, onDetails }) => {
 };
 
 export default BrowseCars;
-  

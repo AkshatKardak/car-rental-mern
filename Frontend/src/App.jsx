@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Navbar from "./components/layout/Navbar";
 import DashboardNavbar from "./components/layout/DashboardNavbar";
 import Footer from "./components/layout/Footer";
@@ -40,6 +41,53 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={{
+          // Default options
+          duration: 3000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+            fontSize: '14px',
+            fontWeight: '500',
+            padding: '16px',
+            borderRadius: '8px',
+          },
+          // Success
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+            style: {
+              background: '#10b981',
+            },
+          },
+          // Error
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+            style: {
+              background: '#ef4444',
+            },
+          },
+          // Loading
+          loading: {
+            style: {
+              background: '#3b82f6',
+            },
+          },
+        }}
+      />
+
       {/* Show Landing Navbar only on landing pages for non-logged users */}
       {isLandingPage && !isLoggedIn && <Navbar />}
       

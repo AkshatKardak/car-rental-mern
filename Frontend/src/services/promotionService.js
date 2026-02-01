@@ -1,71 +1,48 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005/api';
-
-const getAuthConfig = () => {
-  const token = localStorage.getItem('token');
-  return {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` })
-    },
-    withCredentials: true
-  };
-};
-
-/**
- * Get all active promotions
- */
-const getAllPromotions = async () => {
-  try {
-    const response = await axios.get(
-      `${API_URL}/promotions`,
-      getAuthConfig()
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching promotions:', error);
-    throw error;
-  }
-};
-
-/**
- * Validate a promo code
- */
-const validatePromoCode = async (code) => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/promotions/validate`,
-      { code },
-      getAuthConfig()
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error validating promo code:', error);
-    throw error;
-  }
-};
-
-/**
- * Get promotion by ID
- */
-const getPromotionById = async (id) => {
-  try {
-    const response = await axios.get(
-      `${API_URL}/promotions/${id}`,
-      getAuthConfig()
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching promotion:', error);
-    throw error;
-  }
-};
+import api from './api';
 
 export const promotionService = {
-  getAllPromotions,
-  validatePromoCode,
-  getPromotionById
-};
+  // Get all active promotions
+  getAllPromotions: async () => {
+    try {
+      const response = await api.get('/promotions');
+      return {
+        success: true,
+        data: response.data.data || response.data || []
+      };
+    } catch (error) {
+      console.error('Get promotions error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch promotions');
+    }
+  },
 
-export default promotionService;
+  // Validate a promo code
+  validatePromoCode: async (code) => {
+    try {
+      const response = await api.post('/promotions/validate', { code });
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Validate promo error:', error);
+      throw new Error(error.response?.data?.message || 'Invalid promo code');
+    }
+  },
+
+  // Apply promo code to booking
+  applyPromoCode: async (code, bookingAmount) => {
+    try {
+      const response = await api.post('/promotions/apply', { 
+        code, 
+        bookingAmount 
+      });
+      return {
+        success: true,
+        data: response.data.data || response.data
+      };
+    } catch (error) {
+      console.error('Apply promo error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to apply promo code');
+    }
+  }
+};
