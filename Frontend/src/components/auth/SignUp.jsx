@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
-import api from '../../services/api'; // Use centralized API
+import { Moon, Sun, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
+import { registerWithFirebase, loginWithGoogle } from '../../services/firebaseAuthService';
+import api from '../../services/api';
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -13,19 +15,62 @@ export default function SignUp() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [useFirebase, setUseFirebase] = useState(true);
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
+    setSuccess('');
   };
 
-  const handleSubmit = async (e) => {
+  // Firebase Registration
+  const handleFirebaseSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await registerWithFirebase(
+        formData.name,
+        formData.email,
+        formData.password
+      );
+      
+      if (result.success) {
+        setSuccess(result.message || 'Registration successful!');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      }
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Traditional Registration
+  const handleTraditionalSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -39,29 +84,18 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      console.log('Attempting registration with:', { 
-        name: formData.name, 
-        email: formData.email 
-      });
-
       const response = await api.post('/auth/register', {
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
 
-      console.log('Registration successful:', response.data);
-
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/dashboard');
     } catch (err) {
-      console.error('Registration error:', err);
-      
       if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to server. Please make sure the backend is running on port 5005.');
-      } else if (err.response?.status === 400) {
-        setError(err.response?.data?.message || 'Invalid registration data');
+        setError('Cannot connect to server.');
       } else if (err.response?.status === 409) {
         setError('Email already exists. Please use a different email or sign in.');
       } else {
@@ -71,6 +105,26 @@ export default function SignUp() {
       setLoading(false);
     }
   };
+
+  // Google Sign-Up
+  const handleGoogleSignup = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await loginWithGoogle();
+      
+      if (result.success) {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message || 'Google sign-up failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = useFirebase ? handleFirebaseSubmit : handleTraditionalSubmit;
 
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#FFFFFF',
@@ -122,11 +176,49 @@ export default function SignUp() {
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
-            <strong>Error:</strong> {error}
+        {/* Success Message */}
+        {success && (
+          <div className="mb-6 p-4 rounded-xl border flex items-center gap-3" style={{
+            backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#D1FAE5',
+            borderColor: '#10B981'
+          }}>
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            <p className="text-sm text-green-500">{success}</p>
           </div>
         )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl border flex items-center gap-3" style={{
+            backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : '#FEE2E2',
+            borderColor: '#EF4444'
+          }}>
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-500">{error}</p>
+          </div>
+        )}
+
+        {/* Google Sign Up */}
+        <button
+          onClick={handleGoogleSignup}
+          disabled={loading}
+          className="w-full mb-6 px-6 py-3 rounded-xl border font-bold flex items-center justify-center gap-3 hover:shadow-md transition-all disabled:opacity-50"
+          style={{
+            backgroundColor: theme.cardBg,
+            borderColor: theme.border,
+            color: theme.text
+          }}
+        >
+          <FcGoogle className="w-6 h-6" />
+          Continue with Google
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
+          <span className="text-sm" style={{ color: theme.textSecondary }}>OR</span>
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -245,6 +337,17 @@ export default function SignUp() {
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
+
+        {/* Toggle Authentication Method */}
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setUseFirebase(!useFirebase)}
+            className="text-xs"
+            style={{ color: theme.textSecondary }}
+          >
+            {useFirebase ? 'Using Firebase Auth' : 'Using Traditional Auth'}
+          </button>
+        </div>
 
         <p 
           className="text-center mt-6"

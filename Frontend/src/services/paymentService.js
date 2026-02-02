@@ -2,11 +2,17 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005/api';
 
+/**
+ * Get authentication token from localStorage
+ */
 const getAuthToken = () => {
   const token = localStorage.getItem('token');
   return token;
 };
 
+/**
+ * Get axios config with auth headers
+ */
 const getAxiosConfig = () => {
   const token = getAuthToken();
   return {
@@ -20,6 +26,8 @@ const getAxiosConfig = () => {
 
 /**
  * Create Razorpay Order
+ * @param {Object} orderData - { bookingId }
+ * @returns {Promise<Object>} Order response
  */
 const createOrder = async (orderData) => {
   try {
@@ -31,12 +39,14 @@ const createOrder = async (orderData) => {
     return response.data;
   } catch (error) {
     console.error('Error creating order:', error);
-    throw error;
+    throw error.response?.data || error;
   }
 };
 
 /**
- * Verify Payment
+ * Verify Payment after Razorpay success
+ * @param {Object} paymentData - { orderId, paymentId, signature }
+ * @returns {Promise<Object>} Verification response
  */
 const verifyPayment = async (paymentData) => {
   try {
@@ -48,62 +58,13 @@ const verifyPayment = async (paymentData) => {
     return response.data;
   } catch (error) {
     console.error('Error verifying payment:', error);
-    throw error;
+    throw error.response?.data || error;
   }
 };
 
 /**
- * Create UPI QR Payment
- */
-const createQRPayment = async (data) => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/payments/create-qr-payment`, 
-      data,
-      getAxiosConfig()
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error creating QR payment:', error);
-    throw error;
-  }
-};
-
-/**
- * Confirm UPI Payment
- */
-const confirmUPIPayment = async (data) => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/payments/confirm-upi`,
-      data,
-      getAxiosConfig()
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error confirming UPI payment:', error);
-    throw error;
-  }
-};
-
-/**
- * Check UPI Payment Status
- */
-const checkUPIStatus = async (transactionRef) => {
-  try {
-    const response = await axios.get(
-      `${API_URL}/payments/check-upi/${transactionRef}`,
-      getAxiosConfig()
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error checking UPI status:', error);
-    throw error;
-  }
-};
-
-/**
- * Get Payment History
+ * Get Payment History for logged-in user
+ * @returns {Promise<Object>} Payment history
  */
 const getPaymentHistory = async () => {
   try {
@@ -114,16 +75,16 @@ const getPaymentHistory = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching payment history:', error);
-    throw error;
+    throw error.response?.data || error;
   }
 };
 
+/**
+ * Export all payment service functions
+ */
 export const paymentService = {
   createOrder,
   verifyPayment,
-  createQRPayment,
-  confirmUPIPayment,
-  checkUPIStatus,
   getPaymentHistory
 };
 

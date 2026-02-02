@@ -1,114 +1,101 @@
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
+const Payment = require('../models/Payment');
+const Booking = require('../models/Booking');
+const { createOrder, verifySignature } = require('../services/paymentService');
+const { ErrorResponse } = require('../middleware/errorHandler');
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
-/**
- * Create Razorpay Order
- */
-exports.createOrder = async (amount, additionalOptions = {}) => {
+// @desc    Initiate payment (Create Order)
+// @route   POST /api/payments/process
+// @access  Private
+exports.createPayment = async (req, res, next) => {
     try {
-        const options = {
-            amount: amount * 100,
-            currency: additionalOptions.currency || 'INR',
-            receipt: additionalOptions.receipt || `receipt_${Date.now()}`,
-            notes: additionalOptions.notes || {}
-        };
+        const { bookingId } = req.body;
 
-        const order = await razorpay.orders.create(options);
-        return order;
-    } catch (error) {
-        console.error('Error creating Razorpay order:', error);
-        throw error;
-    }
-};
+        const booking = await Booking.findById(bookingId);
 
-/**
- * Create UPI QR Code (Test Mode Compatible)
- */
-exports.createUPIQRCode = (amount, options = {}) => {
-    try {
-        // Test mode UPI ID
-        const upiId = process.env.RAZORPAY_UPI_ID || 'rentride.test@paytm';
-        
-        const transactionRef = options.transactionRef || `TEST${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-        
-        // Create UPI URL
-        const upiUrl = `upi://pay?pa=${upiId}&pn=RentRide&am=${amount}&cu=INR&tn=${encodeURIComponent(options.description || 'Car Rental Payment')}&tr=${transactionRef}`;
-        
-        console.log('✅ UPI QR Created:', {
-            transactionRef,
-            amount,
-            upiId,
-            testMode: true
+        if (!booking) {
+            return next(new ErrorResponse('Booking not found', 404));
+        }
+
+        if (booking.user.toString() !== req.user.id) {
+            return next(new ErrorResponse('Not authorized', 401));
+        }
+
+        if (booking.paymentStatus === 'paid') {
+            return next(new ErrorResponse('Booking already paid', 400));
+        }
+
+        // Create Razorpay Order
+        const order = await createOrder(booking.totalPrice);
+
+        // Create initial payment record
+        const payment = await Payment.create({
+            booking: bookingId,
+            user: req.user.id,
+            amount: booking.totalPrice,
+            orderId: order.id,
+            status: 'pending'
         });
-        
-        return {
-            id: transactionRef,
-            upiUrl: upiUrl,
-            upiId: upiId,
-            amount: amount,
-            description: options.description || 'Car Rental Payment',
-            transactionRef: transactionRef,
-            createdAt: new Date(),
-            testMode: true
-        };
-    } catch (error) {
-        console.error('❌ Error creating UPI QR:', error);
-        throw error;
+
+        res.status(200).json({
+            success: true,
+            order
+        });
+    } catch (err) {
+        next(err);
     }
 };
 
-/**
- * Verify UPI Payment (Test Mode - Auto Success)
- */
-exports.verifyUPIPayment = async (transactionRef) => {
+// @desc    Verify Payment
+// @route   POST /api/payments/verify
+// @access  Private
+exports.verifyPayment = async (req, res, next) => {
     try {
-        console.log('🧪 Test Mode: Simulating payment verification for', transactionRef);
-        
-        // In test mode, always return success
-        return { 
-            success: true, 
-            payment: {
-                id: `pay_test_${Date.now()}`,
-                amount: 100000,
-                status: 'captured',
-                method: 'upi',
-                upi: {
-                    vpa: 'test@paytm'
-                },
-                created_at: Math.floor(Date.now() / 1000)
+        const { orderId, paymentId, signature } = req.body;
+
+        const isSignatureValid = verifySignature(orderId, paymentId, signature);
+
+        if (isSignatureValid) {
+            const payment = await Payment.findOne({ orderId });
+
+            if (!payment) {
+                return next(new ErrorResponse('Payment record not found', 404));
             }
-        };
-    } catch (error) {
-        console.error('❌ Error verifying UPI payment:', error);
-        throw error;
+
+            payment.transactionId = paymentId;
+            payment.status = 'success';
+            await payment.save();
+
+            // Update Booking
+            const booking = await Booking.findById(payment.booking);
+            booking.paymentStatus = 'paid';
+            booking.status = 'confirmed';
+            await booking.save();
+
+            res.status(200).json({
+                success: true,
+                message: 'Payment verified successfully'
+            });
+        } else {
+            return next(new ErrorResponse('Invalid signature', 400));
+        }
+    } catch (err) {
+        next(err);
     }
 };
 
-/**
- * Verify Razorpay Payment Signature
- */
-exports.verifySignature = (orderId, paymentId, signature) => {
+// @desc    Get payment history
+// @route   GET /api/payments/history
+// @access  Private
+exports.getPaymentHistory = async (req, res, next) => {
     try {
-        const generatedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(orderId + '|' + paymentId)
-            .digest('hex');
+        const payments = await Payment.find({ user: req.user.id }).populate('booking');
 
-        return generatedSignature === signature;
-    } catch (error) {
-        console.error('Error verifying signature:', error);
-        return false;
+        res.status(200).json({
+            success: true,
+            count: payments.length,
+            data: payments
+        });
+    } catch (err) {
+        next(err);
     }
-};
-
-/**
- * Get Razorpay instance
- */
-exports.getRazorpayInstance = () => {
-    return razorpay;
 };

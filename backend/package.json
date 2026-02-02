@@ -12,9 +12,12 @@
     "test:resend": "node scripts/testResend.js",
     "test:razorpay": "node scripts/testRazorpay.js",
     "test:imgbb": "node scripts/testImgBB.js",
-    "test:all": "node scripts/testAll.js"
-  },
-  "keywords": [],
+    "test:all": "node scripts/testAll.js",
+    "seed:cars": "node seeders/carSeeder.js",
+    "seed:promotions": "node seeders/promotionSeeder.js",
+  "seed:all": "node seeders/carSeeder.js && node seeders/promotionSeeder.js"
+},
+"keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -29,6 +32,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
+    "firebase-admin": "^13.6.0",
     "form-data": "^4.0.5",
     "groq-sdk": "^0.37.0",
     "jsonwebtoken": "^9.0.3",

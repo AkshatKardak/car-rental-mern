@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
-import api from '../../services/api'; // Use centralized API
+import { Moon, Sun, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
+import { loginWithFirebase, loginWithGoogle } from '../../services/firebaseAuthService';
+import api from '../../services/api';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -10,36 +12,49 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [useFirebase, setUseFirebase] = useState(true); // Toggle between Firebase and traditional
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
 
-  const handleSubmit = async (e) => {
+  // Firebase Login
+  const handleFirebaseSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      console.log('Attempting login with:', { email });
+      const result = await loginWithFirebase(email, password);
+      
+      if (result.success) {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Traditional Login (Fallback)
+  const handleTraditionalSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
       const response = await api.post('/auth/login', {
         email,
         password,
       });
 
-      console.log('Login successful:', response.data);
-
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/dashboard');
     } catch (err) {
-      console.error('Login error:', err);
-      
       if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to server. Please make sure the backend is running on port 5005.');
+        setError('Cannot connect to server. Please make sure the backend is running.');
       } else if (err.response?.status === 401) {
         setError('Invalid email or password');
-      } else if (err.response?.status === 404) {
-        setError('User not found. Please sign up first.');
       } else {
         setError(err.response?.data?.message || 'Login failed. Please try again.');
       }
@@ -47,6 +62,26 @@ export default function SignIn() {
       setLoading(false);
     }
   };
+
+  // Google Sign-In
+  const handleGoogleLogin = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await loginWithGoogle();
+      
+      if (result.success) {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = useFirebase ? handleFirebaseSubmit : handleTraditionalSubmit;
 
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#FFFFFF',
@@ -63,7 +98,7 @@ export default function SignIn() {
       className="min-h-screen flex items-center justify-center px-4 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      {/* Dark Mode Toggle - Top Right */}
+      {/* Dark Mode Toggle */}
       <button
         onClick={toggleTheme}
         className="fixed top-6 right-6 p-3 rounded-xl transition-all duration-300 hover:scale-110 z-50"
@@ -98,11 +133,38 @@ export default function SignIn() {
           </p>
         </div>
 
+        {/* Error Message */}
         {error && (
-          <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
-            <strong>Error:</strong> {error}
+          <div className="mb-6 p-4 rounded-xl border flex items-center gap-3" style={{
+            backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : '#FEE2E2',
+            borderColor: '#EF4444'
+          }}>
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-500">{error}</p>
           </div>
         )}
+
+        {/* Google Sign In */}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="w-full mb-6 px-6 py-3 rounded-xl border font-bold flex items-center justify-center gap-3 hover:shadow-md transition-all disabled:opacity-50"
+          style={{
+            backgroundColor: theme.cardBg,
+            borderColor: theme.border,
+            color: theme.text
+          }}
+        >
+          <FcGoogle className="w-6 h-6" />
+          Continue with Google
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
+          <span className="text-sm" style={{ color: theme.textSecondary }}>OR</span>
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -170,6 +232,17 @@ export default function SignIn() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        {/* Toggle Authentication Method (for testing) */}
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setUseFirebase(!useFirebase)}
+            className="text-xs"
+            style={{ color: theme.textSecondary }}
+          >
+            {useFirebase ? 'Using Firebase Auth' : 'Using Traditional Auth'}
+          </button>
+        </div>
 
         <p 
           className="text-center mt-6"

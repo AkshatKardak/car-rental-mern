@@ -3,6 +3,12 @@
 .env.local
 .env.development
 .env.production
+Frontend/.env
+
+# Firebase service account
+*service-account*.json
+firebase-adminsdk*.json
+
 
 # Dependencies
 node_modules/

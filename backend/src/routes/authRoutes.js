@@ -1,16 +1,36 @@
 const express = require('express');
-const { signup, login, logout, getMe, refreshToken } = require('../controllers/authController');
+const {
+    register,
+    login,
+    getMe,
+    updateProfile,
+    updatePassword,
+    logout,
+    deleteAccount,
+    firebaseRegister,
+    firebaseLogin,
+    firebaseGoogleLogin,
+    verifyFirebaseToken
+} = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
-const { registerRules, loginRules } = require('../utils/validators');
 
 const router = express.Router();
 
-router.post('/signup', registerRules, signup);
-router.post('/register', registerRules, signup); // Alias for signup
-router.post('/login', loginRules, login);
-router.get('/logout', logout); // or post
-router.post('/logout', logout); // Support both
+// Traditional auth routes
+router.post('/register', register);
+router.post('/login', login);
+
+// Firebase auth routes
+router.post('/firebase-register', firebaseRegister);
+router.post('/firebase-login', firebaseLogin);
+router.post('/firebase-google', firebaseGoogleLogin);
+router.post('/verify-firebase-token', verifyFirebaseToken);
+
+// Protected routes
 router.get('/me', protect, getMe);
-// router.get('/refresh-token', protect, refreshToken); // Optional
+router.put('/update-profile', protect, updateProfile);
+router.put('/update-password', protect, updatePassword);
+router.post('/logout', protect, logout);
+router.delete('/delete-account', protect, deleteAccount);
 
 module.exports = router;
