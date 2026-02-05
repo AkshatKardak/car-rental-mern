@@ -1,5 +1,7 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Toaster, toast } from "react-hot-toast";
+import { useEffect } from "react";
+import { handleRedirectResult } from "./services/firebaseAuthService";
 import Navbar from "./components/layout/Navbar";
 import DashboardNavbar from "./components/layout/DashboardNavbar";
 import Footer from "./components/layout/Footer";
@@ -20,7 +22,33 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem('token');
+
+  // Check for Google Redirect Result
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await handleRedirectResult();
+        if (result) {
+          if (result.success) {
+            toast.success("Successfully logged in with Google!");
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            console.error("Google Auth Error:", result.error);
+            toast.error(result.error || "Google Sign-In failed");
+          }
+        }
+      } catch (error) {
+        console.error("Redirect login failed", error);
+        toast.error("Authentication failed during redirect.");
+      }
+    };
+    checkRedirect();
+  }, []);
+
 
   // Landing pages: Show landing Navbar & Footer (for non-logged users)
   const landingRoutes = ["/", "/signin", "/signup"];
@@ -28,11 +56,11 @@ export default function App() {
 
   // Dashboard routes: Show DashboardNavbar (for logged-in users)
   const dashboardRoutes = [
-    "/dashboard", 
-    "/browsecars", 
-    "/mybookings", 
-    "/payment", 
-    "/offers", 
+    "/dashboard",
+    "/browsecars",
+    "/mybookings",
+    "/payment",
+    "/offers",
     "/aiassistant",
     "/booking-confirmation",
     "/payment-success"
@@ -42,7 +70,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
       {/* Toast Notifications */}
-      <Toaster 
+      <Toaster
         position="top-right"
         reverseOrder={false}
         gutter={8}
@@ -90,24 +118,24 @@ export default function App() {
 
       {/* Show Landing Navbar only on landing pages for non-logged users */}
       {isLandingPage && !isLoggedIn && <Navbar />}
-      
+
       {/* Show Dashboard Navbar for logged-in users on dashboard pages */}
       {isLoggedIn && isDashboardPage && <DashboardNavbar />}
 
       <main>
         <Routes>
           {/* Public Routes - Redirect to dashboard if logged in */}
-          <Route 
-            path="/" 
-            element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Home />} 
+          <Route
+            path="/"
+            element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Home />}
           />
-          <Route 
-            path="/signin" 
-            element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <SignIn />} 
+          <Route
+            path="/signin"
+            element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <SignIn />}
           />
-          <Route 
-            path="/signup" 
-            element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <SignUp />} 
+          <Route
+            path="/signup"
+            element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <SignUp />}
           />
 
           {/* Browse Cars - accessible to all */}

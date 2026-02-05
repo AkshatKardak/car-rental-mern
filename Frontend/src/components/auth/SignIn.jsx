@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { Moon, Sun, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
-import { loginWithFirebase, loginWithGoogle } from '../../services/firebaseAuthService';
+import { loginWithEmail, loginWithGoogle } from '../../services/firebaseAuthService';
 import api from '../../services/api';
 
 export default function SignIn() {
@@ -23,8 +23,8 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const result = await loginWithFirebase(email, password);
-      
+      const result = await loginWithEmail(email, password);
+
       if (result.success) {
         navigate('/dashboard');
       }
@@ -70,7 +70,7 @@ export default function SignIn() {
 
     try {
       const result = await loginWithGoogle();
-      
+
       if (result.success) {
         navigate('/dashboard');
       }
@@ -94,7 +94,7 @@ export default function SignIn() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center px-4 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
@@ -114,7 +114,7 @@ export default function SignIn() {
         )}
       </button>
 
-      <div 
+      <div
         className="max-w-md w-full rounded-2xl shadow-2xl p-8 transition-all duration-300"
         style={{
           backgroundColor: theme.cardBg,
@@ -122,7 +122,7 @@ export default function SignIn() {
         }}
       >
         <div className="text-center mb-8">
-          <h1 
+          <h1
             className="text-3xl font-bold mb-2"
             style={{ color: theme.text }}
           >
@@ -168,7 +168,7 @@ export default function SignIn() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label 
+            <label
               className="block text-sm font-medium mb-2"
               style={{ color: theme.text }}
             >
@@ -190,7 +190,7 @@ export default function SignIn() {
           </div>
 
           <div>
-            <label 
+            <label
               className="block text-sm font-medium mb-2"
               style={{ color: theme.text }}
             >
@@ -244,13 +244,13 @@ export default function SignIn() {
           </button>
         </div>
 
-        <p 
+        <p
           className="text-center mt-6"
           style={{ color: theme.textSecondary }}
         >
           Don't have an account?{' '}
-          <Link 
-            to="/signup" 
+          <Link
+            to="/signup"
             className="font-semibold hover:underline"
             style={{ color: theme.primary }}
           >

@@ -33,14 +33,10 @@ const getAuthHeader = () => {
 
 const PricingPromotions = () => {
   return (
-    <div className="relative flex h-screen w-full bg-background-secondary overflow-hidden text-text-primary">
-      <Sidebar />
-
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <Header />
-        <ContentArea />
-      </main>
-    </div>
+    <>
+      <Header />
+      <ContentArea />
+    </>
   )
 }
 
@@ -96,12 +92,12 @@ const ContentArea = () => {
   const fetchPromotions = async () => {
     try {
       setLoading(true)
-      
+
       const params = {
         page,
         limit: 10
       }
-      
+
       if (filterActive === 'active') {
         params.active = 'true'
       }
@@ -115,14 +111,14 @@ const ContentArea = () => {
         setPromotions(response.data.data || [])
         setTotalPages(response.data.totalPages || 1)
         setTotalCount(response.data.total || 0)
-        
+
         // Calculate stats
         const totalUsage = response.data.data?.reduce((sum, promo) => sum + (promo.usedCount || 0), 0) || 0
         const activeCount = response.data.data?.filter(p => {
           const now = new Date()
           return p.active && new Date(p.validFrom) <= now && new Date(p.validUntil) >= now
         }).length || 0
-        
+
         setStats({
           totalPromotions: response.data.total || 0,
           activePromotions: activeCount,
@@ -139,28 +135,28 @@ const ContentArea = () => {
   }
 
   const statsData = [
-    { 
-      label: 'Total Codes', 
-      value: stats.totalPromotions.toString(), 
+    {
+      label: 'Total Codes',
+      value: stats.totalPromotions.toString(),
       icon: Tag,
       color: 'bg-purple-50 text-purple-600 border-purple-100'
     },
-    { 
-      label: 'Active Codes', 
-      value: stats.activePromotions.toString(), 
+    {
+      label: 'Active Codes',
+      value: stats.activePromotions.toString(),
       trend: '+8%',
       icon: Check,
       color: 'bg-green-50 text-green-600 border-green-100'
     },
-    { 
-      label: 'Total Usage', 
-      value: stats.totalUsage.toString(), 
+    {
+      label: 'Total Usage',
+      value: stats.totalUsage.toString(),
       icon: TrendingUp,
       color: 'bg-blue-50 text-blue-600 border-blue-100'
     },
-    { 
-      label: 'Total Savings', 
-      value: `₹${stats.totalSavings.toLocaleString()}`, 
+    {
+      label: 'Total Savings',
+      value: `₹${stats.totalSavings.toLocaleString()}`,
       icon: DollarSign,
       color: 'bg-orange-50 text-orange-600 border-orange-100'
     },
@@ -176,28 +172,28 @@ const ContentArea = () => {
     const now = new Date()
     const validFrom = new Date(promo.validFrom)
     const validUntil = new Date(promo.validUntil)
-    
+
     if (!promo.active) {
       return { text: 'Inactive', color: 'bg-gray-50 text-gray-600 border-gray-200' }
     }
-    
+
     if (now < validFrom) {
       return { text: 'Scheduled', color: 'bg-blue-50 text-blue-600 border-blue-200' }
     }
-    
+
     if (now > validUntil) {
       return { text: 'Expired', color: 'bg-red-50 text-red-600 border-red-200' }
     }
-    
+
     return { text: 'Active', color: 'bg-green-50 text-green-600 border-green-200' }
   }
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-IN', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
     })
   }
 
@@ -288,11 +284,10 @@ const ContentArea = () => {
                     setFilterActive(f)
                     setPage(1)
                   }}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${
-                    filterActive === f 
-                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${filterActive === f
+                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
                       : 'bg-white border-border-light text-text-secondary hover:bg-background-secondary hover:text-text-primary'
-                  }`}
+                    }`}
                 >
                   {f}
                 </button>
@@ -430,34 +425,33 @@ const ContentArea = () => {
               Showing {promotions.length} of {totalCount} promotions
             </p>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page === 1}
                 className="w-10 h-10 rounded-xl border border-border-light flex items-center justify-center text-text-secondary hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               {[...Array(Math.min(3, totalPages))].map((_, i) => {
                 const pageNum = page > 2 ? page - 1 + i : i + 1
                 if (pageNum > totalPages) return null
-                
+
                 return (
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${
-                      page === pageNum
+                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${page === pageNum
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
                         : 'border border-border-light text-text-secondary hover:bg-white'
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
                 )
               })}
-              
-              <button 
+
+              <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page === totalPages}
                 className="w-10 h-10 rounded-xl border border-border-light flex items-center justify-center text-text-secondary hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"

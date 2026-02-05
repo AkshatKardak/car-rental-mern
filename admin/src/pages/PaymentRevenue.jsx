@@ -31,14 +31,10 @@ const getAuthHeader = () => {
 
 const PaymentRevenue = () => {
   return (
-    <div className="relative flex h-screen w-full bg-background-secondary overflow-hidden text-text-primary">
-      <Sidebar />
-
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <Header />
-        <ContentArea />
-      </main>
-    </div>
+    <>
+      <Header />
+      <ContentArea />
+    </>
   )
 }
 
@@ -93,12 +89,12 @@ const ContentArea = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true)
-      
+
       const params = {
         page,
         limit: 10
       }
-      
+
       if (filterStatus !== 'all') {
         params.status = filterStatus
       }
@@ -112,7 +108,7 @@ const ContentArea = () => {
         setPayments(response.data.data || [])
         setTotalPages(response.data.totalPages || 1)
         setTotalCount(response.data.total || 0)
-        
+
         // Set revenue stats
         setStats({
           totalRevenue: response.data.totalRevenue || 0,
@@ -130,29 +126,29 @@ const ContentArea = () => {
   }
 
   const statsData = [
-    { 
-      label: 'Total Revenue', 
-      value: `₹${stats.totalRevenue.toLocaleString()}`, 
-      trend: '+12.4%', 
+    {
+      label: 'Total Revenue',
+      value: `₹${stats.totalRevenue.toLocaleString()}`,
+      trend: '+12.4%',
       trendUp: true,
       icon: DollarSign,
       color: 'bg-green-50 text-green-600 border-green-100'
     },
-    { 
-      label: 'Confirmed', 
-      value: stats.confirmedPayments.toString(), 
+    {
+      label: 'Confirmed',
+      value: stats.confirmedPayments.toString(),
       icon: CheckCircle,
       color: 'bg-blue-50 text-blue-600 border-blue-100'
     },
-    { 
-      label: 'Pending', 
-      value: stats.pendingPayments.toString(), 
+    {
+      label: 'Pending',
+      value: stats.pendingPayments.toString(),
       icon: Clock,
       color: 'bg-orange-50 text-orange-600 border-orange-100'
     },
-    { 
-      label: 'Failed', 
-      value: stats.failedPayments.toString(), 
+    {
+      label: 'Failed',
+      value: stats.failedPayments.toString(),
       icon: XCircle,
       color: 'bg-red-50 text-red-600 border-red-100'
     },
@@ -192,10 +188,10 @@ const ContentArea = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-IN', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
     })
   }
 
@@ -278,11 +274,10 @@ const ContentArea = () => {
                     setFilterStatus(f)
                     setPage(1)
                   }}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${
-                    filterStatus === f 
-                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${filterStatus === f
+                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
                       : 'bg-white border-border-light text-text-secondary hover:bg-background-secondary hover:text-text-primary'
-                  }`}
+                    }`}
                 >
                   {f}
                 </button>
@@ -417,34 +412,33 @@ const ContentArea = () => {
               Showing {payments.length} of {totalCount} transactions
             </p>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page === 1}
                 className="w-10 h-10 rounded-xl border border-border-light flex items-center justify-center text-text-secondary hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               {[...Array(Math.min(3, totalPages))].map((_, i) => {
                 const pageNum = page > 2 ? page - 1 + i : i + 1
                 if (pageNum > totalPages) return null
-                
+
                 return (
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${
-                      page === pageNum
+                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${page === pageNum
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
                         : 'border border-border-light text-text-secondary hover:bg-white'
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
                 )
               })}
-              
-              <button 
+
+              <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page === totalPages}
                 className="w-10 h-10 rounded-xl border border-border-light flex items-center justify-center text-text-secondary hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"

@@ -31,14 +31,10 @@ const getAuthHeader = () => {
 
 const UserManagement = () => {
   return (
-    <div className="relative flex h-screen w-full bg-background-secondary overflow-hidden text-text-primary">
-      <Sidebar />
-
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <Header />
-        <ContentArea />
-      </main>
-    </div>
+    <>
+      <Header />
+      <ContentArea />
+    </>
   )
 }
 
@@ -97,12 +93,12 @@ const ContentArea = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      
+
       const params = {
         page,
         limit: 10
       }
-      
+
       if (filterStatus !== 'all') {
         params.status = filterStatus
       }
@@ -116,18 +112,18 @@ const ContentArea = () => {
         setUsers(response.data.data || [])
         setTotalPages(response.data.totalPages || 1)
         setTotalCount(response.data.total || 0)
-        
+
         // Calculate stats
         const allUsersResponse = await axios.get(`${API_URL}/admin/users`, {
           headers: getAuthHeader(),
           params: { limit: 1000 }
         })
-        
+
         if (allUsersResponse.data.success) {
           const allUsers = allUsersResponse.data.data || []
           const now = new Date()
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          
+
           setStats({
             totalUsers: allUsers.length,
             activeUsers: allUsers.filter(u => u.status === 'active').length,
@@ -267,11 +263,10 @@ const ContentArea = () => {
                     setFilterStatus(f)
                     setPage(1)
                   }}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${
-                    filterStatus === f 
-                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${filterStatus === f
+                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
                       : 'bg-white border-border-light text-text-secondary hover:bg-background-secondary hover:text-text-primary'
-                  }`}
+                    }`}
                 >
                   {f}
                 </button>
@@ -392,34 +387,33 @@ const ContentArea = () => {
               Showing {users.length} of {totalCount} users
             </p>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page === 1}
                 className="w-10 h-10 rounded-xl border border-border-light flex items-center justify-center text-text-secondary hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               {[...Array(Math.min(3, totalPages))].map((_, i) => {
                 const pageNum = page > 2 ? page - 1 + i : i + 1
                 if (pageNum > totalPages) return null
-                
+
                 return (
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${
-                      page === pageNum
+                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${page === pageNum
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
                         : 'border border-border-light text-text-secondary hover:bg-white'
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
                 )
               })}
-              
-              <button 
+
+              <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page === totalPages}
                 className="w-10 h-10 rounded-xl border border-border-light flex items-center justify-center text-text-secondary hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { Moon, Sun, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
-import { registerWithFirebase, loginWithGoogle } from '../../services/firebaseAuthService';
+import { signupWithEmail, loginWithGoogle } from '../../services/firebaseAuthService';
 import api from '../../services/api';
 
 export default function SignUp() {
@@ -47,12 +47,12 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      const result = await registerWithFirebase(
+      const result = await signupWithEmail(
         formData.name,
         formData.email,
         formData.password
       );
-      
+
       if (result.success) {
         setSuccess(result.message || 'Registration successful!');
         setTimeout(() => {
@@ -113,7 +113,7 @@ export default function SignUp() {
 
     try {
       const result = await loginWithGoogle();
-      
+
       if (result.success) {
         navigate('/dashboard');
       }
@@ -137,7 +137,7 @@ export default function SignUp() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center px-4 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
@@ -157,7 +157,7 @@ export default function SignUp() {
         )}
       </button>
 
-      <div 
+      <div
         className="max-w-md w-full rounded-2xl shadow-2xl p-8 transition-all duration-300"
         style={{
           backgroundColor: theme.cardBg,
@@ -165,7 +165,7 @@ export default function SignUp() {
         }}
       >
         <div className="text-center mb-8">
-          <h1 
+          <h1
             className="text-3xl font-bold mb-2"
             style={{ color: theme.text }}
           >
@@ -222,7 +222,7 @@ export default function SignUp() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label 
+            <label
               className="block text-sm font-medium mb-2"
               style={{ color: theme.text }}
             >
@@ -246,7 +246,7 @@ export default function SignUp() {
           </div>
 
           <div>
-            <label 
+            <label
               className="block text-sm font-medium mb-2"
               style={{ color: theme.text }}
             >
@@ -269,7 +269,7 @@ export default function SignUp() {
           </div>
 
           <div>
-            <label 
+            <label
               className="block text-sm font-medium mb-2"
               style={{ color: theme.text }}
             >
@@ -303,7 +303,7 @@ export default function SignUp() {
           </div>
 
           <div>
-            <label 
+            <label
               className="block text-sm font-medium mb-2"
               style={{ color: theme.text }}
             >
@@ -349,13 +349,13 @@ export default function SignUp() {
           </button>
         </div>
 
-        <p 
+        <p
           className="text-center mt-6"
           style={{ color: theme.textSecondary }}
         >
           Already have an account?{' '}
-          <Link 
-            to="/signin" 
+          <Link
+            to="/signin"
             className="font-semibold hover:underline"
             style={{ color: theme.primary }}
           >
