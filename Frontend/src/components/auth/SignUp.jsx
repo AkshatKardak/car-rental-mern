@@ -112,14 +112,10 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      const result = await loginWithGoogle();
-
-      if (result.success) {
-        navigate('/dashboard');
-      }
+      // Just trigger the redirect - App.jsx will handle the rest
+      await loginWithGoogle();
     } catch (err) {
       setError(err.message || 'Google sign-up failed');
-    } finally {
       setLoading(false);
     }
   };

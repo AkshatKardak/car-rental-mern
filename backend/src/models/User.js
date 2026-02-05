@@ -26,7 +26,7 @@ const UserSchema = new mongoose.Schema({
     firebaseUid: {
         type: String,
         unique: true,
-        sparse: true, // Allows null values
+        sparse: true,
         index: true
     },
     profilePicture: {
@@ -53,29 +53,30 @@ const UserSchema = new mongoose.Schema({
 });
 
 // Hash password before saving (skip if Firebase user)
-UserSchema.pre('save', async function(next) {
+// Hash password before saving (skip if Firebase user)
+UserSchema.pre('save', async function () {
+    // If password is not modified, skip hashing
     if (!this.isModified('password')) {
-        next();
+        return;
     }
 
     // Skip hashing for Firebase placeholder passwords
     if (this.password.startsWith('firebase_')) {
-        next();
         return;
     }
 
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
 });
 
 // Match password method
-UserSchema.methods.matchPassword = async function(enteredPassword) {
+UserSchema.methods.matchPassword = async function (enteredPassword) {
     // Firebase users cannot use password login
     if (this.password.startsWith('firebase_')) {
         return false;
     }
-    
+
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

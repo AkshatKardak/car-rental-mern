@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { FiCopy, FiCheck, FiTag, FiPercent, FiDollarSign } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { promotionService } from '../services/promotionService';
+import { useTheme } from '../context/ThemeContext';
 
 const OffersCode = () => {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     loadPromotions();
@@ -16,7 +18,7 @@ const OffersCode = () => {
     try {
       setLoading(true);
       const response = await promotionService.getAllPromotions();
-      
+
       if (response.success && response.data.length > 0) {
         setPromotions(response.data);
       } else {
@@ -84,7 +86,7 @@ const OffersCode = () => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     toast.success(`Code "${code}" copied to clipboard!`);
-    
+
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -98,33 +100,54 @@ const OffersCode = () => {
       minBookingAmount: promo.minBookingAmount,
       description: promo.description
     }));
-    
+
     toast.success(`Promo "${promo.code}" applied! Redirecting to booking...`, {
       duration: 2000,
     });
-    
+
     setTimeout(() => {
       window.location.href = '/browsecars';
     }, 2000);
   };
 
+  const theme = {
+    bg: isDarkMode ? '#0f172a' : '#f8f9fa',
+    cardBg: isDarkMode ? '#1e293b' : '#ffffff',
+    text: isDarkMode ? '#f1f5f9' : '#1F2937',
+    textSecondary: isDarkMode ? '#cbd5e1' : '#6B7280',
+    border: isDarkMode ? '#334155' : '#e5e7eb',
+    inputBg: isDarkMode ? '#0f172a' : '#f3f4f6',
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div
+        className="min-h-screen flex items-center justify-center transition-colors duration-300"
+        style={{ backgroundColor: theme.bg }}
+      >
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div
+      className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 pt-24 transition-colors duration-300"
+      style={{ backgroundColor: theme.bg }}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1
+            className="text-4xl font-bold mb-4"
+            style={{ color: theme.text }}
+          >
             🎉 Exclusive Offers & Promo Codes
           </h1>
-          <p className="text-lg text-gray-600">
+          <p
+            className="text-lg"
+            style={{ color: theme.textSecondary }}
+          >
             Save big on your next car rental! Apply these codes at checkout.
           </p>
         </div>
@@ -134,7 +157,11 @@ const OffersCode = () => {
           {promotions.map((promo) => (
             <div
               key={promo.code || Math.random()}
-              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-green-500"
+              className="rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 hover:border-green-500"
+              style={{
+                backgroundColor: theme.cardBg,
+                borderColor: theme.border
+              }}
             >
               {/* Card Header - GREEN GRADIENT */}
               <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
@@ -161,12 +188,18 @@ const OffersCode = () => {
 
               {/* Card Body */}
               <div className="p-6">
-                <p className="text-gray-700 mb-4 min-h-[60px]">
+                <p
+                  className="mb-4 min-h-[60px]"
+                  style={{ color: theme.text }}
+                >
                   {promo.description || 'Limited time offer - save on your booking!'}
                 </p>
 
                 {/* Details */}
-                <div className="space-y-2 mb-6 text-sm text-gray-600">
+                <div
+                  className="space-y-2 mb-6 text-sm"
+                  style={{ color: theme.textSecondary }}
+                >
                   <div className="flex justify-between">
                     <span>Max Discount:</span>
                     <span className="font-semibold text-green-600">
@@ -175,7 +208,7 @@ const OffersCode = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Min Booking:</span>
-                    <span className="font-semibold">
+                    <span className="font-semibold" style={{ color: theme.text }}>
                       ₹{(promo.minBookingAmount || 0).toLocaleString()}
                     </span>
                   </div>
@@ -185,7 +218,11 @@ const OffersCode = () => {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleCopyCode(promo.code)}
-                    className="flex-1 flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-colors"
+                    className="flex-1 flex items-center justify-center space-x-2 font-semibold py-3 px-4 rounded-lg transition-colors"
+                    style={{
+                      backgroundColor: theme.inputBg,
+                      color: theme.text
+                    }}
                   >
                     {copiedCode === promo.code ? (
                       <>
@@ -215,11 +252,19 @@ const OffersCode = () => {
         {/* No Promotions Message */}
         {promotions.length === 0 && (
           <div className="text-center py-12">
-            <FiTag className="text-6xl text-gray-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-semibold text-gray-700 mb-2">
+            <FiTag
+              className="text-6xl mx-auto mb-4"
+              style={{ color: theme.textSecondary }}
+            />
+            <h3
+              className="text-2xl font-semibold mb-2"
+              style={{ color: theme.text }}
+            >
               No active promotions available
             </h3>
-            <p className="text-gray-500">Check back later for new offers!</p>
+            <p style={{ color: theme.textSecondary }}>
+              Check back later for new offers!
+            </p>
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -10,7 +10,7 @@ import {
   TrendingUp,
   Clock,
   ArrowRight,
-  AlertTriangle  // ← Added for Damage Reports icon
+  AlertTriangle
 } from "lucide-react";
 
 import SupraImg from "../assets/supra.png";
@@ -52,6 +52,23 @@ const RECOMMENDED_CARS = [
 const AppDashboard = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const [userName, setUserName] = useState("Guest");
+
+  // Get user name from localStorage
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        // Get first name only (split by space and take first part)
+        const firstName = user.name ? user.name.split(' ')[0] : 'Guest';
+        setUserName(firstName);
+      }
+    } catch (error) {
+      console.error('Error getting user name:', error);
+      setUserName('Guest');
+    }
+  }, []);
 
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#f8f9fa',
@@ -63,7 +80,7 @@ const AppDashboard = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen pt-20 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
@@ -73,7 +90,7 @@ const AppDashboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tight" style={{ color: theme.text }}>
-              Welcome back, <span className="text-green-500 italic">Alex</span>
+              Welcome back, <span className="text-green-500 italic">{userName}</span>
             </h1>
             <p className="text-lg max-w-md" style={{ color: theme.textSecondary }}>
               Your premium garage is ready. Where would you like to drive today?
@@ -116,37 +133,37 @@ const AppDashboard = () => {
 
         {/* QUICK ACTIONS */}
         <div className="space-y-6">
-          <h2 
+          <h2
             className="text-xl font-black uppercase tracking-widest opacity-70"
             style={{ color: theme.text }}
           >
             ⚡ Quick Access
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <QuickAction 
-              icon={<Car />} 
-              label="Browse Cars" 
-              onClick={() => navigate("/browsecars")} 
-              theme={theme} 
-            />
-            <QuickAction 
-              icon={<Calendar />} 
-              label="My Bookings" 
-              onClick={() => navigate("/mybookings")} 
-              theme={theme} 
-            />
-            <QuickAction 
-              icon={<AlertTriangle />} 
-              label="Damage Reports" 
-              onClick={() => navigate("/mybookings")} 
+            <QuickAction
+              icon={<Car />}
+              label="Browse Cars"
+              onClick={() => navigate("/browsecars")}
               theme={theme}
-              highlight={true}  // ← Add visual highlight
             />
-            <QuickAction 
-              icon={<CreditCard />} 
-              label="Payments" 
-              onClick={() => navigate("/payment")} 
-              theme={theme} 
+            <QuickAction
+              icon={<Calendar />}
+              label="My Bookings"
+              onClick={() => navigate("/mybookings")}
+              theme={theme}
+            />
+            <QuickAction
+              icon={<AlertTriangle />}
+              label="Damage Reports"
+              onClick={() => navigate("/mybookings")}
+              theme={theme}
+              highlight={true}
+            />
+            <QuickAction
+              icon={<CreditCard />}
+              label="Payments"
+              onClick={() => navigate("/payment")}
+              theme={theme}
             />
           </div>
         </div>
@@ -157,7 +174,7 @@ const AppDashboard = () => {
           {/* RECOMMENDED SECTION */}
           <div className="lg:col-span-2 space-y-6">
             <div className="flex justify-between items-center">
-              <h2 
+              <h2
                 className="text-xl font-black uppercase tracking-widest opacity-70"
                 style={{ color: theme.text }}
               >
@@ -179,16 +196,16 @@ const AppDashboard = () => {
           </div>
 
           {/* RECENT ACTIVITY SECTION */}
-          <div 
+          <div
             className="rounded-3xl p-8 border shadow-xl h-fit"
             style={{
               backgroundColor: theme.cardBg,
               borderColor: theme.border
             }}
           >
-            <h2 
+            <h2
               className="text-xl font-black uppercase tracking-widest mb-8 border-b pb-4"
-              style={{ 
+              style={{
                 color: theme.text,
                 borderColor: theme.border
               }}
@@ -203,7 +220,7 @@ const AppDashboard = () => {
               <ActivityItem title="Profile Updated" sub="Mobile Verification • Oct 10" status="idle" theme={theme} />
             </div>
 
-            <button 
+            <button
               className="w-full mt-10 py-4 text-sm font-black rounded-2xl border transition-colors hover:bg-opacity-80"
               style={{
                 backgroundColor: theme.inputBg,
@@ -217,7 +234,7 @@ const AppDashboard = () => {
         </div>
       </main>
 
-      {/* FLOAT ACTION - Keep AI Assistant button */}
+      {/* FLOAT ACTION - AI Assistant button */}
       <button
         type="button"
         onClick={() => navigate("/aiassistant")}
@@ -241,7 +258,7 @@ const AppDashboard = () => {
 ========================= */
 
 const StatCard = ({ title, value, sub, icon, theme }) => (
-  <div 
+  <div
     className="rounded-3xl p-8 border shadow-xl flex items-start justify-between group hover:border-green-500/50 transition-colors"
     style={{
       backgroundColor: theme.cardBg,
@@ -259,7 +276,7 @@ const StatCard = ({ title, value, sub, icon, theme }) => (
         {sub}
       </p>
     </div>
-    <div 
+    <div
       className="p-3 rounded-2xl group-hover:bg-green-500/10 transition-colors"
       style={{ backgroundColor: theme.inputBg }}
     >
@@ -271,20 +288,18 @@ const StatCard = ({ title, value, sub, icon, theme }) => (
 const QuickAction = ({ icon, label, onClick, theme, highlight }) => (
   <button
     onClick={onClick}
-    className={`rounded-3xl p-8 flex flex-col items-center gap-4 border shadow-xl hover:translate-y-[-8px] transition-all group ${
-      highlight ? 'hover:border-orange-500' : 'hover:border-green-500'
-    }`}
+    className={`rounded-3xl p-8 flex flex-col items-center gap-4 border shadow-xl hover:translate-y-[-8px] transition-all group ${highlight ? 'hover:border-orange-500' : 'hover:border-green-500'
+      }`}
     style={{
       backgroundColor: theme.cardBg,
       borderColor: highlight ? 'rgba(249, 115, 22, 0.3)' : theme.border
     }}
   >
-    <div 
-      className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all shadow-inner ${
-        highlight 
-          ? 'group-hover:bg-orange-500 group-hover:text-white' 
+    <div
+      className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all shadow-inner ${highlight
+          ? 'group-hover:bg-orange-500 group-hover:text-white'
           : 'group-hover:bg-green-500 group-hover:text-white'
-      }`}
+        }`}
       style={{
         backgroundColor: highlight ? 'rgba(249, 115, 22, 0.1)' : theme.inputBg,
         color: highlight ? '#f97316' : theme.textSecondary
@@ -299,14 +314,14 @@ const QuickAction = ({ icon, label, onClick, theme, highlight }) => (
 );
 
 const CarCard = ({ name, price, tag, image, specs, theme }) => (
-  <div 
+  <div
     className="group rounded-3xl overflow-hidden border shadow-xl hover:shadow-2xl hover:border-green-500/50 transition-all duration-500 flex flex-col"
     style={{
       backgroundColor: theme.cardBg,
       borderColor: theme.border
     }}
   >
-    <div 
+    <div
       className="h-56 flex items-center justify-center relative p-6"
       style={{ backgroundColor: theme.inputBg }}
     >
@@ -322,7 +337,7 @@ const CarCard = ({ name, price, tag, image, specs, theme }) => (
 
     <div className="p-8 space-y-4 flex-1 flex flex-col justify-between">
       <div>
-        <h3 
+        <h3
           className="text-2xl font-black group-hover:text-green-500 transition-colors"
           style={{ color: theme.text }}
         >
@@ -333,7 +348,7 @@ const CarCard = ({ name, price, tag, image, specs, theme }) => (
         </p>
       </div>
 
-      <div 
+      <div
         className="flex justify-between items-center pt-6 border-t"
         style={{ borderColor: theme.border }}
       >
@@ -345,7 +360,7 @@ const CarCard = ({ name, price, tag, image, specs, theme }) => (
             {price}
           </p>
         </div>
-        <button 
+        <button
           className="px-6 py-3 rounded-xl text-xs font-black text-white hover:bg-green-600 transition-all shadow-lg active:scale-95"
           style={{ backgroundColor: theme.text }}
         >

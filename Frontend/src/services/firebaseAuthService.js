@@ -1,6 +1,5 @@
 import {
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -12,45 +11,23 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005/api';
 
-// Google Sign-In with REDIRECT (instead of popup)
+// Google Sign-In with POPUP
 export const loginWithGoogle = async () => {
   try {
+    console.log('[firebaseAuth] Starting Google sign-in with popup...');
     const provider = new GoogleAuthProvider();
-
-    // Add custom parameters
     provider.setCustomParameters({
       prompt: 'select_account'
     });
 
-    // Use redirect instead of popup
-    await signInWithRedirect(auth, provider);
-
-    // Note: The result will be handled by getRedirectResult on page load
-    return { success: true, message: 'Redirecting to Google...' };
-
-  } catch (error) {
-    console.error('Google login error:', error);
-    throw {
-      success: false,
-      message: error.message || 'Google login failed'
-    };
-  }
-};
-
-// Handle redirect result (call this on app initialization)
-export const handleRedirectResult = async () => {
-  try {
-    const result = await getRedirectResult(auth);
-
-    if (!result) {
-      // No redirect result (user didn't come from OAuth redirect)
-      return null;
-    }
+    // Use popup instead of redirect
+    const result = await signInWithPopup(auth, provider);
+    console.log('[firebaseAuth] ✅ Popup returned successfully');
 
     const user = result.user;
     const idToken = await user.getIdToken();
 
-    // Send to backend
+    console.log('[firebaseAuth] Sending to backend...');
     const response = await axios.post(`${API_URL}/auth/firebase-google`, {
       idToken,
       name: user.displayName,
@@ -58,8 +35,9 @@ export const handleRedirectResult = async () => {
       photoURL: user.photoURL
     });
 
+    console.log('[firebaseAuth] ✅ Backend response:', response.data);
+
     if (response.data.success) {
-      // Store token
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
@@ -71,17 +49,29 @@ export const handleRedirectResult = async () => {
     }
 
     throw new Error('Backend authentication failed');
-
   } catch (error) {
-    console.error('Redirect result error:', error);
-    return {
+    console.error('[firebaseAuth] ❌ Google login error:', error);
+
+    let errorMessage = 'Google login failed';
+
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = 'Sign-in cancelled';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'Popup was blocked. Please allow popups for this site.';
+    } else if (error.code === 'auth/unauthorized-domain') {
+      errorMessage = 'This domain is not authorized for Google Sign-In.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    throw {
       success: false,
-      error: error.message
+      message: errorMessage
     };
   }
 };
 
-// Regular email/password login
+// Email/password login
 export const loginWithEmail = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -112,7 +102,7 @@ export const loginWithEmail = async (email, password) => {
     if (error.code === 'auth/invalid-credential' ||
       error.code === 'auth/user-not-found' ||
       error.code === 'auth/wrong-password') {
-      errorMessage = 'Invalid email or password. Please check your credentials or sign up if you haven\'t already.';
+      errorMessage = 'Invalid email or password';
     } else if (error.code === 'auth/too-many-requests') {
       errorMessage = 'Too many failed attempts. Please try again later.';
     }
@@ -124,7 +114,7 @@ export const loginWithEmail = async (email, password) => {
   }
 };
 
-// Sign up with email/password
+// Email/password signup
 export const signupWithEmail = async (name, email, password, phone) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);

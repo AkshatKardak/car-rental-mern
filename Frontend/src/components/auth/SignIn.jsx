@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { Moon, Sun, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { loginWithEmail, loginWithGoogle } from '../../services/firebaseAuthService';
+import { toast } from 'react-hot-toast';
 import api from '../../services/api';
 
 export default function SignIn() {
@@ -12,11 +13,10 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [useFirebase, setUseFirebase] = useState(true); // Toggle between Firebase and traditional
+  const [useFirebase, setUseFirebase] = useState(true);
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
 
-  // Firebase Login
   const handleFirebaseSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -24,8 +24,8 @@ export default function SignIn() {
 
     try {
       const result = await loginWithEmail(email, password);
-
       if (result.success) {
+        toast.success('Login successful!');
         navigate('/dashboard');
       }
     } catch (err) {
@@ -35,46 +35,45 @@ export default function SignIn() {
     }
   };
 
-  // Traditional Login (Fallback)
   const handleTraditionalSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', {
-        email,
-        password,
-      });
-
+      const response = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      toast.success('Login successful!');
       navigate('/dashboard');
     } catch (err) {
       if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to server. Please make sure the backend is running.');
+        setError('Cannot connect to server.');
       } else if (err.response?.status === 401) {
         setError('Invalid email or password');
       } else {
-        setError(err.response?.data?.message || 'Login failed. Please try again.');
+        setError(err.response?.data?.message || 'Login failed.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Google Sign-In
   const handleGoogleLogin = async () => {
     setError('');
     setLoading(true);
 
     try {
+      console.log('[SignIn] Starting Google login...');
       const result = await loginWithGoogle();
 
       if (result.success) {
+        console.log('[SignIn] ✅ Google login successful!');
+        toast.success('Successfully logged in with Google!');
         navigate('/dashboard');
       }
     } catch (err) {
+      console.error('[SignIn] ❌ Google login failed:', err);
       setError(err.message || 'Google sign-in failed');
     } finally {
       setLoading(false);
@@ -98,7 +97,6 @@ export default function SignIn() {
       className="min-h-screen flex items-center justify-center px-4 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      {/* Dark Mode Toggle */}
       <button
         onClick={toggleTheme}
         className="fixed top-6 right-6 p-3 rounded-xl transition-all duration-300 hover:scale-110 z-50"
@@ -122,10 +120,7 @@ export default function SignIn() {
         }}
       >
         <div className="text-center mb-8">
-          <h1
-            className="text-3xl font-bold mb-2"
-            style={{ color: theme.text }}
-          >
+          <h1 className="text-3xl font-bold mb-2" style={{ color: theme.text }}>
             Welcome Back
           </h1>
           <p style={{ color: theme.textSecondary }}>
@@ -133,7 +128,6 @@ export default function SignIn() {
           </p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 rounded-xl border flex items-center gap-3" style={{
             backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : '#FEE2E2',
@@ -144,7 +138,6 @@ export default function SignIn() {
           </div>
         )}
 
-        {/* Google Sign In */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
@@ -156,10 +149,9 @@ export default function SignIn() {
           }}
         >
           <FcGoogle className="w-6 h-6" />
-          Continue with Google
+          {loading ? 'Signing in...' : 'Continue with Google'}
         </button>
 
-        {/* Divider */}
         <div className="flex items-center gap-4 mb-6">
           <div className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
           <span className="text-sm" style={{ color: theme.textSecondary }}>OR</span>
@@ -168,10 +160,7 @@ export default function SignIn() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: theme.text }}
-            >
+            <label className="block text-sm font-medium mb-2" style={{ color: theme.text }}>
               Email Address
             </label>
             <input
@@ -190,10 +179,7 @@ export default function SignIn() {
           </div>
 
           <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: theme.text }}
-            >
+            <label className="block text-sm font-medium mb-2" style={{ color: theme.text }}>
               Password
             </label>
             <div className="relative">
@@ -225,15 +211,12 @@ export default function SignIn() {
             type="submit"
             disabled={loading}
             className="w-full py-3 rounded-xl font-bold text-white transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: theme.primary
-            }}
+            style={{ backgroundColor: theme.primary }}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        {/* Toggle Authentication Method (for testing) */}
         <div className="mt-4 text-center">
           <button
             onClick={() => setUseFirebase(!useFirebase)}
@@ -244,16 +227,9 @@ export default function SignIn() {
           </button>
         </div>
 
-        <p
-          className="text-center mt-6"
-          style={{ color: theme.textSecondary }}
-        >
+        <p className="text-center mt-6" style={{ color: theme.textSecondary }}>
           Don't have an account?{' '}
-          <Link
-            to="/signup"
-            className="font-semibold hover:underline"
-            style={{ color: theme.primary }}
-          >
+          <Link to="/signup" className="font-semibold hover:underline" style={{ color: theme.primary }}>
             Sign Up
           </Link>
         </p>
