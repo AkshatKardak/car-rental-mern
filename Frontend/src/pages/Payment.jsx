@@ -25,12 +25,72 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
+// ... existing imports
+
+const PaymentSuccessModal = ({ isOpen, onClose, data, theme }) => {
+  if (!isOpen || !data) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md rounded-3xl p-6 shadow-2xl relative overflow-hidden"
+        style={{ backgroundColor: theme.cardBg }}
+      >
+        <div className="absolute top-0 left-0 w-full h-2 bg-green-500" />
+
+        <div className="flex flex-col items-center text-center">
+          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
+            <CheckCircle className="w-10 h-10 text-green-500" />
+          </div>
+
+          <h2 className="text-2xl font-black mb-2" style={{ color: theme.text }}>
+            Payment Successful!
+          </h2>
+
+          <p className="text-sm mb-8" style={{ color: theme.textSecondary }}>
+            Your booking for <span className="font-bold text-green-500">{data.carName}</span> has been confirmed.
+          </p>
+
+          <div
+            className="w-full rounded-2xl p-4 mb-8"
+            style={{ backgroundColor: theme.bg }}
+          >
+            <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: theme.textSecondary }}>
+              Amount Paid
+            </p>
+            <p className="text-3xl font-black text-green-500">
+              ₹{data.amount?.toLocaleString()}
+            </p>
+            <p className="text-xs mt-2 font-mono opacity-60" style={{ color: theme.text }}>
+              ID: {data.paymentId}
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="w-full py-4 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-2"
+          >
+            Continue to Bookings
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDarkMode } = useTheme();
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [paymentSuccessData, setPaymentSuccessData] = useState(null);
+
   const incoming = location.state || {};
+  // ... rest of the component ...
 
   // Check if payment data exists
   const hasPaymentData = incoming.carId && incoming.carName && incoming.startDate && incoming.endDate;
@@ -82,6 +142,10 @@ const Payment = () => {
   const [couponError, setCouponError] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(incoming.promoCode ? true : false);
 
+  // Dynamic pricing states
+  const [currentDiscount, setCurrentDiscount] = useState(summary?.promoDiscount || 0);
+  const [currentPromoCode, setCurrentPromoCode] = useState(summary?.promoCode || '');
+
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#f8f9fa',
     cardBg: isDarkMode ? '#1e293b' : '#ffffff',
@@ -89,6 +153,13 @@ const Payment = () => {
     textSecondary: isDarkMode ? '#cbd5e1' : '#6B7280',
     border: isDarkMode ? '#334155' : '#e5e7eb',
     inputBg: isDarkMode ? '#0f172a' : '#f8f9fa',
+  };
+
+  // Calculate final total with current discount
+  const calculateFinalTotal = () => {
+    if (!summary) return 0;
+    const baseAmount = summary.baseFare + summary.taxesFees + summary.deposit;
+    return Math.max(0, baseAmount - currentDiscount);
   };
 
   // UPI ID validation function
@@ -102,7 +173,7 @@ const Payment = () => {
   // Show empty state if no payment data
   if (!hasPaymentData) {
     return (
-      <div 
+      <div
         className="min-h-screen transition-colors duration-300 pt-20"
         style={{ backgroundColor: theme.bg }}
       >
@@ -116,16 +187,16 @@ const Payment = () => {
               borderColor: theme.border
             }}
           >
-            <div 
+            <div
               className="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-6"
             >
               <AlertCircle className="w-10 h-10 text-orange-500" />
             </div>
-            
+
             <h1 className="text-3xl font-black mb-3" style={{ color: theme.text }}>
               No Payment Details Found
             </h1>
-            
+
             <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: theme.textSecondary }}>
               You need to select a car and complete the booking form before proceeding to payment.
             </p>
@@ -138,7 +209,7 @@ const Payment = () => {
                 <Car className="w-5 h-5" />
                 Browse Cars
               </button>
-              
+
               <button
                 onClick={() => navigate('/mybookings')}
                 className="px-8 py-4 rounded-2xl border font-black hover:bg-opacity-50 transition-all flex items-center justify-center gap-2"
@@ -167,15 +238,46 @@ const Payment = () => {
     setCouponError('');
 
     try {
-      // Simulate coupon validation (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo: accept any code
-      setAppliedCoupon(true);
-      alert(`Coupon "${promoCode}" applied successfully!`);
+      // Call your promotion validation API
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5005/api/promotions/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          code: promoCode,
+          vehicleId: summary.carId,  // Changed from carId to vehicleId
+          bookingAmount: summary.baseFare + summary.taxesFees + summary.deposit
+        })
+      });
+
+      const result = await response.json();
+
+      // Fixed response structure - result.data.discount
+      if (result.success && result.data && result.data.discount > 0) {
+        setCurrentDiscount(result.data.discount);
+        setCurrentPromoCode(promoCode);
+        setAppliedCoupon(true);
+        setCouponError('');
+
+        // Show success message
+        const savedAmount = result.data.discount;
+        const finalAmount = result.data.finalAmount;
+        alert(`✅ Coupon "${promoCode}" applied!\n💰 You saved ₹${savedAmount}\n📊 Final amount: ₹${finalAmount}`);
+      } else {
+        setCouponError(result.message || 'Invalid or expired coupon code');
+        setAppliedCoupon(false);
+        setCurrentDiscount(0);
+        setCurrentPromoCode('');
+      }
     } catch (error) {
-      setCouponError('Invalid coupon code');
+      console.error('Coupon validation error:', error);
+      setCouponError('Failed to apply coupon. Please try again.');
       setAppliedCoupon(false);
+      setCurrentDiscount(0);
+      setCurrentPromoCode('');
     } finally {
       setLoadingCoupon(false);
     }
@@ -193,27 +295,29 @@ const Payment = () => {
         return;
       }
 
-      // Create booking first
+      // Create booking first with final calculated price
       const bookingData = {
         carId: summary.carId,
         startDate: summary.startDate,
         endDate: summary.endDate,
-        totalPrice: summary.total,
-        discount: summary.promoDiscount,
-        promotionCode: summary.promoCode
+        totalPrice: calculateFinalTotal(),
+        discount: currentDiscount,
+        promotionCode: currentPromoCode || null
       };
 
+      console.log('Creating booking with data:', bookingData);
+
       const bookingResponse = await bookingService.createBooking(bookingData);
-      
+
       if (!bookingResponse.success) {
-        throw new Error('Failed to create booking');
+        throw new Error(bookingResponse.message || 'Failed to create booking');
       }
 
       const bookingId = bookingResponse.data._id;
 
       // Create Razorpay order
       const orderResponse = await paymentService.createOrder({ bookingId });
-      
+
       if (!orderResponse.success) {
         throw new Error('Failed to create payment order');
       }
@@ -237,14 +341,13 @@ const Payment = () => {
             });
 
             if (verifyResponse.success) {
-              navigate('/payment-success', {
-                state: {
-                  bookingId: bookingId,
-                  amount: summary.total,
-                  paymentId: response.razorpay_payment_id,
-                  carName: summary.carName
-                }
+              setPaymentSuccessData({
+                amount: calculateFinalTotal(),
+                paymentId: response.razorpay_payment_id,
+                carName: summary.carName,
+                bookingId: bookingId
               });
+              setShowSuccessModal(true);
             }
           } catch (error) {
             console.error('Payment verification failed:', error);
@@ -273,7 +376,7 @@ const Payment = () => {
   `;
 
   return (
-    <div 
+    <div
       className="min-h-screen transition-colors duration-300 pt-20"
       style={{ backgroundColor: theme.bg }}
     >
@@ -307,7 +410,7 @@ const Payment = () => {
             animate="show"
           >
             {/* Coupon */}
-            <div 
+            <div
               className="rounded-3xl border p-4 sm:p-6 shadow-lg"
               style={{
                 backgroundColor: theme.cardBg,
@@ -326,12 +429,15 @@ const Payment = () => {
                   type="text"
                   placeholder="ENTER COUPON CODE"
                   value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setPromoCode(e.target.value.toUpperCase());
+                    setCouponError(''); // Clear error on change
+                  }}
                   disabled={appliedCoupon}
-                  className="flex-1 rounded-xl border px-4 py-3 text-sm sm:text-base focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-colors uppercase"
+                  className="flex-1 rounded-xl border px-4 py-3 text-sm sm:text-base focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-colors uppercase disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{
                     backgroundColor: appliedCoupon ? theme.border : theme.inputBg,
-                    borderColor: couponError ? '#ef4444' : theme.border,
+                    borderColor: couponError ? '#ef4444' : (appliedCoupon ? '#10b981' : theme.border),
                     color: theme.text
                   }}
                 />
@@ -355,13 +461,30 @@ const Payment = () => {
                   )}
                 </button>
               </div>
+
+              {/* Error message */}
               {couponError && (
-                <p className="text-xs text-red-500 mt-2">{couponError}</p>
+                <div className="mt-3 p-3 rounded-lg bg-red-50 border border-red-200">
+                  <p className="text-xs text-red-600 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    {couponError}
+                  </p>
+                </div>
+              )}
+
+              {/* Success message */}
+              {appliedCoupon && currentDiscount > 0 && !couponError && (
+                <div className="mt-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                  <p className="text-xs text-green-700 font-bold flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Woohoo! You saved ₹{currentDiscount} with code "{currentPromoCode}"
+                  </p>
+                </div>
               )}
             </div>
 
             {/* Payment Methods */}
-            <div 
+            <div
               className="rounded-3xl border p-4 sm:p-6 space-y-6 shadow-lg"
               style={{
                 backgroundColor: theme.cardBg,
@@ -369,7 +492,7 @@ const Payment = () => {
               }}
             >
               {/* Tabs */}
-              <div 
+              <div
                 className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl"
                 style={{
                   backgroundColor: theme.inputBg,
@@ -377,8 +500,8 @@ const Payment = () => {
                   borderColor: theme.border
                 }}
               >
-                <button 
-                  className={tabClass(method === "card")} 
+                <button
+                  className={tabClass(method === "card")}
                   onClick={() => setMethod("card")}
                   style={{
                     backgroundColor: method === "card" ? '#10b981' : 'transparent',
@@ -390,8 +513,8 @@ const Payment = () => {
                   <span className="sm:hidden">Card</span>
                 </button>
 
-                <button 
-                  className={tabClass(method === "upi")} 
+                <button
+                  className={tabClass(method === "upi")}
                   onClick={() => setMethod("upi")}
                   style={{
                     backgroundColor: method === "upi" ? '#10b981' : 'transparent',
@@ -403,8 +526,8 @@ const Payment = () => {
                   <span className="sm:hidden">UPI</span>
                 </button>
 
-                <button 
-                  className={tabClass(method === "netbanking")} 
+                <button
+                  className={tabClass(method === "netbanking")}
                   onClick={() => setMethod("netbanking")}
                   style={{
                     backgroundColor: method === "netbanking" ? '#10b981' : 'transparent',
@@ -531,12 +654,12 @@ const Payment = () => {
                           color: theme.text
                         }}
                       />
-                      <Wallet 
-                        className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2" 
-                        style={{ color: theme.textSecondary }} 
+                      <Wallet
+                        className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2"
+                        style={{ color: theme.textSecondary }}
                       />
                     </div>
-                    
+
                     {/* UPI ID Validation Hint */}
                     {upiId && !validateUpiId(upiId) && (
                       <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
@@ -544,7 +667,7 @@ const Payment = () => {
                         Please enter a valid UPI ID (e.g., username@paytm)
                       </p>
                     )}
-                    
+
                     {upiId && validateUpiId(upiId) && (
                       <p className="text-xs text-green-500 mt-2 flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" />
@@ -577,7 +700,7 @@ const Payment = () => {
                   </div>
 
                   {/* Information Box */}
-                  <div 
+                  <div
                     className="p-4 rounded-xl border-l-4 border-l-green-500"
                     style={{
                       backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#D1FAE5',
@@ -605,7 +728,7 @@ const Payment = () => {
                   <p className="text-xs sm:text-sm" style={{ color: theme.textSecondary }}>
                     Razorpay supports all major banks. Click the Pay button to proceed and select your bank.
                   </p>
-                  <select 
+                  <select
                     className="w-full rounded-xl border px-4 py-4 text-sm sm:text-base focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 appearance-none transition-colors"
                     style={{
                       backgroundColor: theme.inputBg,
@@ -628,7 +751,7 @@ const Payment = () => {
             </div>
 
             {/* Trust row */}
-            <div 
+            <div
               className="rounded-2xl border p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm"
               style={{
                 backgroundColor: theme.cardBg,
@@ -655,7 +778,7 @@ const Payment = () => {
             initial="hidden"
             animate="show"
           >
-            <div 
+            <div
               className="rounded-3xl border p-6 shadow-lg sticky top-24"
               style={{
                 backgroundColor: theme.cardBg,
@@ -667,27 +790,27 @@ const Payment = () => {
               </h2>
 
               <div className="space-y-3 mb-6">
-                <SummaryRow 
-                  label={`${summary.carName} • ${summary.days} days`} 
-                  value="" 
-                  theme={theme} 
-                  bold 
+                <SummaryRow
+                  label={`${summary.carName} • ${summary.days} days`}
+                  value=""
+                  theme={theme}
+                  bold
                 />
                 <div className="h-px" style={{ backgroundColor: theme.border }} />
-                <SummaryRow label="Base Fare" value={`₹${summary.baseFare}`} theme={theme} />
-                <SummaryRow label="Taxes & Fees" value={`₹${summary.taxesFees}`} theme={theme} />
-                <SummaryRow 
-                  label="Security Deposit" 
-                  value={`₹${summary.deposit}`} 
-                  subtext="(Refundable)" 
-                  theme={theme} 
+                <SummaryRow label="Base Fare" value={`₹${summary.baseFare.toLocaleString()}`} theme={theme} />
+                <SummaryRow label="Taxes & Fees" value={`₹${summary.taxesFees.toLocaleString()}`} theme={theme} />
+                <SummaryRow
+                  label="Security Deposit"
+                  value={`₹${summary.deposit.toLocaleString()}`}
+                  subtext="(Refundable)"
+                  theme={theme}
                 />
-                {summary.promoDiscount > 0 && (
-                  <SummaryRow 
-                    label={`Discount (${summary.promoCode})`} 
-                    value={`-₹${summary.promoDiscount}`} 
+                {currentDiscount > 0 && (
+                  <SummaryRow
+                    label={`Discount (${currentPromoCode})`}
+                    value={`-₹${currentDiscount.toLocaleString()}`}
                     theme={theme}
-                    valueClass="text-green-500"
+                    valueClass="text-green-600 font-black text-base"
                   />
                 )}
               </div>
@@ -696,22 +819,29 @@ const Payment = () => {
 
               <div className="flex items-end justify-between mb-6">
                 <div>
-                  <p className="text-xs uppercase tracking-wider" style={{ color: theme.textSecondary }}>
+                  <p className="text-xs uppercase tracking-wider font-bold" style={{ color: theme.textSecondary }}>
                     Total Payable
                   </p>
                   <p className="text-xs" style={{ color: theme.textSecondary }}>
                     Incl. all taxes
                   </p>
                 </div>
-                <p className="text-3xl font-black text-green-500">
-                  ₹{summary.total.toLocaleString()}
-                </p>
+                <div className="text-right">
+                  {currentDiscount > 0 && (
+                    <p className="text-sm line-through opacity-60" style={{ color: theme.textSecondary }}>
+                      ₹{(summary.baseFare + summary.taxesFees + summary.deposit).toLocaleString()}
+                    </p>
+                  )}
+                  <p className="text-3xl font-black text-green-500">
+                    ₹{calculateFinalTotal().toLocaleString()}
+                  </p>
+                </div>
               </div>
 
               <button
                 onClick={handlePayment}
                 disabled={loading}
-                className="w-full px-6 py-4 rounded-2xl bg-green-500 text-white font-black text-base hover:bg-green-600 transition-all shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-4 rounded-2xl bg-green-500 text-white font-black text-base hover:bg-green-600 transition-all shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
               >
                 {loading ? (
                   <>
@@ -720,7 +850,7 @@ const Payment = () => {
                   </>
                 ) : (
                   <>
-                    Pay ₹{summary.total.toLocaleString()}
+                    Pay ₹{calculateFinalTotal().toLocaleString()}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -733,7 +863,7 @@ const Payment = () => {
             </div>
 
             {/* Trust badges */}
-            <div 
+            <div
               className="rounded-2xl border p-4 space-y-3"
               style={{
                 backgroundColor: theme.cardBg,
@@ -767,6 +897,13 @@ const Payment = () => {
           </motion.aside>
         </div>
       </main>
+
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        data={paymentSuccessData}
+        theme={theme}
+        onClose={() => navigate('/mybookings')}
+      />
     </div>
   );
 };
@@ -785,7 +922,7 @@ const SummaryRow = ({ label, value, subtext, theme, bold, valueClass }) => (
       )}
     </div>
     {value && (
-      <span 
+      <span
         className={valueClass || (bold ? "font-bold" : "")}
         style={!valueClass ? { color: bold ? theme.text : theme.textSecondary } : {}}
       >
@@ -796,7 +933,7 @@ const SummaryRow = ({ label, value, subtext, theme, bold, valueClass }) => (
 );
 
 const BadgeMini = ({ children, theme }) => (
-  <div 
+  <div
     className="px-2 py-1 rounded text-xs font-bold border"
     style={{
       backgroundColor: theme.inputBg,

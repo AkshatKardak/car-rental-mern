@@ -17,28 +17,27 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallet'],
+    enum: ['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallet', 'Manual', 'Cash'],
     required: false,
     default: null
   },
   transactionId: {
     type: String,
-    required: false,
-    unique: true,
-    sparse: true
+    required: false
   },
   orderId: {
     type: String,
-    default: null
+    default: null,
+    index: true
   },
   status: {
     type: String,
-    enum: ['pending', 'paid', 'failed', 'refunded'],
+    enum: ['pending', 'approved', 'paid', 'failed', 'refunded'],
     default: 'pending'
   },
   paymentDate: {
     type: Date,
-    default: Date.now
+    default: null
   },
   refundAmount: {
     type: Number,
@@ -55,5 +54,8 @@ const paymentSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Define the sparse unique index ONLY here (not in schema field definition)
+paymentSchema.index({ transactionId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Payment', paymentSchema);

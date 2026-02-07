@@ -154,7 +154,7 @@ exports.getBookingById = async (req, res) => {
 exports.getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id })
-      .populate('car', 'name brand model pricePerDay image')
+      .populate('car', 'name brand model pricePerDay image location')
       .populate('promotion', 'code name')
       .sort({ createdAt: -1 });
     
@@ -167,6 +167,68 @@ exports.getUserBookings = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching your bookings',
+      error: error.message
+    });
+  }
+};
+
+// Cancel booking (User can cancel their own booking)
+exports.cancelBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+    
+    // Check if user owns this booking
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to cancel this booking'
+      });
+    }
+    
+    // Check if booking can be cancelled
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Booking is already cancelled'
+      });
+    }
+    
+    if (booking.status === 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot cancel a completed booking'
+      });
+    }
+    
+    // Check if payment is already made
+    if (booking.paymentStatus === 'paid') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot cancel a paid booking. Please contact support for refund.'
+      });
+    }
+    
+    // Update booking status
+    booking.status = 'cancelled';
+    booking.paymentStatus = 'failed';
+    await booking.save();
+    
+    res.json({
+      success: true,
+      message: 'Booking cancelled successfully',
+      data: booking
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error cancelling booking',
       error: error.message
     });
   }
