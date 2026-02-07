@@ -24,23 +24,51 @@ exports.createPayment = async (req, res, next) => {
             return next(new ErrorResponse('Booking already paid', 400));
         }
 
+        // Check if a pending payment already exists for this booking
+        const existingPayment = await Payment.findOne({
+            booking: bookingId,
+            status: 'pending'
+        });
+
+        if (existingPayment && existingPayment.orderId) {
+            // Return existing order instead of creating new one
+            return res.status(200).json({
+                success: true,
+                order: {
+                    id: existingPayment.orderId,
+                    amount: existingPayment.amount,
+                    currency: 'INR'
+                }
+            });
+        }
+
         // Create Razorpay Order
         const order = await createOrder(booking.totalPrice);
 
-        // Create initial payment record
-        const payment = await Payment.create({
-            booking: bookingId,
-            user: req.user.id,
-            amount: booking.totalPrice,
-            orderId: order.id,
-            status: 'pending'
-        });
+        // Create or update payment record
+        let payment;
+        if (existingPayment) {
+            // Update existing payment with new orderId
+            existingPayment.orderId = order.id;
+            existingPayment.amount = booking.totalPrice;
+            payment = await existingPayment.save();
+        } else {
+            // Create new payment record
+            payment = await Payment.create({
+                booking: bookingId,
+                user: req.user.id,
+                amount: booking.totalPrice,
+                orderId: order.id,
+                status: 'pending'
+            });
+        }
 
         res.status(200).json({
             success: true,
             order
         });
     } catch (err) {
+        console.error('Payment error:', err);
         next(err);
     }
 };
@@ -62,7 +90,7 @@ exports.verifyPayment = async (req, res, next) => {
             }
 
             payment.transactionId = paymentId;
-            payment.status = 'success';
+            payment.status = 'paid';
             await payment.save();
 
             // Update Booking
@@ -79,6 +107,7 @@ exports.verifyPayment = async (req, res, next) => {
             return next(new ErrorResponse('Invalid signature', 400));
         }
     } catch (err) {
+        console.error('Payment verification error:', err);
         next(err);
     }
 };

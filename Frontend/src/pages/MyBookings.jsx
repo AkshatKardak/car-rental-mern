@@ -1,9 +1,20 @@
 import React, { useMemo, useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-import { CalendarDays, Clock, MapPin, Car, CreditCard, AlertTriangle } from "lucide-react";
+import { 
+  CalendarDays, 
+  Clock, 
+  MapPin, 
+  Car, 
+  CreditCard, 
+  AlertTriangle,
+  CheckCircle,
+  X
+} from "lucide-react";
 import { bookingService } from '../services/bookingService';
+import { paymentService } from '../services/paymentService';
+import { loadRazorpayScript, initRazorpayPayment } from '../utils/razorpay';
 
 const container = {
   hidden: { opacity: 0 },
@@ -17,10 +28,13 @@ const fadeUp = {
 
 const MyBookings = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isDarkMode } = useTheme();
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successData, setSuccessData] = useState(null);
 
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#f8f9fa',
@@ -33,7 +47,15 @@ const MyBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+    
+    // Check if redirected from payment success
+    if (location.state?.paymentSuccess) {
+      setSuccessData(location.state);
+      setShowSuccessModal(true);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const fetchBookings = async () => {
     try {
@@ -45,6 +67,7 @@ const MyBookings = () => {
         carId: b.car?._id || b.car,
         carName: b.car ? `${b.car.brand} ${b.car.model}` : 'Unknown Car',
         status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
+        paymentStatus: b.paymentStatus.charAt(0).toUpperCase() + b.paymentStatus.slice(1),
         pickup: b.car?.location || 'Store Location',
         dropoff: 'Store Location',
         start: new Date(b.startDate).toLocaleDateString() + ' ' + new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -61,7 +84,84 @@ const MyBookings = () => {
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
+  const handlePayBooking = async (bookingId, total, carName) => {
+    try {
+      setLoading(true);
+
+      // Load Razorpay script
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        alert('Failed to load Razorpay SDK. Please check your internet connection.');
+        setLoading(false);
+        return;
+      }
+
+      // Create Razorpay order
+      const orderResponse = await paymentService.createOrder({ bookingId });
+      
+      if (!orderResponse.success) {
+        if (orderResponse.requiresApproval) {
+          alert('Your booking is awaiting admin approval. You will be able to pay once approved.');
+          setLoading(false);
+          return;
+        }
+        throw new Error('Failed to create payment order');
+      }
+
+      const order = orderResponse.order;
+
+      // Initialize Razorpay payment
+      await initRazorpayPayment(
+        order,
+        {
+          name: carName,
+          description: `Car Rental Payment`,
+        },
+        async (response) => {
+          // Payment successful callback
+          try {
+            const verifyResponse = await paymentService.verifyPayment({
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature
+            });
+
+            if (verifyResponse.success) {
+              setSuccessData({
+                bookingId: bookingId,
+                amount: total,
+                paymentId: response.razorpay_payment_id,
+                carName: carName
+              });
+              setShowSuccessModal(true);
+              fetchBookings(); // Refresh bookings
+            }
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            alert('Payment verification failed. Please contact support.');
+          }
+        },
+        (error) => {
+          // Payment failed callback
+          console.error('Payment failed:', error);
+          alert('Payment failed. Please try again.');
+        }
+      );
+
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert(error.message || 'Payment failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId, paymentStatus) => {
+    if (paymentStatus === 'Paid') {
+      alert('Cannot cancel a paid booking. Please contact support for refund.');
+      return;
+    }
+
     if (!confirm('Are you sure you want to cancel this booking?')) {
       return;
     }
@@ -83,6 +183,15 @@ const MyBookings = () => {
       case 'Cancelled': return 'px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold border border-red-200';
       case 'Completed': return 'px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold border border-blue-200';
       default: return 'px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold border border-gray-200';
+    }
+  };
+
+  const paymentBadge = (status) => {
+    switch (status) {
+      case 'Paid': return 'px-2 py-1 rounded-lg bg-green-500/10 text-green-600 text-xs font-bold';
+      case 'Pending': return 'px-2 py-1 rounded-lg bg-orange-500/10 text-orange-600 text-xs font-bold';
+      case 'Failed': return 'px-2 py-1 rounded-lg bg-red-500/10 text-red-600 text-xs font-bold';
+      default: return 'px-2 py-1 rounded-lg bg-gray-500/10 text-gray-600 text-xs font-bold';
     }
   };
 
@@ -132,7 +241,11 @@ const MyBookings = () => {
         </motion.div>
 
         {/* Content */}
-        {bookings.length === 0 ? (
+        {loading ? (
+          <motion.div variants={fadeUp} className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          </motion.div>
+        ) : bookings.length === 0 ? (
           <motion.div
             variants={fadeUp}
             className="rounded-2xl border p-8 shadow-sm"
@@ -190,7 +303,10 @@ const MyBookings = () => {
                       {b.carName}
                     </p>
                   </div>
-                  <span className={statusBadge(b.status)}>{b.status}</span>
+                  <div className="flex flex-col gap-2 items-end">
+                    <span className={statusBadge(b.status)}>{b.status}</span>
+                    <span className={paymentBadge(b.paymentStatus)}>{b.paymentStatus}</span>
+                  </div>
                 </div>
 
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -242,60 +358,144 @@ const MyBookings = () => {
                     <p className="text-sm" style={{ color: theme.textSecondary }}>
                       Total:{" "}
                       <span className="font-black" style={{ color: theme.text }}>
-                        ₹{b.total}
+                        ₹{b.total?.toLocaleString()}
                       </span>
                     </p>
                   </div>
 
-                 <div className="flex gap-2 flex-wrap">
-  <button
-    onClick={() => navigate(`/car/${b.carId || "porsche"}`)}
-    className="px-4 py-2 rounded-xl border font-bold hover:bg-opacity-50 transition text-sm"
-    style={{
-      backgroundColor: theme.cardBg,
-      borderColor: theme.border,
-      color: theme.text
-    }}
-  >
-    View
-  </button>
-  
-  {/* Report Damage Button - Show for Active/Completed bookings */}
-  {(b.status === 'Confirmed' || b.status === 'Completed') && (
-    <button
-      onClick={() => navigate(`/report-damage/${b.id}`)}
-      className="px-4 py-2 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-600 font-bold hover:bg-orange-500/20 transition text-sm flex items-center gap-2"
-    >
-      <AlertTriangle className="w-4 h-4" />
-      Report Damage
-    </button>
-  )}
-  
-  {(b.status === 'Pending' || b.status === 'Confirmed') && (
-    <button
-      onClick={() => handleCancelBooking(b.id)}
-      className="px-4 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition text-sm border border-red-200"
-    >
-      Cancel
-    </button>
-  )}
-  
-  {b.status === 'Pending' && (
-    <button
-      onClick={() => navigate("/payment")}
-      className="px-4 py-2 rounded-xl bg-green-500 text-white font-black hover:bg-green-600 transition text-sm"
-    >
-      Pay
-    </button>
-  )}
-</div>
-
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => navigate(`/car/${b.carId || "porsche"}`)}
+                      className="px-4 py-2 rounded-xl border font-bold hover:bg-opacity-50 transition text-sm"
+                      style={{
+                        backgroundColor: theme.cardBg,
+                        borderColor: theme.border,
+                        color: theme.text
+                      }}
+                    >
+                      View
+                    </button>
+                    
+                    {/* Show Pay button only if payment is pending */}
+                    {b.paymentStatus === 'Pending' && b.status !== 'Cancelled' && (
+                      <button
+                        onClick={() => handlePayBooking(b.id, b.total, b.carName)}
+                        className="px-4 py-2 rounded-xl bg-green-500 text-white font-black hover:bg-green-600 transition text-sm"
+                        disabled={loading}
+                      >
+                        Pay
+                      </button>
+                    )}
+                    
+                    {/* Show Cancel button if not paid and not cancelled */}
+                    {b.paymentStatus !== 'Paid' && b.status !== 'Cancelled' && (
+                      <button
+                        onClick={() => handleCancelBooking(b.id, b.paymentStatus)}
+                        className="px-4 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition text-sm border border-red-200"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
           </motion.div>
         )}
       </motion.main>
+
+      {/* Payment Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="rounded-3xl border p-8 max-w-md w-full shadow-2xl"
+              style={{
+                backgroundColor: theme.cardBg,
+                borderColor: theme.border
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-end mb-4">
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                >
+                  <X className="w-5 h-5" style={{ color: theme.textSecondary }} />
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6">
+                  <CheckCircle className="w-12 h-12 text-green-500" />
+                </div>
+
+                <h2 className="text-3xl font-black mb-2" style={{ color: theme.text }}>
+                  Payment Successful!
+                </h2>
+
+                <p className="text-sm mb-6" style={{ color: theme.textSecondary }}>
+                  Your payment has been processed successfully
+                </p>
+
+                <div 
+                  className="w-full rounded-2xl border p-6 mb-6"
+                  style={{
+                    backgroundColor: theme.inputBg,
+                    borderColor: theme.border
+                  }}
+                >
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: theme.textSecondary }}>Car</span>
+                      <span className="font-bold" style={{ color: theme.text }}>
+                        {successData?.carName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: theme.textSecondary }}>Booking ID</span>
+                      <span className="font-bold" style={{ color: theme.text }}>
+                        {successData?.bookingId?.slice(-8)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: theme.textSecondary }}>Payment ID</span>
+                      <span className="font-bold" style={{ color: theme.text }}>
+                        {successData?.paymentId?.slice(-8)}
+                      </span>
+                    </div>
+                    <div 
+                      className="flex justify-between text-sm pt-3 border-t"
+                      style={{ borderColor: theme.border }}
+                    >
+                      <span style={{ color: theme.textSecondary }}>Amount Paid</span>
+                      <span className="font-black text-lg text-green-500">
+                        ₹{successData?.amount?.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full px-6 py-4 rounded-2xl bg-green-500 text-white font-black hover:bg-green-600 transition"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

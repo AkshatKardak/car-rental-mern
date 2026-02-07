@@ -18,12 +18,18 @@ const paymentSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     enum: ['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallet'],
-    required: true
+    required: false,
+    default: null
   },
   transactionId: {
     type: String,
-    required: true,
-    unique: true
+    required: false,
+    unique: true,
+    sparse: true
+  },
+  orderId: {
+    type: String,
+    default: null
   },
   status: {
     type: String,
