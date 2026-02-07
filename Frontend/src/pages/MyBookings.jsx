@@ -2,12 +2,12 @@ import React, { useMemo, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-import { 
-  CalendarDays, 
-  Clock, 
-  MapPin, 
-  Car, 
-  CreditCard, 
+import {
+  CalendarDays,
+  Clock,
+  MapPin,
+  Car,
+  CreditCard,
   AlertTriangle,
   CheckCircle,
   X
@@ -47,7 +47,7 @@ const MyBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-    
+
     // Check if redirected from payment success
     if (location.state?.paymentSuccess) {
       setSuccessData(location.state);
@@ -62,18 +62,20 @@ const MyBookings = () => {
       setLoading(true);
       const response = await bookingService.getUserBookings();
 
-      const mappedBookings = (response.data || []).map(b => ({
-        id: b._id,
-        carId: b.car?._id || b.car,
-        carName: b.car ? `${b.car.brand} ${b.car.model}` : 'Unknown Car',
-        status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
-        paymentStatus: b.paymentStatus.charAt(0).toUpperCase() + b.paymentStatus.slice(1),
-        pickup: b.car?.location || 'Store Location',
-        dropoff: 'Store Location',
-        start: new Date(b.startDate).toLocaleDateString() + ' ' + new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        end: new Date(b.endDate).toLocaleDateString() + ' ' + new Date(b.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        total: b.totalPrice
-      }));
+      const mappedBookings = (response.data || [])
+        .filter(b => b.status !== 'cancelled')
+        .map(b => ({
+          id: b._id,
+          carId: b.car?._id || b.car,
+          carName: b.car ? `${b.car.brand} ${b.car.model}` : 'Unknown Car',
+          status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
+          paymentStatus: b.paymentStatus.charAt(0).toUpperCase() + b.paymentStatus.slice(1),
+          pickup: b.car?.location || 'Store Location',
+          dropoff: 'Store Location',
+          start: new Date(b.startDate).toLocaleDateString() + ' ' + new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          end: new Date(b.endDate).toLocaleDateString() + ' ' + new Date(b.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          total: b.totalPrice
+        }));
 
       setBookings(mappedBookings);
     } catch (error) {
@@ -98,7 +100,7 @@ const MyBookings = () => {
 
       // Create Razorpay order
       const orderResponse = await paymentService.createOrder({ bookingId });
-      
+
       if (!orderResponse.success) {
         if (orderResponse.requiresApproval) {
           alert('Your booking is awaiting admin approval. You will be able to pay once approved.');
@@ -196,7 +198,7 @@ const MyBookings = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen pt-20 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
@@ -209,7 +211,7 @@ const MyBookings = () => {
         {/* Header */}
         <motion.div variants={fadeUp} className="flex items-end justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="w-12 h-12 rounded-xl flex items-center justify-center border"
               style={{
                 backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.1)',
@@ -219,7 +221,7 @@ const MyBookings = () => {
               <CalendarDays className="w-6 h-6 text-green-500" />
             </div>
             <div>
-              <h1 
+              <h1
                 className="text-3xl md:text-4xl font-black tracking-tight"
                 style={{ color: theme.text }}
               >
@@ -279,8 +281,8 @@ const MyBookings = () => {
                 whileHover={{
                   y: -6,
                   scale: 1.01,
-                  boxShadow: isDarkMode 
-                    ? "0 10px 30px -10px rgba(16, 185, 129, 0.3)" 
+                  boxShadow: isDarkMode
+                    ? "0 10px 30px -10px rgba(16, 185, 129, 0.3)"
                     : "0 10px 30px -10px rgba(0,0,0,0.1)",
                 }}
                 whileTap={{ scale: 0.99 }}
@@ -310,7 +312,7 @@ const MyBookings = () => {
                 </div>
 
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div 
+                  <div
                     className="rounded-xl border p-4"
                     style={{
                       backgroundColor: theme.inputBg,
@@ -329,7 +331,7 @@ const MyBookings = () => {
                     </p>
                   </div>
 
-                  <div 
+                  <div
                     className="rounded-xl border p-4"
                     style={{
                       backgroundColor: theme.inputBg,
@@ -349,7 +351,7 @@ const MyBookings = () => {
                   </div>
                 </div>
 
-                <div 
+                <div
                   className="mt-5 flex items-center justify-between gap-3 pt-4 border-t"
                   style={{ borderColor: theme.border }}
                 >
@@ -375,7 +377,7 @@ const MyBookings = () => {
                     >
                       View
                     </button>
-                    
+
                     {/* Show Pay button only if payment is pending */}
                     {b.paymentStatus === 'Pending' && b.status !== 'Cancelled' && (
                       <button
@@ -386,7 +388,7 @@ const MyBookings = () => {
                         Pay
                       </button>
                     )}
-                    
+
                     {/* Show Cancel button if not paid and not cancelled */}
                     {b.paymentStatus !== 'Paid' && b.status !== 'Cancelled' && (
                       <button
@@ -447,7 +449,7 @@ const MyBookings = () => {
                   Your payment has been processed successfully
                 </p>
 
-                <div 
+                <div
                   className="w-full rounded-2xl border p-6 mb-6"
                   style={{
                     backgroundColor: theme.inputBg,
@@ -473,7 +475,7 @@ const MyBookings = () => {
                         {successData?.paymentId?.slice(-8)}
                       </span>
                     </div>
-                    <div 
+                    <div
                       className="flex justify-between text-sm pt-3 border-t"
                       style={{ borderColor: theme.border }}
                     >

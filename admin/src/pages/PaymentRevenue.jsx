@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Bell,
-  Loader
+  Loader,
+  Tag
 } from 'lucide-react'
 import axios from 'axios'
 
@@ -120,10 +121,28 @@ const ContentArea = () => {
     } catch (error) {
       console.error('Error fetching payments:', error)
       alert('Failed to fetch payments. Please check your connection.')
-    } finally {
       setLoading(false)
     }
   }
+
+  // Fetch coupon stats
+  const [couponStats, setCouponStats] = useState([])
+
+  useEffect(() => {
+    const fetchCouponStats = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/admin/stats/coupon-analytics`, {
+          headers: getAuthHeader()
+        })
+        if (response.data.success) {
+          setCouponStats(response.data.data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching coupon stats:', error)
+      }
+    }
+    fetchCouponStats()
+  }, [])
 
   const statsData = [
     {
@@ -275,8 +294,8 @@ const ContentArea = () => {
                     setPage(1)
                   }}
                   className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${filterStatus === f
-                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                      : 'bg-white border-border-light text-text-secondary hover:bg-background-secondary hover:text-text-primary'
+                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                    : 'bg-white border-border-light text-text-secondary hover:bg-background-secondary hover:text-text-primary'
                     }`}
                 >
                   {f}
@@ -429,8 +448,8 @@ const ContentArea = () => {
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
                     className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${page === pageNum
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'border border-border-light text-text-secondary hover:bg-white'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                      : 'border border-border-light text-text-secondary hover:bg-white'
                       }`}
                   >
                     {pageNum}
