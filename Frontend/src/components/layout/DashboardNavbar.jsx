@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Bell, 
-  Settings, 
-  Menu, 
-  X, 
+import {
+  Bell,
+  Settings,
+  Menu,
+  X,
   LogOut,
   User,
   ChevronDown,
@@ -13,10 +13,13 @@ import {
   AlertCircle,
   Info,
   Moon,
-  Sun
+  Sun,
+  ExternalLink
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Logo from "../../assets/logo.png";
+import { notificationService } from "../../services/notificationService";
+import { toast } from "react-hot-toast";
 
 const DashboardNavbar = () => {
   const navigate = useNavigate();
@@ -32,37 +35,25 @@ const DashboardNavbar = () => {
   const settingsRef = useRef(null);
   const userMenuRef = useRef(null);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'success',
-      icon: <CheckCircle size={18} />,
-      title: 'Booking Confirmed',
-      message: 'Your Tesla Model S booking is confirmed',
-      time: '2 hours ago',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'info',
-      icon: <Info size={18} />,
-      title: 'Payment Reminder',
-      message: 'Your payment of ₹18,500 is due tomorrow',
-      time: '5 hours ago',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'warning',
-      icon: <AlertCircle size={18} />,
-      title: 'Vehicle Return Due',
-      message: 'Please return your vehicle by 6:00 PM today',
-      time: '1 day ago',
-      read: true
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    fetchNotifications();
+    // Poll for notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await notificationService.getUserNotifications();
+      setNotifications(res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch navbar notifications:', error);
+    }
+  };
 
   useEffect(() => {
     const raw = localStorage.getItem("user");
@@ -102,15 +93,44 @@ const DashboardNavbar = () => {
     }
   };
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
+  const markAsRead = async (id) => {
+    try {
+      await notificationService.markAsRead(id);
+      setNotifications(notifications.map(n =>
+        n._id === id ? { ...n, read: true } : n
+      ));
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+    }
   };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    setShowNotifications(false);
+  const clearAllNotifications = async () => {
+    try {
+      await notificationService.clearAllNotifications();
+      setNotifications([]);
+      setShowNotifications(false);
+    } catch (error) {
+      console.error('Failed to clear notifications:', error);
+    }
+  };
+
+  const formatNotifTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getNotifIcon = (type) => {
+    switch (type) {
+      case 'success': return <CheckCircle size={18} className="text-green-500" />;
+      case 'warning': return <AlertCircle size={18} className="text-yellow-500" />;
+      case 'error': return <AlertCircle size={18} className="text-red-500" />;
+      default: return <Info size={18} className="text-blue-500" />;
+    }
   };
 
   const tabs = [
@@ -146,7 +166,7 @@ const DashboardNavbar = () => {
         </button>
 
         {/* Center: tabs (desktop) */}
-        <nav 
+        <nav
           className="hidden md:flex items-center gap-2 border rounded-full px-2 py-1 transition-colors"
           style={{
             backgroundColor: isDarkMode ? '#1e293b' : '#f8f9fa',
@@ -160,8 +180,8 @@ const DashboardNavbar = () => {
               type="button"
               className="relative px-4 py-2 rounded-full text-sm font-semibold transition"
               style={{
-                color: isActive(t.path) 
-                  ? '#10b981' 
+                color: isActive(t.path)
+                  ? '#10b981'
                   : isDarkMode ? '#cbd5e1' : '#6B7280'
               }}
             >
@@ -218,7 +238,7 @@ const DashboardNavbar = () => {
             >
               <Bell className="w-5 h-5" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }} />
               {unreadCount > 0 && (
-                <span 
+                <span
                   className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2"
                   style={{ borderColor: isDarkMode ? '#0f172a' : '#ffffff' }}
                 ></span>
@@ -237,7 +257,7 @@ const DashboardNavbar = () => {
                     borderColor: isDarkMode ? '#334155' : '#e5e7eb'
                   }}
                 >
-                  <div 
+                  <div
                     className="p-4 border-b flex justify-between items-center"
                     style={{ borderColor: isDarkMode ? '#334155' : '#e5e7eb' }}
                   >
@@ -245,12 +265,23 @@ const DashboardNavbar = () => {
                       Notifications
                     </h3>
                     {notifications.length > 0 && (
-                      <button
-                        onClick={clearAllNotifications}
-                        className="text-xs text-green-500 font-semibold hover:underline"
-                      >
-                        Clear all
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={clearAllNotifications}
+                          className="text-[10px] text-red-500 font-semibold hover:underline"
+                        >
+                          Clear all
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate('/notifications');
+                            setShowNotifications(false);
+                          }}
+                          className="text-[10px] text-blue-500 font-semibold hover:underline flex items-center gap-1"
+                        >
+                          View all <ExternalLink size={10} />
+                        </button>
+                      </div>
                     )}
                   </div>
                   <div className="max-h-96 overflow-y-auto">
@@ -265,33 +296,49 @@ const DashboardNavbar = () => {
                           onClick={() => markAsRead(notif.id)}
                           className="w-full p-4 border-b hover:bg-opacity-50 transition text-left"
                           style={{
-                            backgroundColor: !notif.read 
-                              ? (isDarkMode ? 'rgba(16, 185, 129, 0.05)' : 'rgba(16, 185, 129, 0.05)') 
+                            backgroundColor: !notif.read
+                              ? (isDarkMode ? 'rgba(16, 185, 129, 0.05)' : 'rgba(16, 185, 129, 0.05)')
                               : 'transparent',
                             borderColor: isDarkMode ? '#334155' : '#e5e7eb'
                           }}
                         >
                           <div className="flex gap-3">
-                            <div className={`mt-1 ${notif.type === 'success' ? 'text-green-500' : notif.type === 'warning' ? 'text-yellow-500' : 'text-blue-500'}`}>
-                              {notif.icon}
+                            <div className="mt-1">
+                              {getNotifIcon(notif.type)}
                             </div>
                             <div className="flex-1">
-                              <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}>
+                              <p className="font-semibold text-xs" style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}>
                                 {notif.title}
                               </p>
-                              <p className="text-xs mt-1" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }}>
+                              <p className="text-[10px] mt-0.5" style={{ color: isDarkMode ? '#cbd5e1' : '#6B7280' }}>
                                 {notif.message}
                               </p>
-                              <p className="text-xs mt-1" style={{ color: isDarkMode ? '#94a3b8' : '#9CA3AF' }}>
-                                {notif.time}
+                              <p className="text-[10px] mt-1" style={{ color: isDarkMode ? '#94a3b8' : '#9CA3AF' }}>
+                                {formatNotifTime(notif.createdAt)}
                               </p>
                             </div>
-                            {!notif.read && <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>}
+                            {!notif.read && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2"></div>}
                           </div>
                         </button>
-                      ))
+                      )).slice(0, 5) // Show only 5 in dropdown
                     )}
                   </div>
+                  {notifications.length > 5 && (
+                    <button
+                      onClick={() => {
+                        navigate('/notifications');
+                        setShowNotifications(false);
+                      }}
+                      className="w-full py-2 text-center text-xs font-bold border-t hover:bg-opacity-50 transition"
+                      style={{
+                        color: '#10b981',
+                        borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+                        backgroundColor: isDarkMode ? '#1e293b' : '#f8f9fa'
+                      }}
+                    >
+                      View all notifications
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -328,19 +375,19 @@ const DashboardNavbar = () => {
                   }}
                 >
                   <div className="p-2">
-                    <button 
+                    <button
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >
                       Account Settings
                     </button>
-                    <button 
+                    <button
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >
                       Preferences
                     </button>
-                    <button 
+                    <button
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >
@@ -385,7 +432,7 @@ const DashboardNavbar = () => {
                     borderColor: isDarkMode ? '#334155' : '#e5e7eb'
                   }}
                 >
-                  <div 
+                  <div
                     className="p-4 border-b"
                     style={{ borderColor: isDarkMode ? '#334155' : '#e5e7eb' }}
                   >
@@ -397,7 +444,7 @@ const DashboardNavbar = () => {
                     </p>
                   </div>
                   <div className="p-2">
-                    <button 
+                    <button
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition flex items-center gap-2"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >

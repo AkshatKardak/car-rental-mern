@@ -46,11 +46,14 @@ const PaymentSuccessModal = ({ isOpen, onClose, data, theme }) => {
           </div>
 
           <h2 className="text-2xl font-black mb-2" style={{ color: theme.text }}>
-            Payment Successful!
+            {data.isDamage ? 'Damage Settlement Successful!' : 'Payment Successful!'}
           </h2>
 
           <p className="text-sm mb-8" style={{ color: theme.textSecondary }}>
-            Your booking for <span className="font-bold text-green-500">{data.carName}</span> has been confirmed.
+            {data.isDamage
+              ? `The repair bill for ${data.carName} has been cleared.`
+              : <>Your booking for <span className="font-bold text-green-500">{data.carName}</span> has been confirmed.</>
+            }
           </p>
 
           <div
@@ -93,11 +96,34 @@ const Payment = () => {
   // ... rest of the component ...
 
   // Check if payment data exists
-  const hasPaymentData = incoming.carId && incoming.carName && incoming.startDate && incoming.endDate;
+  // It could be a new booking (carId + carName + dates) or an existing booking/damage (bookingId or damageReportId)
+  const isDamagePayment = !!incoming.damageReportId;
+  const isExistingBooking = !!incoming.bookingId && !isDamagePayment;
+  const isNewBooking = !isExistingBooking && !isDamagePayment && incoming.carId && incoming.carName && incoming.startDate && incoming.endDate;
+
+  const hasPaymentData = isDamagePayment || isExistingBooking || isNewBooking;
 
   const summary = useMemo(() => {
-    if (!hasPaymentData) {
-      return null;
+    if (isDamagePayment) {
+      return {
+        type: 'damage',
+        damageReportId: incoming.damageReportId,
+        carName: incoming.carName,
+        total: incoming.actualCost,
+        bookingId: incoming.bookingId
+      };
+    }
+
+    if (isExistingBooking) {
+      return {
+        type: 'existing_booking',
+        bookingId: incoming.bookingId,
+        carName: incoming.carName,
+        total: incoming.totalPrice,
+        startDate: incoming.startDate,
+        endDate: incoming.endDate,
+        days: incoming.days
+      };
     }
 
     const carName = incoming.carName || "Selected Car";
@@ -113,6 +139,7 @@ const Payment = () => {
     const total = Math.max(0, baseFare + taxesFees + deposit - promoDiscount);
 
     return {
+      type: 'new_booking',
       carName,
       carId,
       days,
@@ -125,7 +152,7 @@ const Payment = () => {
       startDate: incoming.startDate,
       endDate: incoming.endDate,
     };
-  }, [incoming, hasPaymentData]);
+  }, [incoming, hasPaymentData, isDamagePayment, isExistingBooking, isNewBooking]);
 
   const [method, setMethod] = useState("card");
   const [saveCard, setSaveCard] = useState(true);
@@ -158,6 +185,7 @@ const Payment = () => {
   // Calculate final total with current discount
   const calculateFinalTotal = () => {
     if (!summary) return 0;
+    if (summary.type !== 'new_booking') return summary.total;
     const baseAmount = summary.baseFare + summary.taxesFees + summary.deposit;
     return Math.max(0, baseAmount - currentDiscount);
   };
@@ -295,57 +323,73 @@ const Payment = () => {
         return;
       }
 
-      // Create booking first with final calculated price
-      const bookingData = {
-        carId: summary.carId,
-        startDate: summary.startDate,
-        endDate: summary.endDate,
-        totalPrice: calculateFinalTotal(),
-        discount: currentDiscount,
-        promotionCode: currentPromoCode || null
-      };
+      let bookingId = summary.bookingId;
+      let order;
 
-      console.log('Creating booking with data:', bookingData);
+      if (summary.type === 'new_booking') {
+        // Create booking first
+        const bookingData = {
+          carId: summary.carId,
+          startDate: summary.startDate,
+          endDate: summary.endDate,
+          totalPrice: calculateFinalTotal(),
+          discount: currentDiscount,
+          promotionCode: currentPromoCode || null
+        };
 
-      const bookingResponse = await bookingService.createBooking(bookingData);
+        const bookingResponse = await bookingService.createBooking(bookingData);
+        if (!bookingResponse.success) throw new Error(bookingResponse.message || 'Failed to create booking');
+        bookingId = bookingResponse.data._id;
 
-      if (!bookingResponse.success) {
-        throw new Error(bookingResponse.message || 'Failed to create booking');
+        // Create Order
+        const orderResponse = await paymentService.createOrder({ bookingId });
+        if (!orderResponse.success) throw new Error('Failed to create payment order');
+        order = orderResponse.order;
+      } else if (summary.type === 'existing_booking') {
+        // Just create order for existing booking
+        const orderResponse = await paymentService.createOrder({ bookingId });
+        if (!orderResponse.success) throw new Error('Failed to create payment order');
+        order = orderResponse.order;
+      } else if (summary.type === 'damage') {
+        // Create damage order
+        const orderResponse = await paymentService.createDamageOrder(summary.damageReportId);
+        if (!orderResponse.success) throw new Error('Failed to create damage payment order');
+        order = orderResponse.order;
       }
-
-      const bookingId = bookingResponse.data._id;
-
-      // Create Razorpay order
-      const orderResponse = await paymentService.createOrder({ bookingId });
-
-      if (!orderResponse.success) {
-        throw new Error('Failed to create payment order');
-      }
-
-      const order = orderResponse.order;
 
       // Initialize Razorpay payment
       const paymentResult = await initRazorpayPayment(
         order,
         {
           name: summary.carName,
-          description: `${summary.days} days rental`,
+          description: summary.type === 'damage' ? 'Damage Repair Bill' : `${summary.days} days rental`,
         },
         async (response) => {
           // Payment successful callback
           try {
-            const verifyResponse = await paymentService.verifyPayment({
-              orderId: response.razorpay_order_id,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature
-            });
+            let verifyResponse;
+            if (summary.type === 'damage') {
+              verifyResponse = await paymentService.verifyDamagePayment({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                damageReportId: summary.damageReportId
+              });
+            } else {
+              verifyResponse = await paymentService.verifyPayment({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature
+              });
+            }
 
             if (verifyResponse.success) {
               setPaymentSuccessData({
                 amount: calculateFinalTotal(),
                 paymentId: response.razorpay_payment_id,
                 carName: summary.carName,
-                bookingId: bookingId
+                bookingId: bookingId,
+                isDamage: summary.type === 'damage'
               });
               setShowSuccessModal(true);
             }
@@ -791,20 +835,32 @@ const Payment = () => {
 
               <div className="space-y-3 mb-6">
                 <SummaryRow
-                  label={`${summary.carName} • ${summary.days} days`}
+                  label={summary.type === 'damage' ? summary.carName : `${summary.carName} • ${summary.days || 1} days`}
                   value=""
                   theme={theme}
                   bold
                 />
                 <div className="h-px" style={{ backgroundColor: theme.border }} />
-                <SummaryRow label="Base Fare" value={`₹${summary.baseFare.toLocaleString()}`} theme={theme} />
-                <SummaryRow label="Taxes & Fees" value={`₹${summary.taxesFees.toLocaleString()}`} theme={theme} />
-                <SummaryRow
-                  label="Security Deposit"
-                  value={`₹${summary.deposit.toLocaleString()}`}
-                  subtext="(Refundable)"
-                  theme={theme}
-                />
+
+                {summary.type === 'new_booking' ? (
+                  <>
+                    <SummaryRow label="Base Fare" value={`₹${(summary.baseFare || 0).toLocaleString()}`} theme={theme} />
+                    <SummaryRow label="Taxes & Fees" value={`₹${(summary.taxesFees || 0).toLocaleString()}`} theme={theme} />
+                    <SummaryRow
+                      label="Security Deposit"
+                      value={`₹${(summary.deposit || 0).toLocaleString()}`}
+                      subtext="(Refundable)"
+                      theme={theme}
+                    />
+                  </>
+                ) : (
+                  <SummaryRow
+                    label={summary.type === 'damage' ? "Repair Charges" : "Remaining Balance"}
+                    value={`₹${(summary.total || 0).toLocaleString()}`}
+                    theme={theme}
+                  />
+                )}
+
                 {currentDiscount > 0 && (
                   <SummaryRow
                     label={`Discount (${currentPromoCode})`}
@@ -827,13 +883,13 @@ const Payment = () => {
                   </p>
                 </div>
                 <div className="text-right">
-                  {currentDiscount > 0 && (
+                  {currentDiscount > 0 && summary.type === 'new_booking' && (
                     <p className="text-sm line-through opacity-60" style={{ color: theme.textSecondary }}>
-                      ₹{(summary.baseFare + summary.taxesFees + summary.deposit).toLocaleString()}
+                      ₹{((summary.baseFare || 0) + (summary.taxesFees || 0) + (summary.deposit || 0)).toLocaleString()}
                     </p>
                   )}
                   <p className="text-3xl font-black text-green-500">
-                    ₹{calculateFinalTotal().toLocaleString()}
+                    ₹{(calculateFinalTotal() || 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -850,7 +906,7 @@ const Payment = () => {
                   </>
                 ) : (
                   <>
-                    Pay ₹{calculateFinalTotal().toLocaleString()}
+                    Pay ₹{(calculateFinalTotal() || 0).toLocaleString()}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}

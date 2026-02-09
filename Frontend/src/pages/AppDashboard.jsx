@@ -63,6 +63,7 @@ const AppDashboard = () => {
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [currentRental, setCurrentRental] = useState(null);
+  const [pendingItems, setPendingItems] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -98,6 +99,48 @@ const AppDashboard = () => {
         pendingDamages: pendingDmg
       });
 
+      // Detailed Pending Items
+      const items = [];
+      bookings.filter(b => b.paymentStatus === 'pending' && b.status !== 'cancelled').forEach(b => {
+        items.push({
+          id: b._id,
+          type: 'booking',
+          title: 'Booking Payment Due',
+          car: b.car ? `${b.car.brand} ${b.car.model}` : 'Unknown Car',
+          amount: b.totalPrice,
+          link: '/payment',
+          data: {
+            bookingId: b._id,
+            carId: b.car?._id,
+            carName: b.car ? `${b.car.brand} ${b.car.model}` : 'Unknown Car',
+            totalPrice: b.totalPrice,
+            startDate: b.startDate,
+            endDate: b.endDate,
+            days: Math.ceil((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24)) || 1
+          }
+        });
+      });
+
+      damages.filter(d => d.paymentStatus === 'pending' && d.status === 'approved').forEach(d => {
+        items.push({
+          id: d._id,
+          type: 'damage',
+          title: 'Damage Repair Bill',
+          car: d.car ? `${d.car.brand} ${d.car.model}` : 'Unknown Car',
+          amount: d.actualCost,
+          link: '/payment',
+          data: {
+            damageReportId: d._id,
+            carId: d.car?._id,
+            carName: d.car ? `${d.car.brand} ${d.car.model}` : 'Unknown Car',
+            actualCost: d.actualCost,
+            bookingId: d.booking?._id || d.booking
+          }
+        });
+      });
+
+      setPendingItems(items);
+
       // Find current rental (confirmed and future end date)
       const now = new Date();
       const current = bookings.find(b =>
@@ -127,11 +170,21 @@ const AppDashboard = () => {
       });
 
       // Add recent damages
-      damages.slice(0, 2).forEach(d => {
+      damages.slice(0, 3).forEach(d => {
+        let status = 'info';
+        let title = "Damage Reported";
+        if (d.status === 'approved') {
+          status = 'warning';
+          title = "Damage Approved";
+        } else if (d.status === 'rejected') {
+          status = 'success';
+          title = "Damage Dismissed";
+        }
+
         activities.push({
-          title: "Damage Reported",
+          title: title,
           sub: `${d.car?.brand} ${d.car?.model} • ${new Date(d.createdAt).toLocaleDateString()}`,
-          status: 'warning',
+          status: status,
           date: new Date(d.createdAt)
         });
       });
@@ -243,6 +296,40 @@ const AppDashboard = () => {
             />
           </div>
         </div>
+
+        {/* ACTION ITEMS SECTION */}
+        {pendingItems.length > 0 && (
+          <div className="space-y-6">
+            <h2
+              className="text-xl font-black uppercase tracking-widest opacity-70"
+              style={{ color: theme.text }}
+            >
+              🚩 Action Required
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {pendingItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl p-6 border shadow-lg flex items-center justify-between group transition-all"
+                  style={{ backgroundColor: theme.cardBg, borderColor: 'rgba(239, 68, 68, 0.2)' }}
+                >
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Remaining</p>
+                    <h4 className="font-black text-sm" style={{ color: theme.text }}>{item.title}</h4>
+                    <p className="text-xs opacity-60" style={{ color: theme.textSecondary }}>{item.car}</p>
+                    <p className="text-lg font-black text-green-500 italic">₹{item.amount?.toLocaleString()}</p>
+                  </div>
+                  <button
+                    onClick={() => navigate(item.link, { state: item.data })}
+                    className="p-3 rounded-xl bg-red-500 text-white shadow-lg shadow-red-500/20 hover:scale-110 active:scale-95 transition-all"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* MAIN LAYOUT GRID */}
         <div className="grid lg:grid-cols-3 gap-10">

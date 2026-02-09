@@ -1,5 +1,6 @@
 const DamageReport = require('../models/DamageReport');
 const Booking = require('../models/Booking');
+const Notification = require('../models/Notification');
 const { ErrorResponse } = require('../middleware/errorHandler');
 const cloudinary = require('cloudinary').v2;
 const axios = require('axios');
@@ -43,7 +44,7 @@ exports.analyzeDamageWithAI = async (req, res, next) => {
       // Get AI-generated tags from Cloudinary
       const tags = uploadResult.tags || [];
       const moderation = uploadResult.moderation || [];
-      
+
       // Analyze using HuggingFace for better description
       let detailedDescription = '';
       try {
@@ -78,7 +79,7 @@ exports.analyzeDamageWithAI = async (req, res, next) => {
 
     } catch (cloudinaryError) {
       console.error('Cloudinary upload failed:', cloudinaryError);
-      
+
       // Fallback to HuggingFace only
       try {
         const hfResponse = await axios.post(
@@ -136,7 +137,7 @@ function analyzeDamageFromDescription(description) {
     scuff: { type: "Scuff marks", severity: "Minor", cost: 1500, repair: "Surface buffing" },
     paint: { type: "Paint damage", severity: "Minor", cost: 3000, repair: "Repainting required" },
     chip: { type: "Paint chip", severity: "Minor", cost: 1500, repair: "Spot repair" },
-    
+
     // Moderate damages
     dent: { type: "Dent", severity: "Moderate", cost: 5000, repair: "Paintless dent removal or panel beating" },
     bumper: { type: "Bumper damage", severity: "Moderate", cost: 8000, repair: "Bumper repair/replacement" },
@@ -146,7 +147,7 @@ function analyzeDamageFromDescription(description) {
     mirror: { type: "Mirror damage", severity: "Moderate", cost: 3500, repair: "Mirror replacement" },
     headlight: { type: "Headlight damage", severity: "Moderate", cost: 6000, repair: "Headlight replacement" },
     taillight: { type: "Taillight damage", severity: "Moderate", cost: 5000, repair: "Taillight replacement" },
-    
+
     // Severe damages
     broken: { type: "Broken part", severity: "Severe", cost: 15000, repair: "Component replacement required" },
     crack: { type: "Cracked component", severity: "Severe", cost: 12000, repair: "Immediate replacement needed" },
@@ -154,12 +155,12 @@ function analyzeDamageFromDescription(description) {
     shatter: { type: "Shattered component", severity: "Severe", cost: 15000, repair: "Complete replacement" },
     window: { type: "Window/Windshield damage", severity: "Severe", cost: 12000, repair: "Glass replacement" },
     windshield: { type: "Windshield damage", severity: "Severe", cost: 15000, repair: "Windshield replacement" },
-    
+
     // Tire/Wheel damages
     tire: { type: "Tire damage", severity: "Moderate", cost: 4000, repair: "Tire replacement" },
     wheel: { type: "Wheel damage", severity: "Moderate", cost: 8000, repair: "Wheel repair/replacement" },
     rim: { type: "Rim damage", severity: "Moderate", cost: 7000, repair: "Rim repair" },
-    
+
     // Structural
     frame: { type: "Frame damage", severity: "Severe", cost: 25000, repair: "Structural repair - specialist needed" },
     chassis: { type: "Chassis damage", severity: "Severe", cost: 30000, repair: "Major structural work" }
@@ -182,10 +183,10 @@ function analyzeDamageFromDescription(description) {
     // Use most severe damage as primary
     const sortBySeverity = { 'Severe': 3, 'Moderate': 2, 'Minor': 1 };
     detectedDamages.sort((a, b) => sortBySeverity[b.severity] - sortBySeverity[a.severity]);
-    
+
     damageType = detectedDamages[0].type;
     severity = detectedDamages[0].severity;
-    
+
     // Multiple damages increase severity and cost
     if (detectedDamages.length > 1) {
       severity = "Severe";
@@ -283,7 +284,7 @@ exports.createDamageReport = async (req, res, next) => {
 
     // Upload images to Cloudinary
     const imageUrls = [];
-    
+
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         try {
@@ -422,8 +423,8 @@ exports.getCarDamageStats = async (req, res, next) => {
 // @access  Private/Admin
 exports.getPendingDamageReports = async (req, res, next) => {
   try {
-    const damageReports = await DamageReport.find({ 
-      status: { $in: ['pending', 'under_review'] } 
+    const damageReports = await DamageReport.find({
+      status: { $in: ['pending', 'under_review'] }
     })
       .populate('booking')
       .populate('user', 'name email phone')
@@ -471,6 +472,14 @@ exports.approveDamageReport = async (req, res, next) => {
     await damageReport.populate('user', 'name email');
     await damageReport.populate('car', 'brand model');
 
+    // Create notification for user
+    await Notification.create({
+      user: damageReport.user._id,
+      type: 'warning',
+      title: 'Damage Report Approved',
+      message: `Admin has approved the damage report for ${damageReport.car.brand} ${damageReport.car.model}. A repair cost of ₹${actualCost.toLocaleString()} has been charged. Please complete the payment.`
+    });
+
     res.status(200).json({
       success: true,
       message: 'Damage report approved successfully',
@@ -509,6 +518,14 @@ exports.rejectDamageReport = async (req, res, next) => {
     await damageReport.populate('booking');
     await damageReport.populate('user', 'name email');
     await damageReport.populate('car', 'brand model');
+
+    // Create notification for user
+    await Notification.create({
+      user: damageReport.user._id,
+      type: 'info',
+      title: 'Damage Report Rejected',
+      message: `The damage report for ${damageReport.car.brand} ${damageReport.car.model} has been rejected by admin. Reason: ${adminNotes}`
+    });
 
     res.status(200).json({
       success: true,
@@ -581,8 +598,8 @@ exports.getAdminDamageStats = async (req, res, next) => {
     ]);
 
     const totalReports = await DamageReport.countDocuments();
-    const pendingReports = await DamageReport.countDocuments({ 
-      status: { $in: ['pending', 'under_review'] } 
+    const pendingReports = await DamageReport.countDocuments({
+      status: { $in: ['pending', 'under_review'] }
     });
 
     res.status(200).json({
