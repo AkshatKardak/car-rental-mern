@@ -26,14 +26,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Connect to Database
 connectDB();
-
-// Import Routes
-const authRoutes = require('./routes/authRoutes');
-const carRoutes = require('./routes/carRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const userRoutes = require('./routes/userRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
 
 // Root Route - Health Check
 app.get('/', (req, res) => {
@@ -46,18 +40,11 @@ app.get('/', (req, res) => {
     });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/cars', carRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/payments', paymentRoutes);
-
-// API Info Route - Create a dedicated info endpoint
+// API Info Route - BEFORE other /api routes
 app.get('/api/info', (req, res) => {
     res.json({
         success: true,
-        message: 'RentRide API',
+        message: 'RentRide API Information',
         version: '1.0.0',
         endpoints: {
             auth: '/api/auth',
@@ -68,6 +55,42 @@ app.get('/api/info', (req, res) => {
         }
     });
 });
+
+// Import Routes - wrapped in try-catch to prevent crashes
+try {
+    const authRoutes = require('./routes/authRoutes');
+    app.use('/api/auth', authRoutes);
+} catch (error) {
+    console.error('Auth routes error:', error.message);
+}
+
+try {
+    const carRoutes = require('./routes/carRoutes');
+    app.use('/api/cars', carRoutes);
+} catch (error) {
+    console.error('Car routes error:', error.message);
+}
+
+try {
+    const bookingRoutes = require('./routes/bookingRoutes');
+    app.use('/api/bookings', bookingRoutes);
+} catch (error) {
+    console.error('Booking routes error:', error.message);
+}
+
+try {
+    const userRoutes = require('./routes/userRoutes');
+    app.use('/api/users', userRoutes);
+} catch (error) {
+    console.error('User routes error:', error.message);
+}
+
+try {
+    const paymentRoutes = require('./routes/paymentRoutes');
+    app.use('/api/payments', paymentRoutes);
+} catch (error) {
+    console.error('Payment routes error:', error.message);
+}
 
 // 404 Handler
 app.use((req, res) => {
@@ -80,11 +103,10 @@ app.use((req, res) => {
 
 // Error Handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Error:', err.message);
     res.status(err.status || 500).json({
         success: false,
-        message: err.message || 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err : {}
+        message: err.message || 'Internal Server Error'
     });
 });
 
