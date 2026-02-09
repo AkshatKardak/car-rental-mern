@@ -41,7 +41,7 @@ const BrandSection = () => {
           }}
           src={logo}
           alt="RentRide Logo"
-          className="h-16 w-auto object-contain"
+          className="h-100 w-auto object-contain"
         />
       </motion.div>
 
