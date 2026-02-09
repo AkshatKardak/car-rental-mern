@@ -9,8 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ❌ REMOVED - Don't create directories on Vercel
-// fs.mkdirSync('./uploads/temp', { recursive: true });
+
 
 // CORS Configuration
 const corsOptions = {
@@ -29,10 +28,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-// Connect to Database
 connectDB();
 
 // Import Routes
