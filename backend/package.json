@@ -15,16 +15,16 @@
     "test:all": "node scripts/testAll.js",
     "seed:cars": "node seeders/carSeeder.js",
     "seed:promotions": "node seeders/promotionSeeder.js",
-  "seed:all": "node seeders/carSeeder.js && node seeders/promotionSeeder.js"
-},
-"keywords": [],
+    "seed:all": "node seeders/carSeeder.js && node seeders/promotionSeeder.js"
+  },
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.13.10",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
