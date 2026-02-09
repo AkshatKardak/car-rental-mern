@@ -32,7 +32,6 @@ const DashboardNavbar = () => {
   const settingsRef = useRef(null);
   const userMenuRef = useRef(null);
 
-  // Dummy Notifications
   const [notifications, setNotifications] = useState([
     {
       id: 1,

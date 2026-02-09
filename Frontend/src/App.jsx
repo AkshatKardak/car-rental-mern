@@ -18,16 +18,19 @@ import SignUp from "./components/auth/SignUp";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import PaymentSuccess from "./pages/PaymentSuccess";
-import ReportDamage from "./pages/ReportDamage"; 
+import ReportDamage from "./pages/ReportDamage";
 import MyDamageReports from "./pages/MyDamageReports";
 import AdminDamageReports from "./pages/AdminDamageReports";
+
 import DamageReportDetail from "./pages/DamageReportDetail";
+import UserProfile from "./pages/UserProfile";
+import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
 
 export default function App() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
 
-  // Update login state when location changes
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('token'));
   }, [location.pathname]);
@@ -45,11 +48,16 @@ export default function App() {
     "/booking-confirmation",
     "/payment-success",
     "/report-damage",
-    "/my-damage-reports",       
-  "/admin-damage-reports",     
-  "/damage-report/:id"
+    "/my-damage-reports",
+    "/admin-damage-reports",
+    "/damage-report",
+    "/profile",
+    "/settings",
+    "/notifications"
   ];
-  const isDashboardPage = dashboardRoutes.some(route => location.pathname.startsWith(route));
+  const isDashboardPage = dashboardRoutes.some(route =>
+    location.pathname.startsWith(route)
+  );
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
@@ -95,6 +103,7 @@ export default function App() {
 
       <main>
         <Routes>
+          {/* Public Routes */}
           <Route
             path="/"
             element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Home />}
@@ -108,22 +117,33 @@ export default function App() {
             element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <SignUp />}
           />
 
+          {/* Semi-Public Routes */}
           <Route path="/browsecars" element={<BrowseCars />} />
           <Route path="/car/:id" element={<CarDetails />} />
           <Route path="/offers" element={<Offers />} />
           <Route path="/aiassistant" element={<AIAssistant />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
 
+          {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/mybookings" element={<MyBookings />} />
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/payment" element={<Payment />} />
-            <Route path="/report-damage/:bookingId" element={<ReportDamage />} /> {/* ✅ ADD THIS ROUTE */}
-  <Route path="/my-damage-reports" element={<MyDamageReports />} />
-  <Route path="/damage-report/:id" element={<DamageReportDetail />} />
-  <Route path="/admin-damage-reports" element={<AdminDamageReports />} />
+
+            {/* ✅ Damage Report Routes */}
+            <Route path="/report-damage/:bookingId" element={<ReportDamage />} />
+            <Route path="/my-damage-reports" element={<MyDamageReports />} />
+            <Route path="/damage-report/:id" element={<DamageReportDetail />} />
+            <Route path="/admin-damage-reports" element={<AdminDamageReports />} />
+
+            {/* ✅ User Profile Routes */}
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/notifications" element={<Notifications />} />
           </Route>
+
+          {/* Catch All */}
           <Route path="*" element={<Navigate to={isLoggedIn ? "/dashboard" : "/"} replace />} />
         </Routes>
       </main>

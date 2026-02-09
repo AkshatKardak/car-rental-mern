@@ -1,9 +1,10 @@
 const Payment = require('../models/Payment');
 const Booking = require('../models/Booking');
+const DamageReport = require('../models/DamageReport');
 const { createOrder, verifySignature } = require('../services/paymentService');
 const { ErrorResponse } = require('../middleware/errorHandler');
 
-// @desc    Initiate payment (Create Order)
+// @desc    Initiate payment for Booking (Create Order)
 // @route   POST /api/payments/process
 // @access  Private
 exports.createPayment = async (req, res, next) => {
@@ -25,7 +26,7 @@ exports.createPayment = async (req, res, next) => {
         }
 
         // Check if a pending payment already exists for this booking
-        const existingPayment = await Payment.findOne({
+        let existingPayment = await Payment.findOne({
             booking: bookingId,
             status: 'pending'
         });
@@ -43,21 +44,20 @@ exports.createPayment = async (req, res, next) => {
         }
 
         // Create Razorpay Order
-        const order = await createOrder(booking.totalPrice);
+        const order = await createOrder(booking.totalPrice || booking.total);
 
         // Create or update payment record
-        let payment;
         if (existingPayment) {
             // Update existing payment with new orderId
             existingPayment.orderId = order.id;
-            existingPayment.amount = booking.totalPrice;
-            payment = await existingPayment.save();
+            existingPayment.amount = booking.totalPrice || booking.total;
+            await existingPayment.save();
         } else {
             // Create new payment record
-            payment = await Payment.create({
+            await Payment.create({
                 booking: bookingId,
                 user: req.user.id,
-                amount: booking.totalPrice,
+                amount: booking.totalPrice || booking.total,
                 orderId: order.id,
                 status: 'pending'
             });
@@ -73,7 +73,7 @@ exports.createPayment = async (req, res, next) => {
     }
 };
 
-// @desc    Verify Payment
+// @desc    Verify Booking Payment
 // @route   POST /api/payments/verify
 // @access  Private
 exports.verifyPayment = async (req, res, next) => {
@@ -95,9 +95,11 @@ exports.verifyPayment = async (req, res, next) => {
 
             // Update Booking
             const booking = await Booking.findById(payment.booking);
-            booking.paymentStatus = 'paid';
-            booking.status = 'confirmed';
-            await booking.save();
+            if (booking) {
+                booking.paymentStatus = 'paid';
+                booking.status = 'confirmed';
+                await booking.save();
+            }
 
             res.status(200).json({
                 success: true,
@@ -108,6 +110,84 @@ exports.verifyPayment = async (req, res, next) => {
         }
     } catch (err) {
         console.error('Payment verification error:', err);
+        next(err);
+    }
+};
+
+// @desc    Initiate payment for Damage Report
+// @route   POST /api/payments/process-damage
+// @access  Private
+exports.createDamagePayment = async (req, res, next) => {
+    try {
+        const { damageReportId } = req.body;
+
+        const damageReport = await DamageReport.findById(damageReportId);
+
+        if (!damageReport) {
+            return next(new ErrorResponse('Damage report not found', 404));
+        }
+
+        if (damageReport.user.toString() !== req.user.id) {
+            return next(new ErrorResponse('Not authorized', 401));
+        }
+
+        if (damageReport.paymentStatus === 'paid') {
+            return next(new ErrorResponse('Damage report already paid', 400));
+        }
+
+        if (damageReport.status !== 'approved') {
+            return next(new ErrorResponse('Damage report not approved yet', 400));
+        }
+
+        if (!damageReport.actualCost || damageReport.actualCost <= 0) {
+            return next(new ErrorResponse('Invalid cost amount', 400));
+        }
+
+        // Create Razorpay Order
+        const order = await createOrder(damageReport.actualCost);
+
+        res.status(200).json({
+            success: true,
+            order
+        });
+
+    } catch (err) {
+        console.error('Damage Payment error:', err);
+        next(err);
+    }
+};
+
+// @desc    Verify Damage Report Payment
+// @route   POST /api/payments/verify-damage
+// @access  Private
+exports.verifyDamagePayment = async (req, res, next) => {
+    try {
+        const { orderId, paymentId, signature, damageReportId } = req.body;
+
+        const isSignatureValid = verifySignature(orderId, paymentId, signature);
+
+        if (isSignatureValid) {
+            // Update DamageReport
+            const damageReport = await DamageReport.findById(damageReportId);
+
+            if (!damageReport) {
+                return next(new ErrorResponse('Damage report not found', 404));
+            }
+
+            damageReport.paymentStatus = 'paid';
+            damageReport.paymentId = paymentId;
+            damageReport.status = 'resolved'; // Mark as resolved after payment
+            await damageReport.save();
+
+            res.status(200).json({
+                success: true,
+                message: 'Damage payment verified successfully'
+            });
+        } else {
+            return next(new ErrorResponse('Invalid signature', 400));
+        }
+    } catch (err) {
+        console.error('Damage Payment verification error:', err);
         next(err);
     }
 };

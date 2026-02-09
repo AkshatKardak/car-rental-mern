@@ -41,6 +41,14 @@ const damageReportSchema = new mongoose.Schema({
     enum: ['pending', 'under_review', 'approved', 'rejected', 'resolved'],
     default: 'pending'
   },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed'],
+    default: 'pending'
+  },
+  paymentId: {
+    type: String
+  },
   adminNotes: {
     type: String
   },
