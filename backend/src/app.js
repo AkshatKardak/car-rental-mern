@@ -9,8 +9,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-
 // CORS Configuration
 const corsOptions = {
     origin: [
@@ -37,13 +35,6 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/cars', carRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/payments', paymentRoutes);
-
 // Root Route - Health Check
 app.get('/', (req, res) => {
     res.json({
@@ -55,7 +46,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// API Info Route
+// API Info Route - MUST BE BEFORE OTHER /api/* ROUTES
 app.get('/api', (req, res) => {
     res.json({
         success: true,
@@ -69,6 +60,13 @@ app.get('/api', (req, res) => {
         }
     });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/cars', carRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // 404 Handler
 app.use((req, res) => {
