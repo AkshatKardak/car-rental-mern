@@ -54,12 +54,12 @@ const findMatchingCars = async (message, availableCars) => {
   }
 
   if (criteria.passengers) {
-    matches = matches.filter(car => car.seatingCapacity >= criteria.passengers);
+    matches = matches.filter(car => car.seats >= criteria.passengers);
   }
 
   if (criteria.type) {
     matches = matches.filter(car => 
-      car.type.toLowerCase() === criteria.type.toLowerCase()
+      car.category && car.category.toLowerCase() === criteria.type.toLowerCase()
     );
   }
 
@@ -127,7 +127,7 @@ exports.chatWithAI = async (req, res) => {
       .limit(5);
 
     // Get available cars
-    const availableCars = await Car.find({ availability: true })
+    const availableCars = await Car.find({ available: true })
       .limit(20)
       .select('brand model type pricePerDay fuelType seatingCapacity features transmission rating images');
 
@@ -167,8 +167,9 @@ ${userBookings.length > 0 ? `- Previous: ${userBookings[0].car.brand} ${userBook
 
 AVAILABLE CARS (${availableCars.length} total):
 ${availableCars.slice(0, 15).map(car => 
-  `• ${car.brand} ${car.model} (${car.type}) - ₹${car.pricePerDay}/day - ${car.fuelType} - ${car.transmission} - ${car.seatingCapacity} seats - Rating: ${car.rating || 'N/A'}/5`
+  `• ${car.brand} ${car.model} (${car.category}) - ₹${car.pricePerDay}/day - ${car.fuelType} - ${car.transmission} - ${car.seats} seats - Rating: ${car.rating || 'N/A'}/5`
 ).join('\n')}
+
 
 ${matches.length > 0 ? `\n🎯 BEST MATCHES FOR USER QUERY:\n${matches.map(car => 
   `⭐ ${car.brand} ${car.model} - ₹${car.pricePerDay}/day (${car.seatingCapacity} seats, ${car.transmission})`
@@ -183,9 +184,9 @@ IMPORTANT:
 
     // Initialize Gemini model
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-flash-latest',
       generationConfig: {
-        maxOutputTokens: 600,
+        maxOutputTokens: 1000,
         temperature: 0.8,
         topP: 0.95,
         topK: 40,
@@ -321,7 +322,7 @@ exports.identifyCarFromImage = async (req, res) => {
         .sort((a, b) => b.score - a.score);
 
       // Get available cars from database
-      const availableCars = await Car.find({ availability: true })
+      const availableCars = await Car.find({ available: true })
         .select('brand model type pricePerDay fuelType seatingCapacity features transmission rating images');
 
       // Find similar cars based on detected type

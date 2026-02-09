@@ -32,17 +32,14 @@ const upload = multer({
   }
 });
 
-// All routes require authentication
-router.use(protect);
-
-// Chat endpoints
-router.post('/chat', chatWithAI);
-router.get('/history', getChatHistory);
+// Chat endpoints - protect middleware applied to each route
+router.post('/chat', protect, chatWithAI);
+router.get('/history', protect, getChatHistory);
 
 // Insurance advisor
-router.post('/insurance-advice', getInsuranceAdvice);
+router.post('/insurance-advice', protect, getInsuranceAdvice);
 
 // Visual car recognition
-router.post('/identify-car', upload.single('image'), identifyCarFromImage);
+router.post('/identify-car', protect, upload.single('image'), identifyCarFromImage);
 
 module.exports = router;

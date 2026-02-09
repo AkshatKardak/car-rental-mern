@@ -25,13 +25,13 @@ const seedData = async () => {
 
     // Create User
     await User.create({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-      role: 'customer',
-      phone: '8888888888',
-      isVerified: true
-    });
+  name: 'John Doe',
+  email: 'john@example.com',
+  password: 'password123',
+  role: 'user',  
+  phone: '8888888888',
+  isEmailVerified: true  
+});
 
     // ✅ ALL 7 CARS - Using correct lowercase enum values
     const cars = [
