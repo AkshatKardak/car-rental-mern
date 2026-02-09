@@ -235,22 +235,25 @@ IMPORTANT:
       suggestions.push('Budget friendly options?');
     }
 
-    // Send successful response
-    res.status(200).json({
-      success: true,
-      data: {
-        message: aiResponse,
-        timestamp: new Date(),
-        suggestions: suggestions.slice(0, 3),
-        matchedCars: matches.length > 0 ? matches.map(car => ({
-          id: car._id,
-          name: `${car.brand} ${car.model}`,
-          type: car.type,
-          price: car.pricePerDay,
-          image: car.images[0]
-        })) : []
-      }
-    });
+
+res.status(200).json({
+  success: true,
+  data: {
+    message: aiResponse,
+    timestamp: new Date(),
+    suggestions: suggestions.slice(0, 3),
+    matchedCars: matches.length > 0 ? matches.map(car => ({
+      id: car._id,
+      name: `${car.brand} ${car.model}`,
+      category: car.category,  
+      price: car.pricePerDay,
+      seats: car.seats,         
+      transmission: car.transmission,
+      image: car.images && car.images[0] ? car.images[0] : 'default'
+    })) : []
+  }
+});
+
 
   } catch (error) {
     console.error('❌ AI Chat Error:', error.message);
