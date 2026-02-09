@@ -470,6 +470,17 @@ const MyBookings = () => {
 
 
 
+                      {/* Show Report Damage button if Paid and no existing report */}
+                      {b.paymentStatus === 'Paid' && !damageReport && (
+                        <button
+                          onClick={() => navigate(`/report-damage/${b.id}`)}
+                          className="px-4 py-2 rounded-xl bg-orange-50 text-orange-600 font-bold hover:bg-orange-100 transition text-sm border border-orange-200 flex items-center gap-1"
+                        >
+                          <AlertTriangle className="w-4 h-4" />
+                          Report Damage
+                        </button>
+                      )}
+
                       {/* Show Pay Damage button if needed */}
                       {hasUnpaidDamage && (
                         <button

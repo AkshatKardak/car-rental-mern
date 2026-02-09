@@ -12,6 +12,8 @@ import {
   ArrowRight,
   AlertTriangle
 } from "lucide-react";
+import { bookingService } from '../services/bookingService';
+import damageService from '../services/damageService';
 
 import SupraImg from "../assets/supra.png";
 import PorscheImg from "../assets/porsche.png";
@@ -53,22 +55,95 @@ const AppDashboard = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const [userName, setUserName] = useState("Guest");
+  const [stats, setStats] = useState({
+    totalBookings: 0,
+    activeBookings: 0,
+    pendingPayments: 0,
+    pendingDamages: 0
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [currentRental, setCurrentRental] = useState(null);
 
-  // Get user name from localStorage
   useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         const user = JSON.parse(storedUser);
-        // Get first name only (split by space and take first part)
         const firstName = user.name ? user.name.split(' ')[0] : 'Guest';
         setUserName(firstName);
       }
+
+      // Fetch user data
+      const [bookingsRes, damagesRes] = await Promise.all([
+        bookingService.getUserBookings(),
+        damageService.getUserDamageReports()
+      ]);
+
+      const bookings = bookingsRes.data || [];
+      const damages = damagesRes.data || [];
+
+      // Calculate stats
+      const active = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').length;
+      const pendingPay = bookings.filter(b => b.paymentStatus === 'pending' && b.status !== 'cancelled').length;
+      const pendingDmg = damages.filter(d => d.paymentStatus === 'pending' && d.status === 'approved').length;
+
+      setStats({
+        totalBookings: bookings.length,
+        activeBookings: active,
+        pendingPayments: pendingPay,
+        pendingDamages: pendingDmg
+      });
+
+      // Find current rental (confirmed and future end date)
+      const now = new Date();
+      const current = bookings.find(b =>
+        b.status === 'confirmed' &&
+        new Date(b.endDate) > now &&
+        new Date(b.startDate) <= now
+      );
+
+      if (current) {
+        setCurrentRental({
+          name: current.car ? `${current.car.brand} ${current.car.model}` : 'Unknown Car',
+          endDate: new Date(current.endDate).toLocaleDateString()
+        });
+      }
+
+      // Generate Recent Activity
+      const activities = [];
+
+      // Add recent bookings
+      bookings.slice(0, 3).forEach(b => {
+        activities.push({
+          title: `Booking ${b.status.charAt(0).toUpperCase() + b.status.slice(1)}`,
+          sub: `${b.car?.brand} ${b.car?.model} • ${new Date(b.createdAt).toLocaleDateString()}`,
+          status: b.status === 'confirmed' ? 'success' : 'info',
+          date: new Date(b.createdAt)
+        });
+      });
+
+      // Add recent damages
+      damages.slice(0, 2).forEach(d => {
+        activities.push({
+          title: "Damage Reported",
+          sub: `${d.car?.brand} ${d.car?.model} • ${new Date(d.createdAt).toLocaleDateString()}`,
+          status: 'warning',
+          date: new Date(d.createdAt)
+        });
+      });
+
+      // Sort by date desc
+      activities.sort((a, b) => b.date - a.date);
+      setRecentActivity(activities.slice(0, 4));
+
     } catch (error) {
-      console.error('Error getting user name:', error);
-      setUserName('Guest');
+      console.error('Error fetching dashboard data:', error);
     }
-  }, []);
+  };
 
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#f8f9fa',
@@ -110,23 +185,23 @@ const AppDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <StatCard
             title="Current Rental"
-            value="Tesla Model S"
-            sub="Return in 48 hours"
-            icon={<Clock className="w-5 h-5 text-green-500" />}
+            value={currentRental ? currentRental.name : "No Active Rental"}
+            sub={currentRental ? `Return by ${currentRental.endDate}` : "Ready to book"}
+            icon={<Car className="w-5 h-5 text-green-500" />}
             theme={theme}
           />
           <StatCard
             title="Total Bookings"
-            value="14"
-            sub="2 upcoming trips"
+            value={stats.totalBookings}
+            sub={`${stats.activeBookings} active trips`}
             icon={<Calendar className="w-5 h-5 text-green-500" />}
             theme={theme}
           />
           <StatCard
-            title="Rewards Credits"
-            value="₹4,500"
-            sub="₹500 expiring soon"
-            icon={<TrendingUp className="w-5 h-5 text-green-500" />}
+            title="Pending Actions"
+            value={stats.pendingPayments + stats.pendingDamages}
+            sub="Payments & Reports"
+            icon={<AlertTriangle className="w-5 h-5 text-orange-500" />}
             theme={theme}
           />
         </div>
@@ -157,13 +232,14 @@ const AppDashboard = () => {
               label="Damage Reports"
               onClick={() => navigate("/mybookings")}
               theme={theme}
-              highlight={true}
+              highlight={stats.pendingDamages > 0}
             />
             <QuickAction
               icon={<CreditCard />}
               label="Payments"
               onClick={() => navigate("/payment")}
               theme={theme}
+              highlight={stats.pendingPayments > 0}
             />
           </div>
         </div>
@@ -214,13 +290,25 @@ const AppDashboard = () => {
             </h2>
 
             <div className="space-y-8">
-              <ActivityItem title="Booking Confirmed" sub="Tesla Model S • Today, 9:41 AM" status="success" theme={theme} />
-              <ActivityItem title="Payment Received" sub="Invoice #4920 • Yesterday" status="primary" theme={theme} />
-              <ActivityItem title="Car Dispatched" sub="Mercedes G63 • Oct 15" status="info" theme={theme} />
-              <ActivityItem title="Profile Updated" sub="Mobile Verification • Oct 10" status="idle" theme={theme} />
+              {recentActivity.length > 0 ? (
+                recentActivity.map((item, idx) => (
+                  <ActivityItem
+                    key={idx}
+                    title={item.title}
+                    sub={item.sub}
+                    status={item.status}
+                    theme={theme}
+                  />
+                ))
+              ) : (
+                <p className="text-sm text-center opacity-50" style={{ color: theme.textSecondary }}>
+                  No recent activity
+                </p>
+              )}
             </div>
 
             <button
+              onClick={() => navigate('/mybookings')}
               className="w-full mt-10 py-4 text-sm font-black rounded-2xl border transition-colors hover:bg-opacity-80"
               style={{
                 backgroundColor: theme.inputBg,
@@ -297,8 +385,8 @@ const QuickAction = ({ icon, label, onClick, theme, highlight }) => (
   >
     <div
       className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all shadow-inner ${highlight
-          ? 'group-hover:bg-orange-500 group-hover:text-white'
-          : 'group-hover:bg-green-500 group-hover:text-white'
+        ? 'group-hover:bg-orange-500 group-hover:text-white'
+        : 'group-hover:bg-green-500 group-hover:text-white'
         }`}
       style={{
         backgroundColor: highlight ? 'rgba(249, 115, 22, 0.1)' : theme.inputBg,
@@ -377,6 +465,7 @@ const ActivityItem = ({ title, sub, status, theme }) => {
       case 'success': return 'bg-green-500';
       case 'primary': return 'bg-green-500';
       case 'info': return 'bg-blue-500';
+      case 'warning': return 'bg-orange-500';
       default: return theme.border;
     }
   };
