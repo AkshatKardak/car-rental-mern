@@ -13,10 +13,10 @@ const Banner = () => {
           alt="Banner" 
           className='w-full h-full object-cover opacity-20 dark:opacity-30'
         />
-        <div className='absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/80'></div>
+        <div className='absolute inset-0 bg-linear-to-r from-primary/120 via-primary/ to-primary/40'></div>
       </div>
 
-      <div className='relative min-h-[700px] lg:min-h-[800px] flex items-center justify-end px-4 lg:px-16 max-w-7xl mx-auto py-20'>
+      <div className='relative min-h-175 lg:min-h-200 flex items-center justify-end px-4 lg:px-16 max-w-7xl mx-auto py-20'>
         <motion.div
           variants={FadeLeft(0.2)}
           initial="hidden"

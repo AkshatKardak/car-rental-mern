@@ -19,42 +19,42 @@ const Inventory = () => {
       id: 1,
       name: "Rolls-Royce Phantom",
       desc: "Experience unparalleled luxury with handcrafted interiors and whisper-quiet performance.",
-      price: "10.48 Cr",
+      price: "₹15,000 - ₹20,000/day",
       img: RollsRoyce
     },
     {
       id: 2,
       name: "Mercedes-Benz S-Class",
       desc: "Premium executive sedan featuring cutting-edge technology and refined German engineering.",
-      price: "1.76 Cr",
+      price: "₹8,000 - ₹12,000/day",
       img: Mercedes
     },
     {
       id: 3,
       name: "Ferrari 488 GTB",
       desc: "Italian supercar delivering breathtaking speed with iconic Prancing Horse heritage.",
-      price: "4.02 Cr",
+      price: "₹35,000 - ₹50,000/day",
       img: Bugatti
     },
     {
       id: 4,
       name: "Bentley Continental GT",
       desc: "Handcrafted British luxury combining elegant design with exceptional performance.",
-      price: "5.50 Cr",
+      price: "₹18,000 - ₹25,000/day",
       img: luxury
     },
     {
       id: 5,
       name: "Lamborghini Huracán EVO",
       desc: "Track-ready supercar with aggressive styling and naturally aspirated V10 power.",
-      price: "4.29 Cr",
+      price: "₹40,000 - ₹60,000/day",
       img: bluecar
     },
     {
       id: 6,
       name: "Porsche 911 Turbo S",
       desc: "Legendary sports car offering precision handling and everyday supercar usability.",
-      price: "3.51 Cr",
+      price: "₹25,000 - ₹35,000/day",
       img: blackcar,
       isBlackcar: true
     }
