@@ -398,6 +398,17 @@ const MyBookings = () => {
                         Cancel
                       </button>
                     )}
+
+                    {/* ✅ NEW: Show Report Damage button for Confirmed or Completed bookings */}
+                    {(b.status === 'Confirmed' || b.status === 'Completed') && b.paymentStatus === 'Paid' && (
+                      <button
+                        onClick={() => navigate(`/report-damage/${b.id}`)}
+                        className="px-4 py-2 rounded-xl bg-orange-50 text-orange-600 font-bold hover:bg-orange-100 transition text-sm border border-orange-200 flex items-center gap-1"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                        Report Damage
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>

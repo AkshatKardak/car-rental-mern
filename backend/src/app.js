@@ -59,8 +59,8 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promotions', promotionRoutes);
-app.use('/api/damage-reports', damageRoutes);
-app.use('/api/ai', aiRoutes);  // ← AI ROUTES
+app.use('/api/damages', damageRoutes);
+app.use('/api/ai', aiRoutes);  
 
 // Base route
 app.get('/', (req, res) => {

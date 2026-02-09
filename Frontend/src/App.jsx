@@ -18,6 +18,7 @@ import SignUp from "./components/auth/SignUp";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import ReportDamage from "./pages/ReportDamage"; // ✅ ADD THIS IMPORT
 
 export default function App() {
   const location = useLocation();
@@ -39,7 +40,8 @@ export default function App() {
     "/offers",
     "/aiassistant",
     "/booking-confirmation",
-    "/payment-success"
+    "/payment-success",
+    "/report-damage" 
   ];
   const isDashboardPage = dashboardRoutes.some(route => location.pathname.startsWith(route));
 
@@ -111,6 +113,7 @@ export default function App() {
             <Route path="/mybookings" element={<MyBookings />} />
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/payment" element={<Payment />} />
+            <Route path="/report-damage/:bookingId" element={<ReportDamage />} /> {/* ✅ ADD THIS ROUTE */}
           </Route>
 
           <Route path="*" element={<Navigate to={isLoggedIn ? "/dashboard" : "/"} replace />} />

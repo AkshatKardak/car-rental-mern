@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   Image as ImageIcon
 } from 'lucide-react';
-import DashboardNavbar from '../components/layout/DashboardNavbar';
 import axios from 'axios';
 
 const ReportDamage = () => {
@@ -157,7 +156,6 @@ const ReportDamage = () => {
       className="min-h-screen pb-12 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      <DashboardNavbar />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         {/* Back Button */}
