@@ -18,7 +18,10 @@ import SignUp from "./components/auth/SignUp";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import PaymentSuccess from "./pages/PaymentSuccess";
-import ReportDamage from "./pages/ReportDamage"; // ✅ ADD THIS IMPORT
+import ReportDamage from "./pages/ReportDamage"; 
+import MyDamageReports from "./pages/MyDamageReports";
+import AdminDamageReports from "./pages/AdminDamageReports";
+import DamageReportDetail from "./pages/DamageReportDetail";
 
 export default function App() {
   const location = useLocation();
@@ -41,7 +44,10 @@ export default function App() {
     "/aiassistant",
     "/booking-confirmation",
     "/payment-success",
-    "/report-damage" 
+    "/report-damage",
+    "/my-damage-reports",       
+  "/admin-damage-reports",     
+  "/damage-report/:id"
   ];
   const isDashboardPage = dashboardRoutes.some(route => location.pathname.startsWith(route));
 
@@ -114,8 +120,10 @@ export default function App() {
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/report-damage/:bookingId" element={<ReportDamage />} /> {/* ✅ ADD THIS ROUTE */}
+  <Route path="/my-damage-reports" element={<MyDamageReports />} />
+  <Route path="/damage-report/:id" element={<DamageReportDetail />} />
+  <Route path="/admin-damage-reports" element={<AdminDamageReports />} />
           </Route>
-
           <Route path="*" element={<Navigate to={isLoggedIn ? "/dashboard" : "/"} replace />} />
         </Routes>
       </main>

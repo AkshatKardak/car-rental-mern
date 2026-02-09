@@ -222,7 +222,7 @@ exports.getAllDamageReports = async (req, res, next) => {
     const damageReports = await DamageReport.find(query)
       .populate('booking')
       .populate('user', 'name email')
-      .populate('car', 'name brand model')
+      .populate('car', 'brand model')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -243,14 +243,14 @@ exports.getDamageReportById = async (req, res, next) => {
     const damageReport = await DamageReport.findById(req.params.id)
       .populate('booking')
       .populate('user', 'name email')
-      .populate('car', 'name brand model');
+      .populate('car', 'brand model');
 
     if (!damageReport) {
       return next(new ErrorResponse('Damage report not found', 404));
     }
 
     // Check if user owns this report or is admin
-    if (damageReport.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (damageReport.user._id.toString() !== req.user.id && req.user.role !== 'admin') {
       return next(new ErrorResponse('Not authorized', 401));
     }
 
@@ -407,6 +407,191 @@ exports.getCarDamageStats = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: stats
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ========================================
+// ✅ NEW ADMIN FUNCTIONS
+// ========================================
+
+// @desc    Get all pending damage reports (Admin only)
+// @route   GET /api/damages/admin/pending
+// @access  Private/Admin
+exports.getPendingDamageReports = async (req, res, next) => {
+  try {
+    const damageReports = await DamageReport.find({ 
+      status: { $in: ['pending', 'under_review'] } 
+    })
+      .populate('booking')
+      .populate('user', 'name email phone')
+      .populate('car', 'brand model registrationNumber')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: damageReports.length,
+      data: damageReports
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Approve damage report and set final cost (Admin only)
+// @route   PUT /api/damages/:id/approve
+// @access  Private/Admin
+exports.approveDamageReport = async (req, res, next) => {
+  try {
+    const { actualCost, adminNotes } = req.body;
+
+    if (!actualCost || actualCost < 0) {
+      return next(new ErrorResponse('Please provide a valid cost', 400));
+    }
+
+    const damageReport = await DamageReport.findById(req.params.id);
+
+    if (!damageReport) {
+      return next(new ErrorResponse('Damage report not found', 404));
+    }
+
+    // Update damage report
+    damageReport.status = 'approved';
+    damageReport.actualCost = actualCost;
+    damageReport.adminNotes = adminNotes || '';
+    damageReport.reviewedBy = req.user.id;
+    damageReport.reviewedAt = new Date();
+
+    await damageReport.save();
+
+    // Populate fields for response
+    await damageReport.populate('booking');
+    await damageReport.populate('user', 'name email');
+    await damageReport.populate('car', 'brand model');
+
+    res.status(200).json({
+      success: true,
+      message: 'Damage report approved successfully',
+      data: damageReport
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reject damage report (Admin only)
+// @route   PUT /api/damages/:id/reject
+// @access  Private/Admin
+exports.rejectDamageReport = async (req, res, next) => {
+  try {
+    const { adminNotes } = req.body;
+
+    if (!adminNotes || adminNotes.trim() === '') {
+      return next(new ErrorResponse('Please provide reason for rejection', 400));
+    }
+
+    const damageReport = await DamageReport.findById(req.params.id);
+
+    if (!damageReport) {
+      return next(new ErrorResponse('Damage report not found', 404));
+    }
+
+    damageReport.status = 'rejected';
+    damageReport.adminNotes = adminNotes;
+    damageReport.reviewedBy = req.user.id;
+    damageReport.reviewedAt = new Date();
+
+    await damageReport.save();
+
+    // Populate fields for response
+    await damageReport.populate('booking');
+    await damageReport.populate('user', 'name email');
+    await damageReport.populate('car', 'brand model');
+
+    res.status(200).json({
+      success: true,
+      message: 'Damage report rejected',
+      data: damageReport
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Mark damage as under review (Admin only)
+// @route   PUT /api/damages/:id/review
+// @access  Private/Admin
+exports.setUnderReview = async (req, res, next) => {
+  try {
+    const damageReport = await DamageReport.findById(req.params.id);
+
+    if (!damageReport) {
+      return next(new ErrorResponse('Damage report not found', 404));
+    }
+
+    damageReport.status = 'under_review';
+    await damageReport.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Damage report marked as under review',
+      data: damageReport
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get user's damage reports with status
+// @route   GET /api/damages/user/my-reports
+// @access  Private
+exports.getUserDamageReports = async (req, res, next) => {
+  try {
+    const damageReports = await DamageReport.find({ user: req.user.id })
+      .populate('booking')
+      .populate('car', 'brand model registrationNumber')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: damageReports.length,
+      data: damageReports
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get admin dashboard stats
+// @route   GET /api/damages/admin/stats
+// @access  Private/Admin
+exports.getAdminDamageStats = async (req, res, next) => {
+  try {
+    const stats = await DamageReport.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalEstimatedCost: { $sum: '$estimatedCost' },
+          totalActualCost: { $sum: '$actualCost' }
+        }
+      }
+    ]);
+
+    const totalReports = await DamageReport.countDocuments();
+    const pendingReports = await DamageReport.countDocuments({ 
+      status: { $in: ['pending', 'under_review'] } 
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalReports,
+        pendingReports,
+        statusBreakdown: stats
+      }
     });
   } catch (error) {
     next(error);

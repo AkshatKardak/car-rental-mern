@@ -43,6 +43,13 @@ const damageReportSchema = new mongoose.Schema({
   },
   adminNotes: {
     type: String
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  reviewedAt: {
+    type: Date
   }
 }, {
   timestamps: true
