@@ -15,6 +15,8 @@ const corsOptions = {
         process.env.CLIENT_URL || 'http://localhost:5173',
         process.env.ADMIN_URL || 'http://localhost:5174',
         'https://rentridebackend-two.vercel.app',
+        'https://rentridefrontend.vercel.app',      
+        'https://rentrideadmin.vercel.app',         
         'http://localhost:5173',
         'http://localhost:5174'
     ],
