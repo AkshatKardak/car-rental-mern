@@ -46,11 +46,19 @@ app.get('/', (req, res) => {
     });
 });
 
-// API Info Route - MUST BE BEFORE OTHER /api/* ROUTES
-app.get('/api', (req, res) => {
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/cars', carRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/payments', paymentRoutes);
+
+// API Info Route - Create a dedicated info endpoint
+app.get('/api/info', (req, res) => {
     res.json({
         success: true,
         message: 'RentRide API',
+        version: '1.0.0',
         endpoints: {
             auth: '/api/auth',
             cars: '/api/cars',
@@ -61,18 +69,12 @@ app.get('/api', (req, res) => {
     });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/cars', carRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/payments', paymentRoutes);
-
 // 404 Handler
 app.use((req, res) => {
     res.status(404).json({
         success: false,
-        message: 'Route not found'
+        message: 'Route not found',
+        path: req.path
     });
 });
 
