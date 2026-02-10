@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { bookingService } from '../services/bookingService';
 import damageService from '../services/damageService';
+import DashboardNavbar from '../components/layout/DashboardNavbar';
 
 import SupraImg from "../assets/supra.png";
 import PorscheImg from "../assets/porsche.png";
@@ -208,223 +209,226 @@ const AppDashboard = () => {
   };
 
   return (
-    <div
-      className="min-h-screen pt-20 transition-colors duration-300"
-      style={{ backgroundColor: theme.bg }}
-    >
-      <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
+    <>
+      <DashboardNavbar />
+      <div
+        className="min-h-screen pt-20 transition-colors duration-300"
+        style={{ backgroundColor: theme.bg }}
+      >
+        <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
 
-        {/* WELCOME SECTION */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-black tracking-tight" style={{ color: theme.text }}>
-              Welcome back, <span className="text-green-500 italic">{userName}</span>
-            </h1>
-            <p className="text-lg max-w-md" style={{ color: theme.textSecondary }}>
-              Your premium garage is ready. Where would you like to drive today?
-            </p>
-          </div>
+          {/* WELCOME SECTION */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-black tracking-tight" style={{ color: theme.text }}>
+                Welcome back, <span className="text-green-500 italic">{userName}</span>
+              </h1>
+              <p className="text-lg max-w-md" style={{ color: theme.textSecondary }}>
+                Your premium garage is ready. Where would you like to drive today?
+              </p>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => navigate("/browsecars")}
-            className="flex items-center gap-3 bg-green-500 text-white px-8 py-4 rounded-2xl hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 font-black tracking-widest text-sm"
-          >
-            <Plus size={20} /> NEW BOOKING
-          </button>
-        </div>
-
-        {/* STATS SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <StatCard
-            title="Current Rental"
-            value={currentRental ? currentRental.name : "No Active Rental"}
-            sub={currentRental ? `Return by ${currentRental.endDate}` : "Ready to book"}
-            icon={<Car className="w-5 h-5 text-green-500" />}
-            theme={theme}
-          />
-          <StatCard
-            title="Total Bookings"
-            value={stats.totalBookings}
-            sub={`${stats.activeBookings} active trips`}
-            icon={<Calendar className="w-5 h-5 text-green-500" />}
-            theme={theme}
-          />
-          <StatCard
-            title="Pending Actions"
-            value={stats.pendingPayments + stats.pendingDamages}
-            sub="Payments & Reports"
-            icon={<AlertTriangle className="w-5 h-5 text-orange-500" />}
-            theme={theme}
-          />
-        </div>
-
-        {/* QUICK ACTIONS */}
-        <div className="space-y-6">
-          <h2
-            className="text-xl font-black uppercase tracking-widest opacity-70"
-            style={{ color: theme.text }}
-          >
-            ⚡ Quick Access
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <QuickAction
-              icon={<Car />}
-              label="Browse Cars"
+            <button
+              type="button"
               onClick={() => navigate("/browsecars")}
+              className="flex items-center gap-3 bg-green-500 text-white px-8 py-4 rounded-2xl hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 font-black tracking-widest text-sm"
+            >
+              <Plus size={20} /> NEW BOOKING
+            </button>
+          </div>
+
+          {/* STATS SECTION */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <StatCard
+              title="Current Rental"
+              value={currentRental ? currentRental.name : "No Active Rental"}
+              sub={currentRental ? `Return by ${currentRental.endDate}` : "Ready to book"}
+              icon={<Car className="w-5 h-5 text-green-500" />}
               theme={theme}
             />
-            <QuickAction
-              icon={<Calendar />}
-              label="My Bookings"
-              onClick={() => navigate("/mybookings")}
+            <StatCard
+              title="Total Bookings"
+              value={stats.totalBookings}
+              sub={`${stats.activeBookings} active trips`}
+              icon={<Calendar className="w-5 h-5 text-green-500" />}
               theme={theme}
             />
-            <QuickAction
-              icon={<AlertTriangle />}
-              label="Damage Reports"
-              onClick={() => navigate("/mybookings")}
+            <StatCard
+              title="Pending Actions"
+              value={stats.pendingPayments + stats.pendingDamages}
+              sub="Payments & Reports"
+              icon={<AlertTriangle className="w-5 h-5 text-orange-500" />}
               theme={theme}
-              highlight={stats.pendingDamages > 0}
-            />
-            <QuickAction
-              icon={<CreditCard />}
-              label="Payments"
-              onClick={() => navigate("/payment")}
-              theme={theme}
-              highlight={stats.pendingPayments > 0}
             />
           </div>
-        </div>
 
-        {/* ACTION ITEMS SECTION */}
-        {pendingItems.length > 0 && (
+          {/* QUICK ACTIONS */}
           <div className="space-y-6">
             <h2
               className="text-xl font-black uppercase tracking-widest opacity-70"
               style={{ color: theme.text }}
             >
-              🚩 Action Required
+              ⚡ Quick Access
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pendingItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-2xl p-6 border shadow-lg flex items-center justify-between group transition-all"
-                  style={{ backgroundColor: theme.cardBg, borderColor: 'rgba(239, 68, 68, 0.2)' }}
-                >
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Remaining</p>
-                    <h4 className="font-black text-sm" style={{ color: theme.text }}>{item.title}</h4>
-                    <p className="text-xs opacity-60" style={{ color: theme.textSecondary }}>{item.car}</p>
-                    <p className="text-lg font-black text-green-500 italic">₹{item.amount?.toLocaleString()}</p>
-                  </div>
-                  <button
-                    onClick={() => navigate(item.link, { state: item.data })}
-                    className="p-3 rounded-xl bg-red-500 text-white shadow-lg shadow-red-500/20 hover:scale-110 active:scale-95 transition-all"
-                  >
-                    <ArrowRight size={20} />
-                  </button>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <QuickAction
+                icon={<Car />}
+                label="Browse Cars"
+                onClick={() => navigate("/browsecars")}
+                theme={theme}
+              />
+              <QuickAction
+                icon={<Calendar />}
+                label="My Bookings"
+                onClick={() => navigate("/mybookings")}
+                theme={theme}
+              />
+              <QuickAction
+                icon={<AlertTriangle />}
+                label="Damage Reports"
+                onClick={() => navigate("/mybookings")}
+                theme={theme}
+                highlight={stats.pendingDamages > 0}
+              />
+              <QuickAction
+                icon={<CreditCard />}
+                label="Payments"
+                onClick={() => navigate("/payment")}
+                theme={theme}
+                highlight={stats.pendingPayments > 0}
+              />
             </div>
           </div>
-        )}
 
-        {/* MAIN LAYOUT GRID */}
-        <div className="grid lg:grid-cols-3 gap-10">
-
-          {/* RECOMMENDED SECTION */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex justify-between items-center">
+          {/* ACTION ITEMS SECTION */}
+          {pendingItems.length > 0 && (
+            <div className="space-y-6">
               <h2
                 className="text-xl font-black uppercase tracking-widest opacity-70"
                 style={{ color: theme.text }}
               >
-                For Your Next Trip
+                🚩 Action Required
               </h2>
-              <button
-                onClick={() => navigate("/browsecars")}
-                className="text-green-500 text-sm font-black flex items-center gap-2 hover:translate-x-1 transition-transform"
-              >
-                EXPLORE ALL <ArrowRight size={16} />
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pendingItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-2xl p-6 border shadow-lg flex items-center justify-between group transition-all"
+                    style={{ backgroundColor: theme.cardBg, borderColor: 'rgba(239, 68, 68, 0.2)' }}
+                  >
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Remaining</p>
+                      <h4 className="font-black text-sm" style={{ color: theme.text }}>{item.title}</h4>
+                      <p className="text-xs opacity-60" style={{ color: theme.textSecondary }}>{item.car}</p>
+                      <p className="text-lg font-black text-green-500 italic">₹{item.amount?.toLocaleString()}</p>
+                    </div>
+                    <button
+                      onClick={() => navigate(item.link, { state: item.data })}
+                      className="p-3 rounded-xl bg-red-500 text-white shadow-lg shadow-red-500/20 hover:scale-110 active:scale-95 transition-all"
+                    >
+                      <ArrowRight size={20} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* MAIN LAYOUT GRID */}
+          <div className="grid lg:grid-cols-3 gap-10">
+
+            {/* RECOMMENDED SECTION */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex justify-between items-center">
+                <h2
+                  className="text-xl font-black uppercase tracking-widest opacity-70"
+                  style={{ color: theme.text }}
+                >
+                  For Your Next Trip
+                </h2>
+                <button
+                  onClick={() => navigate("/browsecars")}
+                  className="text-green-500 text-sm font-black flex items-center gap-2 hover:translate-x-1 transition-transform"
+                >
+                  EXPLORE ALL <ArrowRight size={16} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {RECOMMENDED_CARS.slice(0, 2).map((car) => (
+                  <CarCard key={car.name} {...car} theme={theme} />
+                ))}
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {RECOMMENDED_CARS.slice(0, 2).map((car) => (
-                <CarCard key={car.name} {...car} theme={theme} />
-              ))}
-            </div>
-          </div>
-
-          {/* RECENT ACTIVITY SECTION */}
-          <div
-            className="rounded-3xl p-8 border shadow-xl h-fit"
-            style={{
-              backgroundColor: theme.cardBg,
-              borderColor: theme.border
-            }}
-          >
-            <h2
-              className="text-xl font-black uppercase tracking-widest mb-8 border-b pb-4"
+            {/* RECENT ACTIVITY SECTION */}
+            <div
+              className="rounded-3xl p-8 border shadow-xl h-fit"
               style={{
-                color: theme.text,
+                backgroundColor: theme.cardBg,
                 borderColor: theme.border
               }}
             >
-              Timeline
-            </h2>
+              <h2
+                className="text-xl font-black uppercase tracking-widest mb-8 border-b pb-4"
+                style={{
+                  color: theme.text,
+                  borderColor: theme.border
+                }}
+              >
+                Timeline
+              </h2>
 
-            <div className="space-y-8">
-              {recentActivity.length > 0 ? (
-                recentActivity.map((item, idx) => (
-                  <ActivityItem
-                    key={idx}
-                    title={item.title}
-                    sub={item.sub}
-                    status={item.status}
-                    theme={theme}
-                  />
-                ))
-              ) : (
-                <p className="text-sm text-center opacity-50" style={{ color: theme.textSecondary }}>
-                  No recent activity
-                </p>
-              )}
+              <div className="space-y-8">
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((item, idx) => (
+                    <ActivityItem
+                      key={idx}
+                      title={item.title}
+                      sub={item.sub}
+                      status={item.status}
+                      theme={theme}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-center opacity-50" style={{ color: theme.textSecondary }}>
+                    No recent activity
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={() => navigate('/mybookings')}
+                className="w-full mt-10 py-4 text-sm font-black rounded-2xl border transition-colors hover:bg-opacity-80"
+                style={{
+                  backgroundColor: theme.inputBg,
+                  borderColor: theme.border,
+                  color: theme.textSecondary
+                }}
+              >
+                VIEW ALL ACTIVITY
+              </button>
             </div>
-
-            <button
-              onClick={() => navigate('/mybookings')}
-              className="w-full mt-10 py-4 text-sm font-black rounded-2xl border transition-colors hover:bg-opacity-80"
-              style={{
-                backgroundColor: theme.inputBg,
-                borderColor: theme.border,
-                color: theme.textSecondary
-              }}
-            >
-              VIEW ALL ACTIVITY
-            </button>
           </div>
-        </div>
-      </main>
+        </main>
 
-      {/* FLOAT ACTION - AI Assistant button */}
-      <button
-        type="button"
-        onClick={() => navigate("/aiassistant")}
-        className="
-          fixed bottom-10 right-10 z-50
-          w-16 h-16 rounded-3xl
-          bg-green-500 text-white
-          flex items-center justify-center
-          shadow-2xl shadow-green-500/40
-          hover:scale-110 hover:-translate-y-2 transition-all duration-300
-        "
-      >
-        <Sparkles size={28} />
-      </button>
-    </div>
+        {/* FLOAT ACTION - AI Assistant button */}
+        <button
+          type="button"
+          onClick={() => navigate("/aiassistant")}
+          className="
+            fixed bottom-10 right-10 z-50
+            w-16 h-16 rounded-3xl
+            bg-green-500 text-white
+            flex items-center justify-center
+            shadow-2xl shadow-green-500/40
+            hover:scale-110 hover:-translate-y-2 transition-all duration-300
+          "
+        >
+          <Sparkles size={28} />
+        </button>
+      </div>
+    </>
   );
 };
 
