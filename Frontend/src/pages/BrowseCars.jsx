@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { Search, Loader2, Users, Fuel, Gauge, AlertCircle, SlidersHorizontal, X } from 'lucide-react';
 import { carService } from '../services/carService';
+import DashboardNavbar from '../components/layout/DashboardNavbar';
 
 // Import all car images from assets
 import heroCarImg from '../assets/herocar.png';
@@ -218,274 +219,277 @@ const BrowseCars = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen pt-20 transition-colors duration-300"
-      style={{ backgroundColor: theme.bg }}
-    >
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-green-500 mb-2">
-            Browse Cars
-          </h1>
-          <p className="text-lg" style={{ color: theme.textSecondary }}>
-            Choose from our exclusive collection of {displayCars.length} vehicles
-          </p>
-        </div>
-
-        {/* Search & Filter Bar */}
-        <div className="mb-8">
-          <div 
-            className="flex flex-col md:flex-row gap-4 p-4 rounded-2xl shadow-sm border"
-            style={{
-              backgroundColor: theme.cardBg,
-              borderColor: theme.border
-            }}
-          >
-            {/* Search Input */}
-            <div className="flex-1 relative">
-              <Search 
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" 
-                style={{ color: theme.textSecondary, opacity: 0.5 }}
-              />
-              <input
-                type="text"
-                placeholder="Search by name, brand, or category..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl border-none focus:ring-2 focus:ring-green-500/20 transition-colors"
-                style={{
-                  backgroundColor: theme.inputBg,
-                  color: theme.text
-                }}
-              />
-            </div>
-
-            {/* Filter Toggle Button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/30 flex items-center gap-2 relative"
-            >
-              <SlidersHorizontal size={20} />
-              Filters
-              {activeFiltersCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-
-            {activeFiltersCount > 0 && (
-              <button
-                onClick={handleClearAll}
-                className="px-6 py-3 border-2 border-red-500 text-red-500 font-bold rounded-xl hover:bg-red-50 transition flex items-center gap-2"
-              >
-                <X size={20} />
-                Clear All
-              </button>
-            )}
+    <>
+      <DashboardNavbar />
+      <div 
+        className="min-h-screen pt-20 transition-colors duration-300"
+        style={{ backgroundColor: theme.bg }}
+      >
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-green-500 mb-2">
+              Browse Cars
+            </h1>
+            <p className="text-lg" style={{ color: theme.textSecondary }}>
+              Choose from our exclusive collection of {displayCars.length} vehicles
+            </p>
           </div>
 
-          {/* Expandable Filters Panel */}
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="p-6 rounded-2xl shadow-sm border mt-4"
+          {/* Search & Filter Bar */}
+          <div className="mb-8">
+            <div 
+              className="flex flex-col md:flex-row gap-4 p-4 rounded-2xl shadow-sm border"
               style={{
                 backgroundColor: theme.cardBg,
                 borderColor: theme.border
               }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {/* Brand Filter */}
-                <div>
-                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
-                    Brand
-                  </label>
-                  <select
-                    value={brand}
-                    onChange={(e) => setBrand(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
-                    style={{
-                      backgroundColor: theme.inputBg,
-                      borderColor: theme.border,
-                      color: theme.text
-                    }}
-                  >
-                    {brands.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </div>
-
-                {/* Category Filter */}
-                <div>
-                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
-                    Category
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
-                    style={{
-                      backgroundColor: theme.inputBg,
-                      borderColor: theme.border,
-                      color: theme.text
-                    }}
-                  >
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-
-                {/* Transmission Filter */}
-                <div>
-                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
-                    Transmission
-                  </label>
-                  <select
-                    value={transmission}
-                    onChange={(e) => setTransmission(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
-                    style={{
-                      backgroundColor: theme.inputBg,
-                      borderColor: theme.border,
-                      color: theme.text
-                    }}
-                  >
-                    {transmissions.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-
-                {/* Fuel Type Filter */}
-                <div>
-                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
-                    Fuel Type
-                  </label>
-                  <select
-                    value={fuelType}
-                    onChange={(e) => setFuelType(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
-                    style={{
-                      backgroundColor: theme.inputBg,
-                      borderColor: theme.border,
-                      color: theme.text
-                    }}
-                  >
-                    {fuelTypes.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
-                </div>
-
-                {/* Price Range Filter */}
-                <div>
-                  <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
-                    Price Range
-                  </label>
-                  <select
-                    value={priceRange}
-                    onChange={(e) => setPriceRange(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
-                    style={{
-                      backgroundColor: theme.inputBg,
-                      borderColor: theme.border,
-                      color: theme.text
-                    }}
-                  >
-                    {priceRanges.map(pr => <option key={pr.value} value={pr.value}>{pr.label}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex gap-4 mt-6">
-                <button
-                  onClick={handleApplyFilters}
-                  className="flex-1 px-8 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/30"
-                >
-                  Apply Filters
-                </button>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="px-8 py-3 border font-bold rounded-xl hover:bg-opacity-50 transition"
+              {/* Search Input */}
+              <div className="flex-1 relative">
+                <Search 
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" 
+                  style={{ color: theme.textSecondary, opacity: 0.5 }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search by name, brand, or category..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl border-none focus:ring-2 focus:ring-green-500/20 transition-colors"
                   style={{
-                    backgroundColor: theme.cardBg,
-                    borderColor: theme.border,
+                    backgroundColor: theme.inputBg,
                     color: theme.text
                   }}
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Active Filters Tags */}
-          {activeFiltersCount > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {brand !== 'All' && (
-                <FilterTag label={`Brand: ${brand}`} onRemove={() => setBrand('All')} />
-              )}
-              {category !== 'All' && (
-                <FilterTag label={`Category: ${category}`} onRemove={() => setCategory('All')} />
-              )}
-              {transmission !== 'All' && (
-                <FilterTag label={`Transmission: ${transmission}`} onRemove={() => setTransmission('All')} />
-              )}
-              {fuelType !== 'All' && (
-                <FilterTag label={`Fuel: ${fuelType}`} onRemove={() => setFuelType('All')} />
-              )}
-              {priceRange !== 'All' && (
-                <FilterTag 
-                  label={`Price: ${priceRanges.find(pr => pr.value === priceRange)?.label}`} 
-                  onRemove={() => setPriceRange('All')} 
                 />
+              </div>
+
+              {/* Filter Toggle Button */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/30 flex items-center gap-2 relative"
+              >
+                <SlidersHorizontal size={20} />
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="px-6 py-3 border-2 border-red-500 text-red-500 font-bold rounded-xl hover:bg-red-50 transition flex items-center gap-2"
+                >
+                  <X size={20} />
+                  Clear All
+                </button>
               )}
             </div>
-          )}
-        </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
+            {/* Expandable Filters Panel */}
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="p-6 rounded-2xl shadow-sm border mt-4"
+                style={{
+                  backgroundColor: theme.cardBg,
+                  borderColor: theme.border
+                }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                  {/* Brand Filter */}
+                  <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                      Brand
+                    </label>
+                    <select
+                      value={brand}
+                      onChange={(e) => setBrand(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        borderColor: theme.border,
+                        color: theme.text
+                      }}
+                    >
+                      {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Category Filter */}
+                  <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                      Category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        borderColor: theme.border,
+                        color: theme.text
+                      }}
+                    >
+                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Transmission Filter */}
+                  <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                      Transmission
+                    </label>
+                    <select
+                      value={transmission}
+                      onChange={(e) => setTransmission(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        borderColor: theme.border,
+                        color: theme.text
+                      }}
+                    >
+                      {transmissions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Fuel Type Filter */}
+                  <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                      Fuel Type
+                    </label>
+                    <select
+                      value={fuelType}
+                      onChange={(e) => setFuelType(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        borderColor: theme.border,
+                        color: theme.text
+                      }}
+                    >
+                      {fuelTypes.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Price Range Filter */}
+                  <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: theme.text }}>
+                      Price Range
+                    </label>
+                    <select
+                      value={priceRange}
+                      onChange={(e) => setPriceRange(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500/20 cursor-pointer transition-colors"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        borderColor: theme.border,
+                        color: theme.text
+                      }}
+                    >
+                      {priceRanges.map(pr => <option key={pr.value} value={pr.value}>{pr.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={handleApplyFilters}
+                    className="flex-1 px-8 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/30"
+                  >
+                    Apply Filters
+                  </button>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="px-8 py-3 border font-bold rounded-xl hover:bg-opacity-50 transition"
+                    style={{
+                      backgroundColor: theme.cardBg,
+                      borderColor: theme.border,
+                      color: theme.text
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Active Filters Tags */}
+            {activeFiltersCount > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {brand !== 'All' && (
+                  <FilterTag label={`Brand: ${brand}`} onRemove={() => setBrand('All')} />
+                )}
+                {category !== 'All' && (
+                  <FilterTag label={`Category: ${category}`} onRemove={() => setCategory('All')} />
+                )}
+                {transmission !== 'All' && (
+                  <FilterTag label={`Transmission: ${transmission}`} onRemove={() => setTransmission('All')} />
+                )}
+                {fuelType !== 'All' && (
+                  <FilterTag label={`Fuel: ${fuelType}`} onRemove={() => setFuelType('All')} />
+                )}
+                {priceRange !== 'All' && (
+                  <FilterTag 
+                    label={`Price: ${priceRanges.find(pr => pr.value === priceRange)?.label}`} 
+                    onRemove={() => setPriceRange('All')} 
+                  />
+                )}
+              </div>
+            )}
           </div>
-        ) : error ? (
-          <div className="text-center py-20">
-            <p className="text-xl font-bold mb-4 text-red-500">{error}</p>
-            <button
-              onClick={loadCars}
-              className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition"
-            >
-              Retry
-            </button>
-          </div>
-        ) : displayCars.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-xl font-bold mb-2" style={{ color: theme.text }}>
-              No cars found
-            </p>
-            <p className="mb-4" style={{ color: theme.textSecondary }}>
-              Try adjusting your filters
-            </p>
-            <button
-              onClick={handleClearAll}
-              className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition"
-            >
-              Clear All Filters
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
-            {displayCars.map((car, index) => (
-              <CarCard
-                key={car._id || index}
-                car={car}
-                index={index}
-                theme={theme}
-                onBook={() => handleBookCar(car)}
-                onDetails={() => handleViewDetails(car._id)}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-20">
+              <p className="text-xl font-bold mb-4 text-red-500">{error}</p>
+              <button
+                onClick={loadCars}
+                className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition"
+              >
+                Retry
+              </button>
+            </div>
+          ) : displayCars.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-xl font-bold mb-2" style={{ color: theme.text }}>
+                No cars found
+              </p>
+              <p className="mb-4" style={{ color: theme.textSecondary }}>
+                Try adjusting your filters
+              </p>
+              <button
+                onClick={handleClearAll}
+                className="px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
+              {displayCars.map((car, index) => (
+                <CarCard
+                  key={car._id || index}
+                  car={car}
+                  index={index}
+                  theme={theme}
+                  onBook={() => handleBookCar(car)}
+                  onDetails={() => handleViewDetails(car._id)}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    </>
   );
 };
 

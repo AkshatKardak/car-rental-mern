@@ -3,6 +3,7 @@ import { FiCopy, FiCheck, FiTag, FiPercent, FiDollarSign } from 'react-icons/fi'
 import { toast } from 'react-hot-toast';
 import { promotionService } from '../services/promotionService';
 import { useTheme } from '../context/ThemeContext';
+import DashboardNavbar from '../components/layout/DashboardNavbar';
 
 const OffersCode = () => {
   const [promotions, setPromotions] = useState([]);
@@ -121,154 +122,160 @@ const OffersCode = () => {
 
   if (loading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center transition-colors duration-300"
-        style={{ backgroundColor: theme.bg }}
-      >
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
+      <>
+        <DashboardNavbar />
+        <div
+          className="min-h-screen flex items-center justify-center transition-colors duration-300"
+          style={{ backgroundColor: theme.bg }}
+        >
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div
-      className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 pt-24 transition-colors duration-300"
-      style={{ backgroundColor: theme.bg }}
-    >
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1
-            className="text-4xl font-bold mb-4"
-            style={{ color: theme.text }}
-          >
-            🎉 Exclusive Offers & Promo Codes
-          </h1>
-          <p
-            className="text-lg"
-            style={{ color: theme.textSecondary }}
-          >
-            Save big on your next car rental! Apply these codes at checkout.
-          </p>
-        </div>
-
-        {/* Promotions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {promotions.map((promo) => (
-            <div
-              key={promo.code || Math.random()}
-              className="rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 hover:border-green-500"
-              style={{
-                backgroundColor: theme.cardBg,
-                borderColor: theme.border
-              }}
-            >
-              {/* Card Header - GREEN GRADIENT */}
-              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    {promo.type === 'percentage' ? (
-                      <FiPercent className="text-2xl" />
-                    ) : (
-                      <FiDollarSign className="text-2xl" />
-                    )}
-                    <h3 className="text-2xl font-bold">{promo.code || 'PROMO'}</h3>
-                  </div>
-                  <FiTag className="text-3xl opacity-50" />
-                </div>
-                <p className="text-green-100 text-sm font-semibold">
-                  {promo.name || 'Special Offer'}
-                </p>
-                <p className="text-green-50 text-xs mt-1">
-                  {promo.type === 'percentage'
-                    ? `${promo.value || 0}% OFF`
-                    : `₹${(promo.value || 0).toLocaleString()} OFF`}
-                </p>
-              </div>
-
-              {/* Card Body */}
-              <div className="p-6">
-                <p
-                  className="mb-4 min-h-[60px]"
-                  style={{ color: theme.text }}
-                >
-                  {promo.description || 'Limited time offer - save on your booking!'}
-                </p>
-
-                {/* Details */}
-                <div
-                  className="space-y-2 mb-6 text-sm"
-                  style={{ color: theme.textSecondary }}
-                >
-                  <div className="flex justify-between">
-                    <span>Max Discount:</span>
-                    <span className="font-semibold text-green-600">
-                      ₹{(promo.maxDiscount || 0).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Min Booking:</span>
-                    <span className="font-semibold" style={{ color: theme.text }}>
-                      ₹{(promo.minBookingAmount || 0).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleCopyCode(promo.code)}
-                    className="flex-1 flex items-center justify-center space-x-2 font-semibold py-3 px-4 rounded-lg transition-colors"
-                    style={{
-                      backgroundColor: theme.inputBg,
-                      color: theme.text
-                    }}
-                  >
-                    {copiedCode === promo.code ? (
-                      <>
-                        <FiCheck className="text-green-600" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <FiCopy />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => handleApplyCode(promo)}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-md hover:shadow-lg"
-                  >
-                    Apply Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* No Promotions Message */}
-        {promotions.length === 0 && (
-          <div className="text-center py-12">
-            <FiTag
-              className="text-6xl mx-auto mb-4"
-              style={{ color: theme.textSecondary }}
-            />
-            <h3
-              className="text-2xl font-semibold mb-2"
+    <>
+      <DashboardNavbar />
+      <div
+        className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 pt-24 transition-colors duration-300"
+        style={{ backgroundColor: theme.bg }}
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1
+              className="text-4xl font-bold mb-4"
               style={{ color: theme.text }}
             >
-              No active promotions available
-            </h3>
-            <p style={{ color: theme.textSecondary }}>
-              Check back later for new offers!
+              🎉 Exclusive Offers & Promo Codes
+            </h1>
+            <p
+              className="text-lg"
+              style={{ color: theme.textSecondary }}
+            >
+              Save big on your next car rental! Apply these codes at checkout.
             </p>
           </div>
-        )}
+
+          {/* Promotions Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {promotions.map((promo) => (
+              <div
+                key={promo.code || Math.random()}
+                className="rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 hover:border-green-500"
+                style={{
+                  backgroundColor: theme.cardBg,
+                  borderColor: theme.border
+                }}
+              >
+                {/* Card Header - GREEN GRADIENT */}
+                <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      {promo.type === 'percentage' ? (
+                        <FiPercent className="text-2xl" />
+                      ) : (
+                        <FiDollarSign className="text-2xl" />
+                      )}
+                      <h3 className="text-2xl font-bold">{promo.code || 'PROMO'}</h3>
+                    </div>
+                    <FiTag className="text-3xl opacity-50" />
+                  </div>
+                  <p className="text-green-100 text-sm font-semibold">
+                    {promo.name || 'Special Offer'}
+                  </p>
+                  <p className="text-green-50 text-xs mt-1">
+                    {promo.type === 'percentage'
+                      ? `${promo.value || 0}% OFF`
+                      : `₹${(promo.value || 0).toLocaleString()} OFF`}
+                  </p>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-6">
+                  <p
+                    className="mb-4 min-h-[60px]"
+                    style={{ color: theme.text }}
+                  >
+                    {promo.description || 'Limited time offer - save on your booking!'}
+                  </p>
+
+                  {/* Details */}
+                  <div
+                    className="space-y-2 mb-6 text-sm"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    <div className="flex justify-between">
+                      <span>Max Discount:</span>
+                      <span className="font-semibold text-green-600">
+                        ₹{(promo.maxDiscount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Min Booking:</span>
+                      <span className="font-semibold" style={{ color: theme.text }}>
+                        ₹{(promo.minBookingAmount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleCopyCode(promo.code)}
+                      className="flex-1 flex items-center justify-center space-x-2 font-semibold py-3 px-4 rounded-lg transition-colors"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        color: theme.text
+                      }}
+                    >
+                      {copiedCode === promo.code ? (
+                        <>
+                          <FiCheck className="text-green-600" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiCopy />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleApplyCode(promo)}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-md hover:shadow-lg"
+                    >
+                      Apply Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* No Promotions Message */}
+          {promotions.length === 0 && (
+            <div className="text-center py-12">
+              <FiTag
+                className="text-6xl mx-auto mb-4"
+                style={{ color: theme.textSecondary }}
+              />
+              <h3
+                className="text-2xl font-semibold mb-2"
+                style={{ color: theme.text }}
+              >
+                No active promotions available
+              </h3>
+              <p style={{ color: theme.textSecondary }}>
+                Check back later for new offers!
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

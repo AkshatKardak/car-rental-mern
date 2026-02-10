@@ -16,6 +16,8 @@ import { bookingService } from '../services/bookingService';
 import { paymentService } from '../services/paymentService';
 import damageService from '../services/damageService';
 import { loadRazorpayScript, initRazorpayPayment } from '../utils/razorpay';
+import DashboardNavbar from '../components/layout/DashboardNavbar';
+
 
 const container = {
   hidden: { opacity: 0 },
@@ -262,6 +264,8 @@ const MyBookings = () => {
   };
 
   return (
+    <>
+    <DashboardNavbar/>
     <div
       className="min-h-screen pt-20 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
@@ -599,6 +603,7 @@ const MyBookings = () => {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 };
 
