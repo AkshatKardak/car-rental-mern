@@ -21,12 +21,14 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import ReportDamage from "./pages/ReportDamage";
 import MyDamageReports from "./pages/MyDamageReports";
 import AdminDamageReports from "./pages/AdminDamageReports";
-
 import DamageReportDetail from "./pages/DamageReportDetail";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 
+import AccountSettings from './pages/AccountSettings';
+import Preferences from './pages/Preferences';
+import HelpSupport from './pages/HelpSupport';
 export default function App() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
@@ -141,6 +143,9 @@ export default function App() {
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/account-settings" element={<AccountSettings />} />
+<Route path="/preferences" element={<Preferences />} />
+<Route path="/help-support" element={<HelpSupport />} />
           </Route>
 
           {/* Catch All */}

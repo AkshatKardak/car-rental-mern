@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const ThemeContext = createContext();
+const ThemeContext = createContext(undefined);
 
 // Define theme colors
 const lightTheme = {
@@ -23,48 +23,70 @@ const darkTheme = {
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
+  
+  // Instead of throwing error, return default light theme
   if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
+    console.warn('useTheme must be used within ThemeProvider. Using default light theme.');
+    return {
+      isDarkMode: false,
+      toggleTheme: () => console.warn('ThemeProvider not found'),
+      theme: lightTheme
+    };
   }
+  
   return context;
 };
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
+    try {
+      const saved = localStorage.getItem('darkMode');
+      return saved ? JSON.parse(saved) : false;
+    } catch (error) {
+      console.error('Error reading darkMode from localStorage:', error);
+      return false;
+    }
   });
 
   // Get current theme based on isDarkMode
   const theme = isDarkMode ? darkTheme : lightTheme;
 
   useEffect(() => {
-    const html = document.documentElement;
-    
-    // Force remove and add class
-    html.classList.remove('light', 'dark');
-    
-    if (isDarkMode) {
-      html.classList.add('dark');
-      html.setAttribute('data-theme', 'dark');
-    } else {
-      html.classList.add('light');
-      html.setAttribute('data-theme', 'light');
+    try {
+      const html = document.documentElement;
+      
+      // Force remove and add class
+      html.classList.remove('light', 'dark');
+      
+      if (isDarkMode) {
+        html.classList.add('dark');
+        html.setAttribute('data-theme', 'dark');
+      } else {
+        html.classList.add('light');
+        html.setAttribute('data-theme', 'light');
+      }
+      
+      localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+      
+      // Force reflow
+      void html.offsetHeight;
+    } catch (error) {
+      console.error('Error in theme effect:', error);
     }
-    
-    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
-    
-    // Force reflow
-    void html.offsetHeight;
-    
   }, [isDarkMode]);
 
   const toggleTheme = () => {
     setIsDarkMode(prev => !prev);
   };
 
+  const value = {
+    isDarkMode,
+    toggleTheme,
+    theme
+  };
+
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, theme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

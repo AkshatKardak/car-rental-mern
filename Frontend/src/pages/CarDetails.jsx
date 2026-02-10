@@ -16,7 +16,7 @@ import DashboardNavbar from '../components/layout/DashboardNavbar';
 import { carService } from '../services/carService';
 import { useTheme } from '../context/ThemeContext';
 
-// --- IMAGE IMPORTS (keep all your existing imports) ---
+
 import PorscheImg from '../assets/porsche.png';
 import LamboImg from '../assets/lambo.png';
 import BugattiImg from '../assets/Bugatti.png';
@@ -63,15 +63,7 @@ const getCarImage = (car) => {
   return HeroCarImg;
 };
 
-// Default theme in case ThemeContext is not available
-const defaultTheme = {
-  background: '#f9fafb',
-  card: '#ffffff',
-  text: '#111827',
-  textSecondary: '#6b7280',
-  border: '#e5e7eb',
-  hover: '#f3f4f6'
-};
+
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -79,9 +71,15 @@ const CarDetails = () => {
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Add fallback for theme
-  const themeContext = useTheme();
-  const theme = themeContext?.theme || defaultTheme;
+ const themeContext = useTheme();
+  const { theme = {
+    background: '#f9fafb',
+    card: '#ffffff',
+    text: '#111827',
+    textSecondary: '#6b7280',
+    border: '#e5e7eb',
+    hover: '#f3f4f6'
+  } } = themeContext || {};
 
   useEffect(() => {
     const fetchCarDetails = async () => {
