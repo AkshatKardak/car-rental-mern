@@ -44,7 +44,7 @@ const UserProfile = () => {
                     email: user.email || '',
                     phone: user.phone || '',
                     address: user.address || '',
-                    profilePicture: user.profilePicture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || 'User') + '&background=4F46E5&color=fff&size=200'
+                    profilePicture: user.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=4F46E5&color=fff&size=200`
                 });
             }
         } catch (error) {
@@ -72,7 +72,7 @@ const UserProfile = () => {
 
             if (response.success) {
                 toast.success('Profile updated successfully!');
-                // Update local storage if you're using it
+                // Update local storage
                 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
                 localStorage.setItem('user', JSON.stringify({
                     ...currentUser,
