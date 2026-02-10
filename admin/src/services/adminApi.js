@@ -10,7 +10,7 @@ const adminApi = axios.create({
   timeout: 10000 // 10 second timeout
 })
 
-// Request interceptor - Add token to all requests
+
 adminApi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('adminToken')
