@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // Use environment variable with proper fallback
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://rentridebackend-two.vercel.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://rentridebackend-seven.vercel.app/api';
+
 
 console.log('🔗 API Base URL:', API_BASE_URL);
 
