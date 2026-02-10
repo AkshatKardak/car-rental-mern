@@ -26,6 +26,7 @@ import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import HelpSupport from './pages/HelpSupport';
+
 export default function App() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
@@ -52,7 +53,8 @@ export default function App() {
     "/damage-report",
     "/profile",
     "/settings",
-    "/notifications"
+    "/notifications",
+    "/help-support"
   ];
   const isDashboardPage = dashboardRoutes.some(route =>
     location.pathname.startsWith(route)
@@ -98,7 +100,6 @@ export default function App() {
       />
 
       {isLandingPage && !isLoggedIn && <Navbar />}
-      {isLoggedIn && isDashboardPage && <DashboardNavbar />}
 
       <main>
         <Routes>
@@ -130,17 +131,17 @@ export default function App() {
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/payment" element={<Payment />} />
 
-            {/* ✅ Damage Report Routes */}
+            {/* Damage Report Routes */}
             <Route path="/report-damage/:bookingId" element={<ReportDamage />} />
             <Route path="/my-damage-reports" element={<MyDamageReports />} />
             <Route path="/damage-report/:id" element={<DamageReportDetail />} />
             <Route path="/admin-damage-reports" element={<AdminDamageReports />} />
 
-            {/* ✅ User Profile Routes */}
+            {/* User Profile Routes */}
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/notifications" element={<Notifications />} />
-<Route path="/help-support" element={<HelpSupport />} />
+            <Route path="/help-support" element={<HelpSupport />} />
           </Route>
 
           {/* Catch All */}

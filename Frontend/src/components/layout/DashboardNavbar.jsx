@@ -24,7 +24,7 @@ import { toast } from "react-hot-toast";
 const DashboardNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDarkMode, toggleTheme } = useTheme(); // Add theme hook
+  const { isDarkMode, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -320,7 +320,7 @@ const DashboardNavbar = () => {
                             {!notif.read && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2"></div>}
                           </div>
                         </button>
-                      )).slice(0, 5) // Show only 5 in dropdown
+                      )).slice(0, 5)
                     )}
                   </div>
                   {notifications.length > 5 && (
@@ -376,18 +376,30 @@ const DashboardNavbar = () => {
                 >
                   <div className="p-2">
                     <button
+                      onClick={() => {
+                        navigate('/settings');
+                        setShowSettings(false);
+                      }}
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >
                       Account Settings
                     </button>
                     <button
+                      onClick={() => {
+                        navigate('/settings');
+                        setShowSettings(false);
+                      }}
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >
                       Preferences
                     </button>
                     <button
+                      onClick={() => {
+                        navigate('/help-support');
+                        setShowSettings(false);
+                      }}
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >
@@ -445,6 +457,10 @@ const DashboardNavbar = () => {
                   </div>
                   <div className="p-2">
                     <button
+                      onClick={() => {
+                        navigate('/profile');
+                        setShowUserMenu(false);
+                      }}
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-opacity-50 rounded-xl transition flex items-center gap-2"
                       style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
                     >
@@ -515,6 +531,26 @@ const DashboardNavbar = () => {
                   {t.label}
                 </button>
               ))}
+              <button
+                onClick={() => {
+                  navigate('/profile');
+                  setMobileOpen(false);
+                }}
+                className="w-full px-4 py-2.5 text-left text-sm rounded-xl transition"
+                style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => {
+                  navigate('/settings');
+                  setMobileOpen(false);
+                }}
+                className="w-full px-4 py-2.5 text-left text-sm rounded-xl transition"
+                style={{ color: isDarkMode ? '#f1f5f9' : '#1F2937' }}
+              >
+                Settings
+              </button>
               <button
                 onClick={handleLogout}
                 className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 rounded-xl transition"

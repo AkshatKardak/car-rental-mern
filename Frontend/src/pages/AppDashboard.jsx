@@ -488,63 +488,71 @@ const QuickAction = ({ icon, label, onClick, theme, highlight }) => (
   </button>
 );
 
-const CarCard = ({ name, price, tag, image, specs, theme }) => (
-  <div
-    className="group rounded-3xl overflow-hidden border shadow-xl hover:shadow-2xl hover:border-green-500/50 transition-all duration-500 flex flex-col"
-    style={{
-      backgroundColor: theme.cardBg,
-      borderColor: theme.border
-    }}
-  >
-    <div
-      className="h-56 flex items-center justify-center relative p-6"
-      style={{ backgroundColor: theme.inputBg }}
-    >
-      <img
-        src={image}
-        alt={name}
-        className="h-full object-contain group-hover:scale-110 transition-transform duration-700"
-      />
-      <span className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1.5 rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-green-500/20">
-        {tag}
-      </span>
-    </div>
+const CarCard = ({ name, price, tag, image, specs, theme }) => {
+  const navigate = useNavigate();
 
-    <div className="p-8 space-y-4 flex-1 flex flex-col justify-between">
-      <div>
-        <h3
-          className="text-2xl font-black group-hover:text-green-500 transition-colors"
-          style={{ color: theme.text }}
-        >
-          {name}
-        </h3>
-        <p className="text-sm font-medium mt-1" style={{ color: theme.textSecondary }}>
-          {specs}
-        </p>
+  const handleBookNow = () => {
+    navigate('/browsecars');
+  };
+
+  return (
+    <div
+      className="group rounded-3xl overflow-hidden border shadow-xl hover:shadow-2xl hover:border-green-500/50 transition-all duration-500 flex flex-col"
+      style={{
+        backgroundColor: theme.cardBg,
+        borderColor: theme.border
+      }}
+    >
+      <div
+        className="h-56 flex items-center justify-center relative p-6"
+        style={{ backgroundColor: theme.inputBg }}
+      >
+        <img
+          src={image}
+          alt={name}
+          className="h-full object-contain group-hover:scale-110 transition-transform duration-700"
+        />
+        <span className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1.5 rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-green-500/20">
+          {tag}
+        </span>
       </div>
 
-      <div
-        className="flex justify-between items-center pt-6 border-t"
-        style={{ borderColor: theme.border }}
-      >
+      <div className="p-8 space-y-4 flex-1 flex flex-col justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: theme.textSecondary }}>
-            Daily Fare
-          </p>
-          <p className="text-2xl font-black text-green-500">
-            {price}
+          <h3
+            className="text-2xl font-black group-hover:text-green-500 transition-colors"
+            style={{ color: theme.text }}
+          >
+            {name}
+          </h3>
+          <p className="text-sm font-medium mt-1" style={{ color: theme.textSecondary }}>
+            {specs}
           </p>
         </div>
-        <button
-          className="px-6 py-3 rounded-xl text-xs font-black text-white hover:bg-green-600 transition-all shadow-lg active:scale-95"
-          style={{ backgroundColor: theme.text }}
+
+        <div
+          className="flex justify-between items-center pt-6 border-t"
+          style={{ borderColor: theme.border }}
         >
-          BOOK NOW
-        </button>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: theme.textSecondary }}>
+              Daily Fare
+            </p>
+            <p className="text-2xl font-black text-green-500">
+              {price}
+            </p>
+          </div>
+          <button
+            onClick={handleBookNow}
+            className="px-6 py-3 rounded-xl text-xs font-black text-white bg-gray-900 hover:bg-green-500 transition-all shadow-lg active:scale-95"
+          >
+            BOOK NOW
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ActivityItem = ({ title, sub, status, theme }) => {
   const getStatusColor = () => {

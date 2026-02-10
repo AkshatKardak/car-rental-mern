@@ -64,54 +64,87 @@ app.get('/', (req, res) => {
     });
 });
 
-// Load Routes
+// Load routes with error handling
 console.log('🔄 Loading routes...');
 
-// Auth Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-console.log('✅ Auth routes loaded');
+try {
+    app.use('/api/auth', require('./routes/authRoutes'));
+    console.log('✅ Auth routes loaded');
+} catch (error) {
+    console.error('❌ Auth routes failed:', error.message);
+}
 
-// Car Routes  
-app.use('/api/cars', require('./routes/carRoutes'));
-console.log('✅ Car routes loaded');
+try {
+    app.use('/api/cars', require('./routes/carRoutes'));
+    console.log('✅ Car routes loaded');
+} catch (error) {
+    console.error('❌ Car routes failed:', error.message);
+}
 
-// Booking Routes
-app.use('/api/bookings', require('./routes/bookingRoutes'));
-console.log('✅ Booking routes loaded');
+try {
+    app.use('/api/bookings', require('./routes/bookingRoutes'));
+    console.log('✅ Booking routes loaded');
+} catch (error) {
+    console.error('❌ Booking routes failed:', error.message);
+}
 
-// User Routes
-app.use('/api/users', require('./routes/userRoutes'));
-console.log('✅ User routes loaded');
+try {
+    app.use('/api/users', require('./routes/userRoutes'));
+    console.log('✅ User routes loaded');
+} catch (error) {
+    console.error('❌ User routes failed:', error.message);
+}
 
-// Payment Routes
-app.use('/api/payments', require('./routes/paymentRoutes'));
-console.log('✅ Payment routes loaded');
+try {
+    app.use('/api/payments', require('./routes/paymentRoutes'));
+    console.log('✅ Payment routes loaded');
+} catch (error) {
+    console.error('❌ Payment routes failed:', error.message);
+}
 
-// Notification Routes
-app.use('/api/notifications', require('./routes/notificationRoutes'));
-console.log('✅ Notification routes loaded');
+try {
+    app.use('/api/notifications', require('./routes/notificationRoutes'));
+    console.log('✅ Notification routes loaded');
+} catch (error) {
+    console.error('❌ Notification routes failed:', error.message);
+}
 
-// Damage Routes
-app.use('/api/damages', require('./routes/damageRoutes'));
-console.log('✅ Damage routes loaded');
+try {
+    app.use('/api/damages', require('./routes/damageRoutes'));
+    console.log('✅ Damage routes loaded');
+} catch (error) {
+    console.error('❌ Damage routes failed:', error.message);
+}
 
-// Offer Routes
-app.use('/api/offers', require('./routes/offerRoutes'));
-console.log('✅ Offer routes loaded');
+try {
+    app.use('/api/offers', require('./routes/offerRoutes'));
+    console.log('✅ Offer routes loaded');
+} catch (error) {
+    console.error('❌ Offer routes failed:', error.message);
+}
 
-// AI Routes
-app.use('/api/ai', require('./routes/aiRoutes'));
-console.log('✅ AI routes loaded');
+try {
+    app.use('/api/ai', require('./routes/aiRoutes'));
+    console.log('✅ AI routes loaded');
+} catch (error) {
+    console.error('❌ AI routes failed:', error.message);
+}
 
-// Admin Routes - CRITICAL: Must be loaded!
-app.use('/api/admin', require('./routes/adminRoutes'));
-console.log('✅ Admin routes loaded');
+try {
+    app.use('/api/admin', require('./routes/adminRoutes'));
+    console.log('✅ Admin routes loaded');
+} catch (error) {
+    console.error('❌ Admin routes failed:', error.message);
+}
 
-// Promotion Routes
-app.use('/api/promotions', require('./routes/promotionRoutes'));
-console.log('✅ Promotion routes loaded');
+try {
+    app.use('/api/promotions', require('./routes/promotionRoutes'));
+    console.log('✅ Promotion routes loaded');
+} catch (error) {
+    console.error('❌ Promotion routes failed:', error.message);
+}
 
-console.log('✅ All routes loaded successfully');
+console.log('✅ Route loading completed');
 
 // 404 Handler
 app.use((req, res) => {
