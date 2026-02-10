@@ -67,7 +67,6 @@ app.get('/', (req, res) => {
     });
 });
 
-// API Info Route - BEFORE other /api routes
 app.get('/api/info', (req, res) => {
     res.json({
         success: true,
@@ -78,10 +77,17 @@ app.get('/api/info', (req, res) => {
             cars: '/api/cars',
             bookings: '/api/bookings',
             users: '/api/users',
-            payments: '/api/payments'
+            payments: '/api/payments',
+            notifications: '/api/notifications',
+            damages: '/api/damages',
+            offers: '/api/offers',
+            ai: '/api/ai',
+            admin: '/api/admin',
+            promotions: '/api/promotions'
         }
     });
 });
+
 
 // Import Routes - wrapped in try-catch to prevent crashes
 try {
@@ -118,7 +124,47 @@ try {
 } catch (error) {
     console.error('Payment routes error:', error.message);
 }
+try {
+    const notificationRoutes = require('./routes/notificationRoutes');
+    app.use('/api/notifications', notificationRoutes);
+} catch (error) {
+    console.error('Notification routes error:', error.message);
+}
 
+try {
+    const damageRoutes = require('./routes/damageRoutes');
+    app.use('/api/damages', damageRoutes);
+} catch (error) {
+    console.error('Damage routes error:', error.message);
+}
+
+try {
+    const offerRoutes = require('./routes/offerRoutes');
+    app.use('/api/offers', offerRoutes);
+} catch (error) {
+    console.error('Offer routes error:', error.message);
+}
+
+try {
+    const aiRoutes = require('./routes/aiRoutes');
+    app.use('/api/ai', aiRoutes);
+} catch (error) {
+    console.error('AI routes error:', error.message);
+}
+
+try {
+    const adminRoutes = require('./routes/adminRoutes');
+    app.use('/api/admin', adminRoutes);
+} catch (error) {
+    console.error('Admin routes error:', error.message);
+}
+
+try {
+    const promotionRoutes = require('./routes/promotionRoutes');
+    app.use('/api/promotions', promotionRoutes);
+} catch (error) {
+    console.error('Promotion routes error:', error.message);
+}
 // 404 Handler
 app.use((req, res) => {
     res.status(404).json({

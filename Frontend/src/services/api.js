@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// USE 127.0.0.1 TO AVOID LOCALHOST ISSUES
-const API_BASE_URL = 'http://127.0.0.1:5005/api'; 
+// Use environment variable with proper fallback
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://rentridebackend-two.vercel.app/api';
+
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,16 +11,35 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true,
+  timeout: 30000, 
 });
 
-// ... keep your interceptors as they are ...
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/signin';
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default api;
