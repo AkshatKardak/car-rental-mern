@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import DashboardNavbar from '../components/layout/DashboardNavbar';
 import { carService } from '../services/carService';
+import { useTheme } from '../context/ThemeContext';
 
 // --- IMAGE IMPORTS ---
 import PorscheImg from '../assets/porsche.png';
@@ -67,6 +68,7 @@ const CarDetails = () => {
   const navigate = useNavigate();
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -84,47 +86,56 @@ const CarDetails = () => {
     fetchCarDetails();
   }, [id]);
 
- const handleBookNow = () => {
-  if (!car) return;
+  const handleBookNow = () => {
+    if (!car) return;
 
-  navigate('/booking-confirmation', {
-    state: {
-      car: car,
-      bookingDetails: {
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-        days: 2,
-        pickupLocation: car.location || 'Mumbai Hub',
-        dropoffLocation: car.location || 'Mumbai Hub',
-        totalPrice: car.pricePerDay * 2
+    navigate('/booking-confirmation', {
+      state: {
+        car: car,
+        bookingDetails: {
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          days: 2,
+          pickupLocation: car.location || 'Mumbai Hub',
+          dropoffLocation: car.location || 'Mumbai Hub',
+          totalPrice: car.pricePerDay * 2
+        }
       }
-    }
-  });
-};
-
+    });
+  };
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div 
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: theme.background }}
+    >
       <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   if (!car) return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Car not found</h2>
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center"
+      style={{ backgroundColor: theme.background }}
+    >
+      <h2 className="text-2xl font-bold mb-4" style={{ color: theme.text }}>Car not found</h2>
       <button onClick={() => navigate('/browsecars')} className="text-green-600 underline">Browse Fleet</button>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 text-gray-900">
+    <div 
+      className="min-h-screen pb-20"
+      style={{ backgroundColor: theme.background, color: theme.text }}
+    >
       <DashboardNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button 
           onClick={() => navigate('/browsecars')} 
-          className="flex items-center gap-2 text-gray-500 hover:text-green-600 mb-6 transition font-medium"
+          className="flex items-center gap-2 hover:text-green-600 mb-6 transition font-medium"
+          style={{ color: theme.textSecondary }}
         >
           <ArrowLeft size={20} /> Back to Fleet
         </button>
@@ -136,7 +147,10 @@ const CarDetails = () => {
             animate={{ opacity: 1, x: 0 }} 
             className="space-y-6"
           >
-            <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-xl shadow-green-50/50 flex items-center justify-center min-h-[400px] relative overflow-hidden group">
+            <div 
+              className="rounded-[32px] p-8 border shadow-xl flex items-center justify-center min-h-[400px] relative overflow-hidden group"
+              style={{ backgroundColor: theme.card, borderColor: theme.border }}
+            >
               <div className="absolute inset-0 bg-green-500/5 rounded-[32px] transform scale-0 group-hover:scale-100 transition-transform duration-500 rounded-full" />
               <img 
                 src={getCarImage(car)} 
@@ -147,13 +161,22 @@ const CarDetails = () => {
             
             {/* Quick Badges */}
             <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-               <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-100 shadow-sm text-sm whitespace-nowrap">
+               <div 
+                 className="flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm text-sm whitespace-nowrap"
+                 style={{ backgroundColor: theme.card, borderColor: theme.border }}
+               >
                   <CheckCircle2 size={16} className="text-green-500"/> Verified
                </div>
-               <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-100 shadow-sm text-sm whitespace-nowrap">
+               <div 
+                 className="flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm text-sm whitespace-nowrap"
+                 style={{ backgroundColor: theme.card, borderColor: theme.border }}
+               >
                   <CheckCircle2 size={16} className="text-green-500"/> Insured
                </div>
-               <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-100 shadow-sm text-sm whitespace-nowrap">
+               <div 
+                 className="flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm text-sm whitespace-nowrap"
+                 style={{ backgroundColor: theme.card, borderColor: theme.border }}
+               >
                   <CheckCircle2 size={16} className="text-green-500"/> Cleaned
                </div>
             </div>
@@ -169,14 +192,30 @@ const CarDetails = () => {
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold uppercase tracking-widest">{car.brand}</span>
-                 <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold uppercase tracking-widest">{car.year}</span>
+                 <span 
+                   className="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest"
+                   style={{ backgroundColor: theme.hover, color: theme.textSecondary }}
+                 >
+                   {car.year}
+                 </span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight mb-2">
+              <h1 
+                className="text-4xl md:text-5xl font-black leading-tight mb-2"
+                style={{ color: theme.text }}
+              >
                 {car.name}
               </h1>
-              <p className="text-2xl text-gray-400 font-medium">{car.model}</p>
+              <p 
+                className="text-2xl font-medium"
+                style={{ color: theme.textSecondary }}
+              >
+                {car.model}
+              </p>
               
-              <div className="flex items-center gap-6 mt-4 text-sm font-medium text-gray-500 border-b border-gray-100 pb-6">
+              <div 
+                className="flex items-center gap-6 mt-4 text-sm font-medium border-b pb-6"
+                style={{ color: theme.textSecondary, borderColor: theme.border }}
+              >
                 <span className="flex items-center gap-1.5"><MapPin size={18} className="text-green-500"/> {car.location || 'Mumbai Hub'}</span>
                 <span className="flex items-center gap-1.5"><Star size={18} className="text-yellow-400 fill-yellow-400"/> {car.rating || '4.8'} (120+ trips)</span>
               </div>
@@ -184,27 +223,31 @@ const CarDetails = () => {
 
             {/* Specs Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">
-               <SpecBox icon={<Gauge size={20} />} label="Transmission" value={car.transmission} />
-               <SpecBox icon={<Fuel size={20} />} label="Fuel Type" value={car.fuelType} />
-               <SpecBox icon={<Users size={20} />} label="Capacity" value={`${car.seats} Persons`} />
-               <SpecBox icon={<Info size={20} />} label="Mileage" value={`${car.mileage || '10'} km/l`} />
+               <SpecBox icon={<Gauge size={20} />} label="Transmission" value={car.transmission} theme={theme} />
+               <SpecBox icon={<Fuel size={20} />} label="Fuel Type" value={car.fuelType} theme={theme} />
+               <SpecBox icon={<Users size={20} />} label="Capacity" value={`${car.seats} Persons`} theme={theme} />
+               <SpecBox icon={<Info size={20} />} label="Mileage" value={`${car.mileage || '10'} km/l`} theme={theme} />
             </div>
 
             {/* Description */}
             <div className="mb-8">
-              <h3 className="font-bold text-gray-900 text-lg mb-3">About this vehicle</h3>
-              <p className="text-gray-600 leading-relaxed text-base">
+              <h3 className="font-bold text-lg mb-3" style={{ color: theme.text }}>About this vehicle</h3>
+              <p className="leading-relaxed text-base" style={{ color: theme.textSecondary }}>
                 {car.description || "A premium vehicle designed for comfort, style, and performance. Perfect for city drives and weekend getaways. Regularly serviced and sanitized for your safety."}
               </p>
             </div>
 
             {/* Features */}
             <div className="mb-8">
-              <h3 className="font-bold text-gray-900 text-lg mb-3">Key Features</h3>
+              <h3 className="font-bold text-lg mb-3" style={{ color: theme.text }}>Key Features</h3>
               <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-                {(car.features && car.features.length > 0 ? car.features : ['Bluetooth', 'GPS Navigation', 'Climate Control', 'Leather Seats', 'Rear Camera', 'USB Charging']).map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 text-gray-600 text-sm font-medium">
-                    <CheckCircle2 size={16} className="text-green-500 flex-shrink-0" />
+                {(car.features && car.features.length > 0 ? car.features : ['4MATIC AWD', 'AMG Performance', 'Luxury Interior', 'Off-road Package', 'Bluetooth', 'GPS Navigation']).map((feature, i) => (
+                  <div 
+                    key={i} 
+                    className="flex items-center gap-2 text-sm font-medium"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    <CheckCircle2 size={16} className="text-green-500 shrink-0" />
                     {feature}
                   </div>
                 ))}
@@ -236,14 +279,17 @@ const CarDetails = () => {
 };
 
 // Reusable Spec Component
-const SpecBox = ({ icon, label, value }) => (
-  <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-start gap-4 hover:border-green-200 transition-colors">
+const SpecBox = ({ icon, label, value, theme }) => (
+  <div 
+    className="p-4 rounded-2xl border shadow-sm flex items-start gap-4 hover:border-green-200 transition-colors"
+    style={{ backgroundColor: theme.card, borderColor: theme.border }}
+  >
     <div className="p-2.5 bg-green-50 rounded-xl text-green-600">
       {icon}
     </div>
     <div>
-      <p className="text-[10px] text-gray-400 font-black uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="font-bold text-gray-900 capitalize text-base">{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-wider mb-0.5" style={{ color: theme.textSecondary }}>{label}</p>
+      <p className="font-bold capitalize text-base" style={{ color: theme.text }}>{value}</p>
     </div>
   </div>
 );
