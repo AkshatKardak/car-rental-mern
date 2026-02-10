@@ -2,7 +2,6 @@
   <img src="./Frontend/public/tab.png" alt="RentRide Logo" width="200">
   
   # RentRide - Car Rental Platform
-  
   ### Your Ultimate Car Rental Solution
   
   [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://rentridefrontend.vercel.app/)
