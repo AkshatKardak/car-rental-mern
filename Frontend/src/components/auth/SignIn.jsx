@@ -97,20 +97,6 @@ export default function SignIn() {
       className="min-h-screen flex items-center justify-center px-4 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      <button
-        onClick={toggleTheme}
-        className="fixed top-6 right-6 p-3 rounded-xl transition-all duration-300 hover:scale-110 z-50"
-        style={{
-          backgroundColor: isDarkMode ? '#1e293b' : '#F8F9FA',
-          border: `1px solid ${theme.border}`
-        }}
-      >
-        {isDarkMode ? (
-          <Sun size={20} className="text-yellow-400" />
-        ) : (
-          <Moon size={20} style={{ color: theme.textSecondary }} />
-        )}
-      </button>
 
       <div
         className="max-w-md w-full rounded-2xl shadow-2xl p-8 transition-all duration-300"

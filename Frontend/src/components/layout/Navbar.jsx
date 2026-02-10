@@ -4,11 +4,13 @@ import { Menu, X, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../assets/logo.png';
 
+
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+
 
   const scrollToSection = (sectionId) => {
     if (location.pathname !== '/') {
@@ -27,6 +29,7 @@ export default function Navbar() {
     }
     setIsOpen(false);
   };
+
 
   const theme = {
     navbar: {
@@ -48,6 +51,7 @@ export default function Navbar() {
     }
   };
 
+
   return (
     <nav 
       className="sticky top-0 z-50 transition-all duration-300 shadow-lg"
@@ -68,6 +72,7 @@ export default function Navbar() {
               />
             </button>
           </div>
+
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
@@ -94,6 +99,7 @@ export default function Navbar() {
               </button>
             ))}
 
+
             <Link
               to="/signin"
               className="font-medium transition-colors duration-300 hover:opacity-80"
@@ -115,35 +121,16 @@ export default function Navbar() {
               Sign Up
             </Link>
 
-            {/* Dark Mode Toggle */}
+
+            {/* Dark Mode Toggle - Desktop Only (SINGLE TOGGLE) */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl transition-all duration-300 relative group overflow-hidden hover:scale-110"
+              className="p-2.5 rounded-xl transition-all duration-300 hover:scale-110"
               style={{
                 backgroundColor: theme.toggle.bg,
                 border: `1px solid ${theme.toggle.border}`
               }}
               title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              <div className="relative z-10">
-                {isDarkMode ? (
-                  <Sun size={20} className="text-yellow-400 animate-spin-slow" />
-                ) : (
-                  <Moon size={20} style={{ color: theme.text.secondary }} />
-                )}
-              </div>
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg transition-all duration-300"
-              style={{
-                backgroundColor: theme.toggle.bg,
-                border: `1px solid ${theme.toggle.border}`
-              }}
             >
               {isDarkMode ? (
                 <Sun size={20} className="text-yellow-400" />
@@ -151,6 +138,11 @@ export default function Navbar() {
                 <Moon size={20} style={{ color: theme.text.secondary }} />
               )}
             </button>
+          </div>
+
+
+          {/* Mobile Menu Button - NO THEME TOGGLE HERE */}
+          <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 transition-colors"
@@ -161,6 +153,7 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
 
       {/* Mobile Menu */}
       {isOpen && (
@@ -209,6 +202,28 @@ export default function Navbar() {
             >
               Sign Up
             </Link>
+
+            {/* Dark Mode Toggle - Mobile Menu */}
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl mt-2 transition-all duration-300"
+              style={{
+                backgroundColor: theme.toggle.bg,
+                border: `1px solid ${theme.toggle.border}`
+              }}
+            >
+              {isDarkMode ? (
+                <>
+                  <Sun size={20} className="text-yellow-400" />
+                  <span style={{ color: theme.text.primary }} className="font-medium">Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={20} style={{ color: theme.text.secondary }} />
+                  <span style={{ color: theme.text.primary }} className="font-medium">Dark Mode</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}

@@ -11,7 +11,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005/api';
 
-// Google Sign-In with POPUP
+// Google Sign-In with POPUP - OPTIMIZED
 export const loginWithGoogle = async () => {
   try {
     console.log('[firebaseAuth] Starting Google sign-in with popup...');
@@ -20,7 +20,11 @@ export const loginWithGoogle = async () => {
       prompt: 'select_account'
     });
 
-    // Use popup instead of redirect
+    // Add custom scopes if needed
+    provider.addScope('profile');
+    provider.addScope('email');
+
+    // Use popup with optimized settings
     const result = await signInWithPopup(auth, provider);
     console.log('[firebaseAuth] ✅ Popup returned successfully');
 
@@ -28,12 +32,22 @@ export const loginWithGoogle = async () => {
     const idToken = await user.getIdToken();
 
     console.log('[firebaseAuth] Sending to backend...');
-    const response = await axios.post(`${API_URL}/auth/firebase-google`, {
+    
+    // Use timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), 10000)
+    );
+
+    const backendPromise = axios.post(`${API_URL}/auth/firebase-google`, {
       idToken,
       name: user.displayName,
       email: user.email,
       photoURL: user.photoURL
+    }, {
+      timeout: 10000 // 10 second timeout
     });
+
+    const response = await Promise.race([backendPromise, timeoutPromise]);
 
     console.log('[firebaseAuth] ✅ Backend response:', response.data);
 
@@ -60,6 +74,8 @@ export const loginWithGoogle = async () => {
       errorMessage = 'Popup was blocked. Please allow popups for this site.';
     } else if (error.code === 'auth/unauthorized-domain') {
       errorMessage = 'This domain is not authorized for Google Sign-In.';
+    } else if (error.code === 'ECONNABORTED' || error.message === 'Request timeout') {
+      errorMessage = 'Server is taking too long to respond. Please try again.';
     } else if (error.message) {
       errorMessage = error.message;
     }
@@ -70,6 +86,7 @@ export const loginWithGoogle = async () => {
     };
   }
 };
+
 
 // Email/password login
 export const loginWithEmail = async (email, password) => {

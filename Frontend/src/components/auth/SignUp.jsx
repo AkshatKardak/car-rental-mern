@@ -106,19 +106,29 @@ export default function SignUp() {
     }
   };
 
-  // Google Sign-Up
-  const handleGoogleSignup = async () => {
-    setError('');
-    setLoading(true);
+const handleGoogleSignup = async () => {
+  setError('');
+  setLoading(true);
 
-    try {
-      // Just trigger the redirect - App.jsx will handle the rest
-      await loginWithGoogle();
-    } catch (err) {
-      setError(err.message || 'Google sign-up failed');
-      setLoading(false);
+  try {
+    console.log('[SignUp] Starting Google signup...');
+    const result = await loginWithGoogle();
+
+    if (result.success) {
+      console.log('[SignUp] ✅ Google signup successful!');
+      setSuccess('Successfully signed up with Google!');
+
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
     }
-  };
+  } catch (err) {
+    console.error('[SignUp] ❌ Google signup failed:', err);
+    setError(err.message || 'Google sign-up failed');
+    setLoading(false);
+  }
+};
+
 
   const handleSubmit = useFirebase ? handleFirebaseSubmit : handleTraditionalSubmit;
 
@@ -137,21 +147,6 @@ export default function SignUp() {
       className="min-h-screen flex items-center justify-center px-4 transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
-      {/* Dark Mode Toggle */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-6 right-6 p-3 rounded-xl transition-all duration-300 hover:scale-110 z-50"
-        style={{
-          backgroundColor: isDarkMode ? '#1e293b' : '#F8F9FA',
-          border: `1px solid ${theme.border}`
-        }}
-      >
-        {isDarkMode ? (
-          <Sun size={20} className="text-yellow-400" />
-        ) : (
-          <Moon size={20} style={{ color: theme.textSecondary }} />
-        )}
-      </button>
 
       <div
         className="max-w-md w-full rounded-2xl shadow-2xl p-8 transition-all duration-300"
