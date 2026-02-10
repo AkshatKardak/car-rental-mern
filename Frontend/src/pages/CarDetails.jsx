@@ -16,7 +16,7 @@ import DashboardNavbar from '../components/layout/DashboardNavbar';
 import { carService } from '../services/carService';
 import { useTheme } from '../context/ThemeContext';
 
-// --- IMAGE IMPORTS ---
+// --- IMAGE IMPORTS (keep all your existing imports) ---
 import PorscheImg from '../assets/porsche.png';
 import LamboImg from '../assets/lambo.png';
 import BugattiImg from '../assets/Bugatti.png';
@@ -63,12 +63,25 @@ const getCarImage = (car) => {
   return HeroCarImg;
 };
 
+// Default theme in case ThemeContext is not available
+const defaultTheme = {
+  background: '#f9fafb',
+  card: '#ffffff',
+  text: '#111827',
+  textSecondary: '#6b7280',
+  border: '#e5e7eb',
+  hover: '#f3f4f6'
+};
+
 const CarDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { theme } = useTheme();
+  
+  // Add fallback for theme
+  const themeContext = useTheme();
+  const theme = themeContext?.theme || defaultTheme;
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -247,7 +260,7 @@ const CarDetails = () => {
                     className="flex items-center gap-2 text-sm font-medium"
                     style={{ color: theme.textSecondary }}
                   >
-                    <CheckCircle2 size={16} className="text-green-500 shrink-0" />
+                    <CheckCircle2 size={16} className="text-green-500 flex-shrink-0" />
                     {feature}
                   </div>
                 ))}
