@@ -103,7 +103,7 @@
 
 ### 🛠️ Damage Report
 <p align="center">
-  <img src="./screenshots/damage-report.png" alt="Damage Report" width="900">
+  <img src="./screenshots/ReportDamageImage.png" alt="Damage Report" width="900">
 </p>
 
 ### Admin Dashboard
@@ -111,11 +111,10 @@
   <img src="./screenshots/AdminSection.png" alt="Admin Dashboard" width="900">
 </p>
 
-### Reports Damage
+### Reports Damage Statistics
 <p align="center">
   <img src="./screenshots/ReportDamage.png" alt="Report Damage" width="900">
 </p>
-
 
 
 ---
