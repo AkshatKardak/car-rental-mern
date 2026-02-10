@@ -37,6 +37,28 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+        address: {
+        type: String,
+        default: null
+    },
+    preferences: {
+        notifications: {
+            type: Boolean,
+            default: true
+        },
+        darkMode: {
+            type: Boolean,
+            default: false
+        },
+        language: {
+            type: String,
+            default: 'en'
+        },
+        twoFactorAuth: {
+            type: Boolean,
+            default: false
+        }
+    },
     isEmailVerified: {
         type: Boolean,
         default: false

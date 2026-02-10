@@ -16,7 +16,7 @@ import DashboardNavbar from '../components/layout/DashboardNavbar';
 import { carService } from '../services/carService';
 import { useTheme } from '../context/ThemeContext';
 
-
+// Import all car images
 import PorscheImg from '../assets/porsche.png';
 import LamboImg from '../assets/lambo.png';
 import BugattiImg from '../assets/Bugatti.png';
@@ -30,6 +30,7 @@ import AudiImg from '../assets/AudiElectric.png';
 import HeroCarImg from '../assets/herocar.png';
 import MustangImg from '../assets/blackcar.png';
 import NanoImg from '../assets/Nano.png';
+import HondaImg from '../assets/Honda.png';
 
 const carImageAssets = {
   'porsche': PorscheImg,
@@ -46,24 +47,33 @@ const carImageAssets = {
   'audi': AudiImg,
   'tata': NanoImg,
   'nano': NanoImg,
+  'honda': HondaImg,
 };
 
 const getCarImage = (car) => {
-  if (car.images?.[0] && car.images[0].startsWith('http')) return car.images[0];
+  // Priority 1: Use car's own image URL if available
+  if (car.images?.[0] && car.images[0].startsWith('http')) {
+    return car.images[0];
+  }
   
   const brand = (car.brand || '').toLowerCase();
   const model = (car.model || '').toLowerCase();
+  const name = (car.name || '').toLowerCase();
   
-  if (brand === 'tata' && model.includes('nano')) return NanoImg;
-  if (model.includes('nano')) return NanoImg;
-  if (model.includes('g63')) return G63Img;
-  if (model.includes('supra')) return SupraImg;
+  // Priority 2: Match specific models
+  if (name.includes('elevate') || model.includes('elevate')) return HondaImg;
+  if (name.includes('nano') || model.includes('nano')) return NanoImg;
+  if (name.includes('g63') || model.includes('g63')) return G63Img;
+  if (name.includes('supra') || model.includes('supra')) return SupraImg;
   
-  if (carImageAssets[brand]) return carImageAssets[brand];
+  // Priority 3: Match brand
+  if (carImageAssets[brand]) {
+    return carImageAssets[brand];
+  }
+  
+  // Priority 4: Default fallback
   return HeroCarImg;
 };
-
-
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -71,7 +81,7 @@ const CarDetails = () => {
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
   
- const themeContext = useTheme();
+  const themeContext = useTheme();
   const { theme = {
     background: '#f9fafb',
     card: '#ffffff',
@@ -166,7 +176,7 @@ const CarDetails = () => {
               <img 
                 src={getCarImage(car)} 
                 alt={car.name} 
-                className="max-w-full drop-shadow-2xl z-10 transform group-hover:scale-110 transition duration-700 ease-out" 
+                className="max-w-full max-h-[350px] object-contain drop-shadow-2xl z-10 transform group-hover:scale-110 transition duration-700 ease-out" 
               />
             </div>
             
@@ -227,8 +237,8 @@ const CarDetails = () => {
                 className="flex items-center gap-6 mt-4 text-sm font-medium border-b pb-6"
                 style={{ color: theme.textSecondary, borderColor: theme.border }}
               >
-                <span className="flex items-center gap-1.5"><MapPin size={18} className="text-green-500"/> {car.location || 'Mumbai Hub'}</span>
-                <span className="flex items-center gap-1.5"><Star size={18} className="text-yellow-400 fill-yellow-400"/> {car.rating || '4.8'} (120+ trips)</span>
+                <span className="flex items-center gap-1.5"><MapPin size={18} className="text-green-500"/> {car.location || 'Pune'}</span>
+                <span className="flex items-center gap-1.5"><Star size={18} className="text-yellow-400 fill-yellow-400"/> {car.rating || '4.5'} (120+ trips)</span>
               </div>
             </div>
 
@@ -244,7 +254,7 @@ const CarDetails = () => {
             <div className="mb-8">
               <h3 className="font-bold text-lg mb-3" style={{ color: theme.text }}>About this vehicle</h3>
               <p className="leading-relaxed text-base" style={{ color: theme.textSecondary }}>
-                {car.description || "A premium vehicle designed for comfort, style, and performance. Perfect for city drives and weekend getaways. Regularly serviced and sanitized for your safety."}
+                {car.description || "Reliable mid-size SUV with Honda's legendary engineering and comfort. Perfect for city drives and weekend getaways. Regularly serviced and sanitized for your safety."}
               </p>
             </div>
 
@@ -252,7 +262,7 @@ const CarDetails = () => {
             <div className="mb-8">
               <h3 className="font-bold text-lg mb-3" style={{ color: theme.text }}>Key Features</h3>
               <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-                {(car.features && car.features.length > 0 ? car.features : ['4MATIC AWD', 'AMG Performance', 'Luxury Interior', 'Off-road Package', 'Bluetooth', 'GPS Navigation']).map((feature, i) => (
+                {(car.features && car.features.length > 0 ? car.features : ['Honda Sensing', 'Walk-Away Auto Lock', 'Lane Watch Camera', 'Remote Engine Start', 'Bluetooth', 'GPS Navigation']).map((feature, i) => (
                   <div 
                     key={i} 
                     className="flex items-center gap-2 text-sm font-medium"

@@ -3,19 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/database');
 
-// Import routes directly - let errors bubble up
-const authRoutes = require('./routes/authRoutes');
-const carRoutes = require('./routes/carRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const userRoutes = require('./routes/userRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
-const damageRoutes = require('./routes/damageRoutes');
-const offerRoutes = require('./routes/offerRoutes');
-const aiRoutes = require('./routes/aiRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const promotionRoutes = require('./routes/promotionRoutes');
-
 const app = express();
 
 // Middleware
@@ -51,7 +38,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Additional headers
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -78,18 +64,54 @@ app.get('/', (req, res) => {
     });
 });
 
-// Mount Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/cars', carRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/damages', damageRoutes);
-app.use('/api/offers', offerRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/promotions', promotionRoutes);
+// Load Routes
+console.log('🔄 Loading routes...');
+
+// Auth Routes
+app.use('/api/auth', require('./routes/authRoutes'));
+console.log('✅ Auth routes loaded');
+
+// Car Routes  
+app.use('/api/cars', require('./routes/carRoutes'));
+console.log('✅ Car routes loaded');
+
+// Booking Routes
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+console.log('✅ Booking routes loaded');
+
+// User Routes
+app.use('/api/users', require('./routes/userRoutes'));
+console.log('✅ User routes loaded');
+
+// Payment Routes
+app.use('/api/payments', require('./routes/paymentRoutes'));
+console.log('✅ Payment routes loaded');
+
+// Notification Routes
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+console.log('✅ Notification routes loaded');
+
+// Damage Routes
+app.use('/api/damages', require('./routes/damageRoutes'));
+console.log('✅ Damage routes loaded');
+
+// Offer Routes
+app.use('/api/offers', require('./routes/offerRoutes'));
+console.log('✅ Offer routes loaded');
+
+// AI Routes
+app.use('/api/ai', require('./routes/aiRoutes'));
+console.log('✅ AI routes loaded');
+
+// Admin Routes - CRITICAL: Must be loaded!
+app.use('/api/admin', require('./routes/adminRoutes'));
+console.log('✅ Admin routes loaded');
+
+// Promotion Routes
+app.use('/api/promotions', require('./routes/promotionRoutes'));
+console.log('✅ Promotion routes loaded');
+
+console.log('✅ All routes loaded successfully');
 
 // 404 Handler
 app.use((req, res) => {
@@ -102,11 +124,10 @@ app.use((req, res) => {
 
 // Error Handler
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
+    console.error('Error:', err.message);
     res.status(err.status || 500).json({
         success: false,
-        message: err.message || 'Internal Server Error',
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        message: err.message || 'Internal Server Error'
     });
 });
 
