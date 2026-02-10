@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./Frontend/src/assets/logo.png" alt="RentRide Logo" width="200">
+  <img src="./Frontend/public/tab.png" alt="RentRide Logo" width="200">
   
   # RentRide - Car Rental Platform
   
