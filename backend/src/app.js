@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./config/database');
 
 const app = express();
@@ -88,83 +89,95 @@ app.get('/api/info', (req, res) => {
     });
 });
 
-
-// Import Routes - wrapped in try-catch to prevent crashes
+// Import Routes - Using absolute paths for Vercel compatibility
 try {
-    const authRoutes = require('./routes/authRoutes');
+    const authRoutes = require(path.join(__dirname, 'routes', 'authRoutes'));
     app.use('/api/auth', authRoutes);
+    console.log('✅ Auth routes loaded');
 } catch (error) {
-    console.error('Auth routes error:', error.message);
+    console.error('❌ Auth routes error:', error.message);
 }
 
 try {
-    const carRoutes = require('./routes/carRoutes');
+    const carRoutes = require(path.join(__dirname, 'routes', 'carRoutes'));
     app.use('/api/cars', carRoutes);
+    console.log('✅ Car routes loaded');
 } catch (error) {
-    console.error('Car routes error:', error.message);
+    console.error('❌ Car routes error:', error.message);
 }
 
 try {
-    const bookingRoutes = require('./routes/bookingRoutes');
+    const bookingRoutes = require(path.join(__dirname, 'routes', 'bookingRoutes'));
     app.use('/api/bookings', bookingRoutes);
+    console.log('✅ Booking routes loaded');
 } catch (error) {
-    console.error('Booking routes error:', error.message);
+    console.error('❌ Booking routes error:', error.message);
 }
 
 try {
-    const userRoutes = require('./routes/userRoutes');
+    const userRoutes = require(path.join(__dirname, 'routes', 'userRoutes'));
     app.use('/api/users', userRoutes);
+    console.log('✅ User routes loaded');
 } catch (error) {
-    console.error('User routes error:', error.message);
+    console.error('❌ User routes error:', error.message);
 }
 
 try {
-    const paymentRoutes = require('./routes/paymentRoutes');
+    const paymentRoutes = require(path.join(__dirname, 'routes', 'paymentRoutes'));
     app.use('/api/payments', paymentRoutes);
+    console.log('✅ Payment routes loaded');
 } catch (error) {
-    console.error('Payment routes error:', error.message);
+    console.error('❌ Payment routes error:', error.message);
 }
+
 try {
-    const notificationRoutes = require('./routes/notificationRoutes');
+    const notificationRoutes = require(path.join(__dirname, 'routes', 'notificationRoutes'));
     app.use('/api/notifications', notificationRoutes);
+    console.log('✅ Notification routes loaded');
 } catch (error) {
-    console.error('Notification routes error:', error.message);
+    console.error('❌ Notification routes error:', error.message);
 }
 
 try {
-    const damageRoutes = require('./routes/damageRoutes');
+    const damageRoutes = require(path.join(__dirname, 'routes', 'damageRoutes'));
     app.use('/api/damages', damageRoutes);
+    console.log('✅ Damage routes loaded');
 } catch (error) {
-    console.error('Damage routes error:', error.message);
+    console.error('❌ Damage routes error:', error.message);
 }
 
 try {
-    const offerRoutes = require('./routes/offerRoutes');
+    const offerRoutes = require(path.join(__dirname, 'routes', 'offerRoutes'));
     app.use('/api/offers', offerRoutes);
+    console.log('✅ Offer routes loaded');
 } catch (error) {
-    console.error('Offer routes error:', error.message);
+    console.error('❌ Offer routes error:', error.message);
 }
 
 try {
-    const aiRoutes = require('./routes/aiRoutes');
+    const aiRoutes = require(path.join(__dirname, 'routes', 'aiRoutes'));
     app.use('/api/ai', aiRoutes);
+    console.log('✅ AI routes loaded');
 } catch (error) {
-    console.error('AI routes error:', error.message);
+    console.error('❌ AI routes error:', error.message);
 }
 
 try {
-    const adminRoutes = require('./routes/adminRoutes');
+    const adminRoutes = require(path.join(__dirname, 'routes', 'adminRoutes'));
     app.use('/api/admin', adminRoutes);
+    console.log('✅ Admin routes loaded');
 } catch (error) {
-    console.error('Admin routes error:', error.message);
+    console.error('❌ Admin routes error:', error.message);
 }
 
 try {
-    const promotionRoutes = require('./routes/promotionRoutes');
+    const promotionRoutes = require(path.join(__dirname, 'routes', 'promotionRoutes'));
     app.use('/api/promotions', promotionRoutes);
+    console.log('✅ Promotion routes loaded');
 } catch (error) {
-    console.error('Promotion routes error:', error.message);
+    console.error('❌ Promotion routes error:', error.message);
 }
+
 // 404 Handler
 app.use((req, res) => {
     res.status(404).json({

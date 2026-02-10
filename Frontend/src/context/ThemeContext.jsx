@@ -2,6 +2,25 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
 
+// Define theme colors
+const lightTheme = {
+  background: '#f9fafb',
+  card: '#ffffff',
+  text: '#111827',
+  textSecondary: '#6b7280',
+  border: '#e5e7eb',
+  hover: '#f3f4f6'
+};
+
+const darkTheme = {
+  background: '#111827',
+  card: '#1f2937',
+  text: '#f9fafb',
+  textSecondary: '#9ca3af',
+  border: '#374151',
+  hover: '#374151'
+};
+
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
@@ -15,6 +34,9 @@ export const ThemeProvider = ({ children }) => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : false;
   });
+
+  // Get current theme based on isDarkMode
+  const theme = isDarkMode ? darkTheme : lightTheme;
 
   useEffect(() => {
     const html = document.documentElement;
@@ -42,7 +64,7 @@ export const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, theme }}>
       {children}
     </ThemeContext.Provider>
   );
